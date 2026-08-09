@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$repo_root"
+
+for path in Cargo.toml Cargo.lock AGENTS.md mlplunit.conf src/hello/module.mlpl tests/test_hello_module.mlpl; do
+  if git check-ignore -q "$path"; then
+    echo "required project file is ignored: $path" >&2
+    exit 1
+  fi
+done
+
+for path in target/debug/libexample.rlib extensions/hello/target/debug/libhello.so reports/check.txt; do
+  if ! git check-ignore -q "$path"; then
+    echo "generated artifact is not ignored: $path" >&2
+    exit 1
+  fi
+done
+
+echo "PASS gitignore policy"

@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+sh -n "$repo_root"/scripts/* "$repo_root/tests/test-layout"
+"$repo_root/tests/test-layout"
+"$repo_root/scripts/check-gitignore"
+"$repo_root/scripts/check-tracked"
+cargo fmt --manifest-path "$repo_root/Cargo.toml" --all --check
+"$repo_root/scripts/run-rust-tests"
+"$repo_root/scripts/run-tests" --format tap >/dev/null
+git -C "$repo_root" diff --check
+
+echo "PASS pre-commit"

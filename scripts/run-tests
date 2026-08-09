@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+config=${MLPLUNIT_CONFIG:-$repo_root/mlplunit.conf}
+mlpl=$($repo_root/scripts/select-mlpl)
+mlplunit=$($repo_root/scripts/select-mlplunit)
+
+exec "$mlplunit" --mlpl "$mlpl" --config "$config" "$@"

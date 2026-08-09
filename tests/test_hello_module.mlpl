@@ -1,0 +1,8 @@
+include "src/hello/module.mlpl";
+
+@test {name: "extension module scaffold is loadable", tags: ["extensions", "scaffold"]}
+def u:test_extension_scaffold() { "Keep the MLPL facade executable while native registration is deferred.";
+  u:assert_eq(u:extension_scaffold_version(), 1, "scaffold contract version")
+}
+
+u:run_registered_tests()

@@ -1,6 +1,6 @@
 number = 1
 slug = "repository-tdd-scaffold"
-status = "pending"
+status = "in-progress"
 description = "Use TDD to add the Rust workspace skeleton, MLPL source and test layout, root..."
 role = "production"
 context_files = []

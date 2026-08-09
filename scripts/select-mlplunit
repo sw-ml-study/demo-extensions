@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+if [ -n "${MLPLUNIT:-}" ]; then
+  case "$MLPLUNIT" in
+    /*) candidate=$MLPLUNIT ;;
+    *) echo "MLPLUNIT must be an absolute path: $MLPLUNIT" >&2; exit 1 ;;
+  esac
+else
+  candidate=$(command -v mlplunit 2>/dev/null || true)
+  if [ -z "$candidate" ]; then
+    adjacent=$repo_root/../../softwarewrighter/mlplunit/bin/mlplunit
+    [ ! -x "$adjacent" ] || candidate=$adjacent
+  fi
+fi
+
+if [ -z "${candidate:-}" ] || [ ! -f "$candidate" ] || [ ! -x "$candidate" ]; then
+  echo "mlplunit executable not found" >&2
+  echo "set MLPLUNIT=/absolute/path/to/mlplunit, add it to PATH, or provide the adjacent checkout" >&2
+  exit 1
+fi
+
+printf '%s\n' "$candidate"

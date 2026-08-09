@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+exec cargo test --manifest-path "$repo_root/Cargo.toml" --workspace "$@"

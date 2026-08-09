@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$repo_root"
+
+for path in Cargo.toml Cargo.lock AGENTS.md .gitignore mlplunit.conf justfile; do
+  if ! git ls-files --error-unmatch "$path" >/dev/null 2>&1; then
+    echo "required source, documentation, or configuration is not tracked: $path" >&2
+    exit 1
+  fi
+done
+
+find .agentrail crates docs extensions scripts src tests -type f -print |
+  while IFS= read -r path; do
+    if ! git ls-files --error-unmatch "$path" >/dev/null 2>&1; then
+      echo "project file is not tracked: $path" >&2
+      exit 1
+    fi
+  done
+
+echo "PASS tracked-file policy"
