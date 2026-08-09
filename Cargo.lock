@@ -64,6 +64,7 @@ dependencies = [
  "libloading",
  "mlpl-extension-abi",
  "mlpl-extension-hello",
+ "mlpl-extension-sdk",
  "serde",
  "toml",
 ]
@@ -71,6 +72,9 @@ dependencies = [
 [[package]]
 name = "mlpl-extension-sdk"
 version = "0.0.0"
+dependencies = [
+ "mlpl-extension-abi",
+]
 
 [[package]]
 name = "proc-macro2"

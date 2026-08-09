@@ -9,9 +9,8 @@ mod foreign;
 mod manifest;
 #[allow(unsafe_code)]
 mod registry;
-mod value;
 
 pub use error::{CallError, LoadError, PackageError};
 pub use manifest::{PackageCatalog, ResolvedPackage};
+pub use mlpl_extension_sdk::Value;
 pub use registry::{ProviderKind, Registry};
-pub use value::Value;

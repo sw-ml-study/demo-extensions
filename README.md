@@ -95,10 +95,11 @@ The completed foundation proves:
   stable diagnostics, and duplicate/mismatch rejection;
 - a public MLPL facade kept separate from private native functions.
 
-General argument conversion, dense array views, native handles, safe authoring
+General argument marshalling, dense array views, native handles, safe authoring
 macros, real unload/hot reload, native 3D, and sw-MLPL language integration are
-future work. Dynamic/static provider parity now shares one tested registration
-path; safe scalar conversion is the next SDK step.
+future work. Dynamic/static provider parity shares one tested registration
+path, and safe SDK scalar/result copying now replaces the loader's original
+one-off decoder. Signature metadata is the next SDK step.
 
 ## Documentation
 
@@ -107,6 +108,8 @@ path; safe scalar conversion is the next SDK step.
 - [ABI V1](docs/abi-v1.md) — layouts, validation, ownership, and safety rules.
 - [Hello extension](docs/hello-extension.md) — dynamic loading and lifecycle
   walkthrough.
+- [Safe scalar conversions](docs/sdk-scalars.md) — owned SDK values, errors,
+  foreign-copy rules, and malformed-input behavior.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and

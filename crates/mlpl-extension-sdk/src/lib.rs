@@ -1,3 +1,15 @@
 //! Safe extension-author facade over the versioned native ABI.
 //!
-//! Conversions and macros are deferred until hand-written ABI use stabilizes.
+//! Owned encoders keep foreign backing storage alive. Host-only decoders copy
+//! raw ABI inputs immediately so extension authors work with ordinary values.
+
+#[allow(unsafe_code)]
+mod decode;
+mod encode;
+mod error;
+mod value;
+
+pub use decode::{copy_foreign_error, copy_foreign_value};
+pub use encode::{EncodedError, EncodedValue};
+pub use error::ConversionError;
+pub use value::{OwnedError, Value};
