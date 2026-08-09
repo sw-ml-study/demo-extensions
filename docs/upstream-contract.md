@@ -43,3 +43,18 @@ Every foundation acceptance report classifies each item as supported, proven
 by a named test; supported with a limitation; or blocked upstream. A local mock
 registry may test the ABI and SDK, but it is never evidence that REPL, script,
 or compiled sw-MLPL integration already works.
+
+## Current blocker: host registration
+
+The downstream `hello_registration` Rust integration test now proves dynamic
+loading, V1 validation, namespaced invocation, typed result/error copying,
+panic containment, library retention, and deactivation. This is not a mock of
+the binary boundary: it loads the independently built hello shared library.
+
+End-to-end MLPL use is nevertheless blocked upstream. `../sw-mlpl` does not
+currently provide a public API that accepts a validated external descriptor,
+registers its functions in an importable namespace, and makes that namespace
+available consistently to the REPL, interpreted scripts, and compiled
+programs. No upstream files are changed by this repository. That host contract
+requires a separately authorized sw-MLPL task before this project can claim
+`use hello` or equivalent native invocation from `.mlpl`.

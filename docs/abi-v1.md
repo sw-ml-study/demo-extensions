@@ -43,8 +43,9 @@ not permitted.
 
 - V1 values currently model nil, bool, signed 64-bit integers, 64-bit floats,
   UTF-8, and bytes. Dense numeric arrays and native handles are later contracts.
-- Function descriptors currently contain name and arity. Callable pointers and
-  signature metadata enter with tested registration.
+- Function descriptors now contain name, arity, and an optional V1 invocation
+  trampoline. The loader refuses to register missing trampolines. Rich
+  signature metadata remains SDK work.
 - Struct layout is C-compatible, but no claim of end-to-end sw-MLPL integration
   is made. The upstream registry/value hooks remain listed in
   `docs/upstream-contract.md`.

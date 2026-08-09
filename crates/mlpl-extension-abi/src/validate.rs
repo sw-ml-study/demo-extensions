@@ -100,5 +100,5 @@ unsafe fn copy_function(
     if !names.insert(name.clone()) {
         return Err(DescriptorError::DuplicateFunction(name));
     }
-    Ok(ValidatedFunction::new(name, raw.arity))
+    Ok(ValidatedFunction::new(name, raw.arity, raw.invoke))
 }

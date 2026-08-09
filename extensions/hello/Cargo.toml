@@ -8,5 +8,13 @@ rust-version.workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[lints]
-workspace = true
+[dependencies]
+mlpl-extension-abi = { path = "../../crates/mlpl-extension-abi" }
+
+[lints.rust]
+unsafe_code = "warn"
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = "deny"
+pedantic = "deny"

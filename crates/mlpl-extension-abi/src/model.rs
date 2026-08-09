@@ -1,6 +1,8 @@
 use std::mem::size_of;
 use std::ptr;
 
+use crate::error::AbiErrorV1;
+
 pub const ABI_VERSION_V1: u32 = 1;
 
 #[repr(C)]
@@ -53,12 +55,40 @@ pub struct AbiValue {
     pub payload: ValuePayload,
 }
 
+impl AbiValue {
+    #[must_use]
+    pub const fn nil() -> Self {
+        Self {
+            tag: ValueTag::Nil as u32,
+            reserved: 0,
+            payload: ValuePayload { integer: 0 },
+        }
+    }
+
+    #[must_use]
+    pub const fn from_i64(value: i64) -> Self {
+        Self {
+            tag: ValueTag::I64 as u32,
+            reserved: 0,
+            payload: ValuePayload { integer: value },
+        }
+    }
+}
+
+pub type InvokeFnV1 = unsafe extern "C" fn(
+    arguments: *const AbiValue,
+    argument_count: usize,
+    output: *mut AbiValue,
+    error: *mut AbiErrorV1,
+) -> u32;
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct FunctionDescriptorV1 {
     pub name: AbiSlice,
     pub arity: u32,
     pub reserved: u32,
+    pub invoke: Option<InvokeFnV1>,
 }
 
 impl FunctionDescriptorV1 {
@@ -68,9 +98,22 @@ impl FunctionDescriptorV1 {
             name,
             arity,
             reserved: 0,
+            invoke: None,
+        }
+    }
+
+    #[must_use]
+    pub const fn with_invoke(name: AbiSlice, arity: u32, invoke: InvokeFnV1) -> Self {
+        Self {
+            name,
+            arity,
+            reserved: 0,
+            invoke: Some(invoke),
         }
     }
 }
+
+pub type ExtensionEntryV1 = unsafe extern "C" fn() -> *const ExtensionDescriptorV1;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]

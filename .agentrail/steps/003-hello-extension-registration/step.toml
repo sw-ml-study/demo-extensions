@@ -1,6 +1,6 @@
 number = 3
 slug = "hello-extension-registration"
-status = "pending"
+status = "in-progress"
 description = "Build an independently compiled hello cdylib and a safe test registry using T..."
 role = "production"
 context_files = []
