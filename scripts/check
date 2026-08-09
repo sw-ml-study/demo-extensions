@@ -8,6 +8,8 @@ sh -n "$repo_root"/scripts/* "$repo_root/tests/test-layout"
 "$repo_root/scripts/check-gitignore"
 "$repo_root/scripts/check-tracked"
 cargo fmt --manifest-path "$repo_root/Cargo.toml" --all --check
+"$repo_root/scripts/run-rust-tests" --no-run
+cargo clippy --manifest-path "$repo_root/Cargo.toml" --workspace --all-targets -- -D warnings
 "$repo_root/scripts/run-rust-tests"
 "$repo_root/scripts/run-tests" --format tap >/dev/null
 git -C "$repo_root" diff --check

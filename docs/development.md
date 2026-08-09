@@ -10,7 +10,8 @@ just check
 
 `just check` is the mandatory pre-commit gate. It checks shell syntax, the
 repository layout, `.gitignore`, tracked source/docs/configuration, Rust
-formatting and workspace tests, native mlplunit tests, and whitespace errors.
+formatting, compilation, clippy, workspace tests, native mlplunit tests, and
+whitespace errors.
 
 ## Tool selection
 

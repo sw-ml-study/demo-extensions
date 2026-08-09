@@ -5,5 +5,10 @@ edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 
-[lints]
-workspace = true
+[lints.rust]
+unsafe_code = "warn"
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = "deny"
+pedantic = "deny"

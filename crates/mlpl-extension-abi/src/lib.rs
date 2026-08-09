@@ -1,4 +1,20 @@
 //! Versioned C-compatible types shared by sw-MLPL hosts and extensions.
 //!
-//! The ABI contract is introduced in the next AgentRail step. This crate is
-//! intentionally empty until its layout and failure cases have tests.
+//! Raw foreign data is copied into validated owned metadata before the host
+//! registers it. The only pointer dereferences are isolated in `validate`.
+
+mod call;
+mod error;
+mod model;
+#[allow(unsafe_code)]
+mod validate;
+mod validated;
+
+pub use call::{HostCallError, catch_extension_call};
+pub use error::{AbiErrorV1, DescriptorError, ErrorCode};
+pub use model::{
+    ABI_VERSION_V1, AbiSlice, AbiValue, ExtensionDescriptorV1, FunctionDescriptorV1, ValuePayload,
+    ValueTag,
+};
+pub use validate::validate_descriptor;
+pub use validated::{ValidatedExtension, ValidatedFunction};

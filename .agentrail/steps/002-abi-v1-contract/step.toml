@@ -1,6 +1,6 @@
 number = 2
 slug = "abi-v1-contract"
-status = "pending"
+status = "in-progress"
 description = "Specify the minimal versioned C-safe extension descriptor, value, and error t..."
 role = "production"
 context_files = []
