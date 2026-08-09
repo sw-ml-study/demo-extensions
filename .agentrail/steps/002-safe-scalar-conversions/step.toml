@@ -1,8 +1,9 @@
 number = 2
 slug = "safe-scalar-conversions"
-status = "in-progress"
+status = "completed"
 description = "Add test-first safe SDK conversions for nil, bool, i64, f64, UTF-8, bytes, an..."
 role = "production"
 context_files = []
 created_at = "2026-08-08T20:02:48"
-commits = []
+completed_at = "2026-08-09T08:25:18"
+commits = ["a9c62be1e3fdabdf5d2772109e6b97a0da96f44e"]
