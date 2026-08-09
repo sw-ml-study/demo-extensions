@@ -1,8 +1,9 @@
 number = 2
 slug = "abi-v1-contract"
-status = "in-progress"
+status = "completed"
 description = "Specify the minimal versioned C-safe extension descriptor, value, and error t..."
 role = "production"
 context_files = []
 created_at = "2026-08-08T19:16:18"
-commits = []
+completed_at = "2026-08-08T19:37:12"
+commits = ["c6f97fbec3e871c3b53fb6a34ecdff3e7b565a35"]
