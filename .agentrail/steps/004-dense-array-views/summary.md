@@ -1,0 +1,1 @@
+Added bounded dense numeric ABI descriptors, safe host-owned arrays and call-lifetime views, retained argument encoding, and one bulk f32 [N,3] call through dynamic/static hello providers with full malformed-layout tests and documentation.
