@@ -10,12 +10,13 @@ audit, named-file staging, a detailed commit, AgentRail completion metadata,
 and a successful `git push origin main`. All work is directly on `main`; no
 feature branches, PRs, `gh`, or GitHub Actions are used.
 
-## Active: extension-foundation
+## Completed: extension-foundation
 
 Purpose: establish the repository gate and prove the smallest public extension
 boundary before graphics enters the dependency graph.
 
 Executable AgentRail plan: `docs/extension-foundation-saga.md`.
+Acceptance report: `docs/foundation-acceptance.md`.
 
 1. `repository-tdd-scaffold` — Add the Rust workspace skeleton, MLPL source and test layout, root mlplunit configuration, tool-selection scripts, thin just recipes, and structural tests for the intended package layout.
 2. `abi-v1-contract` — Specify minimal C-safe descriptor/value/error types and write Rust tests for layout, version negotiation, malformed descriptors, ownership, and panic containment before implementing them.
@@ -32,11 +33,14 @@ mocked as complete.
 
 Purpose: make the proven ABI pleasant and safe for third-party Rust authors.
 
-1. Add safe scalar/string/bytes conversions and error mapping.
-2. Add function/type metadata and generate help/signature fixtures.
-3. Add read-only dense numeric array views with shape/dtype/stride validation.
-4. Add extension-scoped typed generational handles and lifecycle tests.
-5. Add `#[mlpl_extension]`, `#[mlpl_fn]`, and `#[mlpl_type]` only where they
+1. Factor descriptor registration behind dynamic and static provider guards,
+   then run the identical hello contract against both without claiming the
+   missing sw-MLPL compiler hook.
+2. Add safe scalar/string/bytes conversions and error mapping.
+3. Add function/type metadata and generate help/signature fixtures.
+4. Add read-only dense numeric array views with shape/dtype/stride validation.
+5. Add extension-scoped typed generational handles and lifecycle tests.
+6. Add `#[mlpl_extension]`, `#[mlpl_fn]`, and `#[mlpl_type]` only where they
    remove stabilized boilerplate; publish an SDK acceptance example.
 
 Acceptance: ordinary extension authors write no unsafe code, bulk `[N,3]`

@@ -108,7 +108,9 @@ the registry layer.
 
 ### 2. Safe SDK, metadata, arrays, and handles
 
-Add safe conversions and ergonomic macros only after hand-written ABI calls
+First factor the stabilized registration path behind equivalent dynamic and
+static provider guards, proving the same hello contract through each. Then add
+safe conversions and ergonomic macros only after hand-written ABI calls
 stabilize. Introduce read-only dense array views and typed generational handles
 with explicit ownership. Test invalid UTF-8, null/overflowing descriptors,
 wrong dtype/rank/shape, strided input policy, stale handles, wrong-extension

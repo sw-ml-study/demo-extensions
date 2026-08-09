@@ -1,6 +1,6 @@
 number = 5
 slug = "foundation-acceptance-report"
-status = "pending"
+status = "in-progress"
 description = "Run the full Rust and MLPL gates and publish the foundation acceptance eviden..."
 role = "validation"
 context_files = []

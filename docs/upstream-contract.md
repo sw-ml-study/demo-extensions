@@ -58,3 +58,15 @@ available consistently to the REPL, interpreted scripts, and compiled
 programs. No upstream files are changed by this repository. That host contract
 requires a separately authorized sw-MLPL task before this project can claim
 `use hello` or equivalent native invocation from `.mlpl`.
+
+### Execution modes as of foundation acceptance
+
+- REPL native invocation: blocked; no external registry/import hook.
+- Interpreted native invocation: blocked; the MLPL facade alone is proven by
+  mlplunit with an explicit input standing in for the unavailable native call.
+- Compiled native invocation: blocked; no static-provider or packaged dynamic
+  provider hook exists in the compiler/runtime contract.
+- Downstream Rust harness: proven by `hello_registration.rs`; it is evidence
+  for the proposed boundary, not evidence that sw-MLPL already implements it.
+
+See `foundation-acceptance.md` for the complete evidence matrix and limitations.
