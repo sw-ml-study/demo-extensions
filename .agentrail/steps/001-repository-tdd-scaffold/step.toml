@@ -1,8 +1,9 @@
 number = 1
 slug = "repository-tdd-scaffold"
-status = "in-progress"
+status = "completed"
 description = "Use TDD to add the Rust workspace skeleton, MLPL source and test layout, root..."
 role = "production"
 context_files = []
 created_at = "2026-08-08T19:16:18"
-commits = []
+completed_at = "2026-08-08T19:32:08"
+commits = ["30fb0f8508e4b7682d2c06ebb2594a0ff273be10"]

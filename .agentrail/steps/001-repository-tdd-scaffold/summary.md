@@ -1,0 +1,1 @@
+Established the test-first repository scaffold: four-member Rust workspace, hello cdylib artifact shape, native mlplunit suite, deterministic tool selectors, thin just recipes, structural and tracking audits, and a green full pre-commit gate. No upstream sw-MLPL changes were needed; ABI behavior remains deferred to step 002.
