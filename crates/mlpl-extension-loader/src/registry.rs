@@ -4,6 +4,7 @@ use std::ptr;
 
 use libloading::Library;
 use mlpl_extension_abi::{AbiErrorV1, AbiValue, ExtensionEntryV1, InvokeFnV1, validate_descriptor};
+use mlpl_extension_sdk::{ExtensionMetadata, MetadataError};
 
 use crate::foreign::decode_result;
 use crate::{CallError, LoadError, ResolvedPackage, Value};
@@ -38,6 +39,7 @@ pub struct Registry {
     provider: ProviderGuard,
     extension_name: String,
     functions: BTreeMap<String, RegisteredFunction>,
+    metadata: ExtensionMetadata,
     active: bool,
 }
 
@@ -103,11 +105,22 @@ impl Registry {
         let extension =
             unsafe { validate_descriptor(raw) }.map_err(LoadError::InvalidDescriptor)?;
         let extension_name = extension.name().to_owned();
+        let metadata =
+            ExtensionMetadata::parse(extension.metadata()).map_err(LoadError::InvalidMetadata)?;
+        let exports: Vec<_> = extension
+            .functions()
+            .iter()
+            .map(|function| (function.name(), function.arity() as usize))
+            .collect();
+        metadata
+            .validate_exports(&exports)
+            .map_err(LoadError::InvalidMetadata)?;
         let functions = register_functions(&extension_name, extension.functions())?;
         Ok(Self {
             provider,
             extension_name,
             functions,
+            metadata,
             active: true,
         })
     }
@@ -128,6 +141,25 @@ impl Registry {
     #[must_use]
     pub fn function_names(&self) -> Vec<&str> {
         self.functions.keys().map(String::as_str).collect()
+    }
+
+    /// Renders deterministic signature and documentation metadata.
+    ///
+    /// # Errors
+    ///
+    /// Returns `UnknownFunction` when the qualified function is not declared
+    /// by this provider.
+    pub fn help(&self, qualified_name: &str) -> Result<String, MetadataError> {
+        self.metadata.help(qualified_name)
+    }
+
+    /// Renders documentation for an extension-defined native type.
+    ///
+    /// # Errors
+    ///
+    /// Returns `UnknownType` when the type is not declared by this provider.
+    pub fn type_help(&self, name: &str) -> Result<String, MetadataError> {
+        self.metadata.type_help(name)
     }
 
     #[must_use]

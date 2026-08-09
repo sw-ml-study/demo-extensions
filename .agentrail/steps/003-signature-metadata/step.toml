@@ -1,6 +1,6 @@
 number = 3
 slug = "signature-metadata"
-status = "pending"
+status = "in-progress"
 description = "Add deterministic function and native-type metadata for documentation, argume..."
 role = "production"
 context_files = []

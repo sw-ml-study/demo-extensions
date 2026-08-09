@@ -47,6 +47,7 @@ pub struct ValidatedExtension {
     name: String,
     version: String,
     functions: Vec<ValidatedFunction>,
+    metadata: String,
 }
 
 impl ValidatedExtension {
@@ -54,11 +55,13 @@ impl ValidatedExtension {
         name: String,
         version: String,
         functions: Vec<ValidatedFunction>,
+        metadata: String,
     ) -> Self {
         Self {
             name,
             version,
             functions,
+            metadata,
         }
     }
 
@@ -75,5 +78,10 @@ impl ValidatedExtension {
     #[must_use]
     pub fn functions(&self) -> &[ValidatedFunction] {
         &self.functions
+    }
+
+    #[must_use]
+    pub fn metadata(&self) -> &str {
+        &self.metadata
     }
 }

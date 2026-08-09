@@ -30,7 +30,8 @@ pub unsafe fn validate_descriptor(
     let name = unsafe { copy_text(raw.name, "extension name")? };
     let version = unsafe { copy_text(raw.version, "extension version")? };
     let functions = unsafe { copy_functions(raw)? };
-    Ok(ValidatedExtension::new(name, version, functions))
+    let metadata = unsafe { copy_optional_text(raw.metadata, "extension metadata")? };
+    Ok(ValidatedExtension::new(name, version, functions, metadata))
 }
 
 fn validate_header(raw: &ExtensionDescriptorV1) -> Result<(), DescriptorError> {
@@ -56,6 +57,17 @@ fn validate_function_pointer(raw: &ExtensionDescriptorV1) -> Result<(), Descript
 }
 
 unsafe fn copy_text(raw: AbiSlice, field: &'static str) -> Result<String, DescriptorError> {
+    let text = unsafe { copy_optional_text(raw, field)? };
+    if text.is_empty() {
+        return Err(DescriptorError::EmptyText(field));
+    }
+    Ok(text)
+}
+
+unsafe fn copy_optional_text(
+    raw: AbiSlice,
+    field: &'static str,
+) -> Result<String, DescriptorError> {
     if raw.len > MAX_TEXT_BYTES {
         return Err(DescriptorError::TextTooLong(field));
     }
@@ -68,9 +80,6 @@ unsafe fn copy_text(raw: AbiSlice, field: &'static str) -> Result<String, Descri
         unsafe { slice::from_raw_parts(raw.data, raw.len) }
     };
     let text = str::from_utf8(bytes).map_err(|_| DescriptorError::InvalidUtf8(field))?;
-    if text.is_empty() {
-        return Err(DescriptorError::EmptyText(field));
-    }
     Ok(text.to_owned())
 }
 

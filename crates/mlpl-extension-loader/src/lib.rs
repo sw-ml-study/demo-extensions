@@ -12,5 +12,5 @@ mod registry;
 
 pub use error::{CallError, LoadError, PackageError};
 pub use manifest::{PackageCatalog, ResolvedPackage};
-pub use mlpl_extension_sdk::Value;
+pub use mlpl_extension_sdk::{MetadataError, Value};
 pub use registry::{ProviderKind, Registry};

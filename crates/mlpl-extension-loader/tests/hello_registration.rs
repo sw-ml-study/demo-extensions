@@ -75,6 +75,10 @@ fn independently_built_library_registers_namespaced_functions() {
             ["_hello.answer", "_hello.fail", "_hello.panic"]
         );
         assert_eq!(registry.call("_hello.answer", &[]), Ok(Value::I64(42)));
+        assert_eq!(
+            registry.help("_hello.answer").unwrap(),
+            "_hello.answer() -> i64\nReturn the canonical extension answer."
+        );
     }
 }
 

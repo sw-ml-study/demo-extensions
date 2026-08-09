@@ -7,9 +7,11 @@
 mod decode;
 mod encode;
 mod error;
+mod metadata;
 mod value;
 
 pub use decode::{copy_foreign_error, copy_foreign_value};
 pub use encode::{EncodedError, EncodedValue};
 pub use error::ConversionError;
+pub use metadata::{ExtensionMetadata, MetadataError};
 pub use value::{OwnedError, Value};

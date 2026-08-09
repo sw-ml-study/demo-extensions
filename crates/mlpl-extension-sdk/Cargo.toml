@@ -7,6 +7,8 @@ rust-version.workspace = true
 
 [dependencies]
 mlpl-extension-abi = { path = "../mlpl-extension-abi" }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
 
 [lints]
 workspace = true

@@ -29,6 +29,16 @@ function pointers, checks lifecycle and arity before invocation, and copies
 results/errors before returning. Deactivation rejects every later call while
 the registry continues to own the library until it is dropped.
 
+The descriptor also embeds a TOML metadata document for all three exports.
+Registration parses it only after the ABI layer has copied it into host-owned
+memory, then requires exact name and arity agreement. For example,
+`Registry::help("_hello.answer")` deterministically returns:
+
+```text
+_hello.answer() -> i64
+Return the canonical extension answer.
+```
+
 The same descriptor is also exposed as a statically linked provider. Dynamic
 and static providers enter one validation/registration function and run the
 identical success, failure, contained-panic, namespace, and deactivation tests.
@@ -37,9 +47,9 @@ static linkage; callable behavior does not branch on provider kind.
 
 ## Deliberate limits
 
-The slice accepts no arguments and decodes only signed 64-bit results. General
-value conversion is SDK work; dense arrays and native handles have later
-sagas. The library's panic hook may still print the contained panic during a
+The hello functions accept no arguments and return only signed 64-bit values;
+the SDK and loader support all scalar copies independently. Dense arrays and
+native handles have later sagas. The library's panic hook may still print the contained panic during a
 test, but the test process continues and receives `ExtensionPanicked`.
 
 The package manifest resolves the public `hello` facade separately from the

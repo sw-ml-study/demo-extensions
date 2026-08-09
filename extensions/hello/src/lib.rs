@@ -32,6 +32,23 @@ mod export {
         FunctionDescriptorV1::with_invoke(AbiSlice::from_bytes(b"panic"), 0, panic_call),
     ]);
 
+    static METADATA: &[u8] = br#"
+[[functions]]
+name = "answer"
+documentation = "Return the canonical extension answer."
+returns = "i64"
+
+[[functions]]
+name = "fail"
+documentation = "Return a contained extension failure."
+returns = "i64"
+
+[[functions]]
+name = "panic"
+documentation = "Demonstrate containment of an extension panic."
+returns = "i64"
+"#;
+
     static DESCRIPTOR: LazyLock<SharedDescriptor> = LazyLock::new(|| {
         SharedDescriptor(ExtensionDescriptorV1 {
             struct_size: u32::try_from(size_of::<ExtensionDescriptorV1>()).unwrap_or(u32::MAX),
@@ -40,6 +57,7 @@ mod export {
             version: AbiSlice::from_bytes(b"0.1.0"),
             functions: FUNCTIONS.0.as_ptr(),
             function_count: FUNCTIONS.0.len(),
+            metadata: AbiSlice::from_bytes(METADATA),
         })
     });
 

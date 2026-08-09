@@ -1,4 +1,5 @@
 use mlpl_extension_abi::DescriptorError;
+use mlpl_extension_sdk::MetadataError;
 use std::fmt;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -7,6 +8,7 @@ pub enum LoadError {
     MissingEntry,
     NullDescriptor,
     InvalidDescriptor(DescriptorError),
+    InvalidMetadata(MetadataError),
     MissingInvoke(String),
     DuplicateName(String),
     NamespaceMismatch { expected: String, actual: String },

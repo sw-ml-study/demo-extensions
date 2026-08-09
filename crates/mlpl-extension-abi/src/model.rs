@@ -124,6 +124,7 @@ pub struct ExtensionDescriptorV1 {
     pub version: AbiSlice,
     pub functions: *const FunctionDescriptorV1,
     pub function_count: usize,
+    pub metadata: AbiSlice,
 }
 
 impl ExtensionDescriptorV1 {
@@ -141,6 +142,13 @@ impl ExtensionDescriptorV1 {
             version,
             functions: function_ptr,
             function_count: functions.len(),
+            metadata: AbiSlice::from_raw_parts(ptr::null(), 0),
         }
+    }
+
+    #[must_use]
+    pub const fn with_metadata(mut self, metadata: AbiSlice) -> Self {
+        self.metadata = metadata;
+        self
     }
 }
