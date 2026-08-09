@@ -1,0 +1,1 @@
+Added copied ABI signature metadata with deterministic safe parsing, exact export validation, stable help rendering, hello integration, TDD fixtures, and documentation.
