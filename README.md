@@ -97,15 +97,18 @@ The completed foundation proves:
   validation and stable help rendering;
 - bounded dense numeric arrays with validated dtype, rank, shape, byte strides,
   alignment, storage length, and one-call `[N,3]` acceptance;
+- extension-scoped, type-tagged generational handles with stale/cross-extension
+  rejection and deterministic resource finalization;
 - a public MLPL facade kept separate from private native functions.
 
-General argument marshalling, native handles, safe authoring
+General argument marshalling, safe authoring
 macros, real unload/hot reload, native 3D, and sw-MLPL language integration are
 future work. Dynamic/static provider parity shares one tested registration
 path, safe SDK scalar/result copying replaces the loader's original one-off
 decoder, signature metadata is checked against every descriptor, and dense
-arrays cross the provider boundary as validated host-owned values. Typed
-generational handles are next.
+arrays cross the provider boundary as validated host-owned values, and native
+resources cross only as opaque numeric capabilities. SDK macro migration and
+acceptance are next.
 
 ## Documentation
 
@@ -120,6 +123,8 @@ generational handles are next.
   returns, native types, export validation, and stable help.
 - [Dense array views](docs/dense-array-views.md) — layout, validation, ownership,
   call lifetime, and measured copy behavior.
+- [Native handles](docs/native-handles.md) — capability identity, generations,
+  exhaustion, finalization, and deactivation.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and

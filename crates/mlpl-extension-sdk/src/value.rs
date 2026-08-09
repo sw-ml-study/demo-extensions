@@ -1,6 +1,6 @@
 use mlpl_extension_abi::ErrorCode;
 
-use crate::DenseArray;
+use crate::{DenseArray, NativeHandle};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
@@ -11,6 +11,7 @@ pub enum Value {
     String(String),
     Bytes(Vec<u8>),
     Array(DenseArray),
+    Handle(NativeHandle),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

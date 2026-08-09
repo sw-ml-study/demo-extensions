@@ -44,26 +44,25 @@ by a named test; supported with a limitation; or blocked upstream. A local mock
 registry may test the ABI and SDK, but it is never evidence that REPL, script,
 or compiled sw-MLPL integration already works.
 
-## Current blocker: host registration
+## Current integration status
 
 The downstream `hello_registration` Rust integration test now proves dynamic
 loading, V1 validation, namespaced invocation, typed result/error copying,
 panic containment, library retention, and deactivation. This is not a mock of
 the binary boundary: it loads the independently built hello shared library.
 
-End-to-end MLPL use is nevertheless blocked upstream. `../sw-mlpl` does not
-currently provide a public API that accepts a validated external descriptor,
-registers its functions in an importable namespace, and makes that namespace
-available consistently to the REPL, interpreted scripts, and compiled
-programs. No upstream files are changed by this repository. That host contract
-requires a separately authorized sw-MLPL task before this project can claim
-`use hello` or equivalent native invocation from `.mlpl`.
+As of reported `sw-mlpl` binary `c3452aa1`, a static registry supports actual
+MLPL invocation with colon-qualified names. The next acceptance step must prove
+that path against hello before this repository marks it supported. `use` facade
+resolution, compiler parity, packaged dynamic loading, arrays at the host
+boundary, and native-handle values remain upstream work. No upstream files are
+changed by this repository.
 
 ### Execution modes as of foundation acceptance
 
-- REPL native invocation: blocked; no external registry/import hook.
-- Interpreted native invocation: blocked; the MLPL facade alone is proven by
-  mlplunit with an explicit input standing in for the unavailable native call.
+- REPL/interpreted scalar invocation: reported available through the static
+  registry's colon spelling; downstream acceptance is pending.
+- `use hello` facade invocation: blocked pending the upstream facade saga.
 - Compiled native invocation: blocked; no static-provider or packaged dynamic
   provider hook exists in the compiler/runtime contract.
 - Downstream Rust harness: proven by `hello_registration.rs`; it is evidence

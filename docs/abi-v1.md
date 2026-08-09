@@ -45,12 +45,12 @@ not permitted.
 ## Current limits
 
 - V1 values model nil, bool, signed 64-bit integers, 64-bit floats, UTF-8,
-  bytes, and bounded dense numeric arrays. Native handles are a later contract.
+  bytes, bounded dense numeric arrays, and opaque native handles.
 - Function descriptors contain name, arity, and an optional V1 invocation
   trampoline. The loader refuses missing trampolines and metadata/export drift.
 - Dense arrays carry a fixed dtype tag, rank, data slice, shape pointer, and
   byte-stride pointer. V1 accepts only bounded contiguous row-major input;
-  handles remain a later contract.
+  handles carry extension ID, type ID, slot, and generation without pointers.
 - Struct layout is C-compatible, but no claim of end-to-end sw-MLPL integration
   is made. The upstream registry/value hooks remain listed in
   `docs/upstream-contract.md`.

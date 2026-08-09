@@ -1,4 +1,6 @@
-use mlpl_extension_abi::{AbiArrayView, AbiErrorV1, AbiSlice, AbiValue, ValuePayload, ValueTag};
+use mlpl_extension_abi::{
+    AbiArrayView, AbiErrorV1, AbiHandle, AbiSlice, AbiValue, ValuePayload, ValueTag,
+};
 
 use crate::{OwnedError, Value};
 
@@ -34,6 +36,18 @@ impl EncodedValue {
             Value::String(value) => Self::with_storage(ValueTag::Utf8, value.into_bytes()),
             Value::Bytes(value) => Self::with_storage(ValueTag::Bytes, value),
             Value::Array(value) => Self::with_array(value),
+            Value::Handle(handle) => Self::scalar(AbiValue {
+                tag: ValueTag::NativeHandle as u32,
+                reserved: 0,
+                payload: ValuePayload {
+                    handle: AbiHandle {
+                        extension_id: handle.extension_id(),
+                        type_id: handle.type_id(),
+                        slot: handle.slot(),
+                        generation: handle.generation(),
+                    },
+                },
+            }),
         }
     }
 

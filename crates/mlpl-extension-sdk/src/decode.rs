@@ -35,6 +35,15 @@ pub unsafe fn copy_foreign_value(raw: &AbiValue) -> Result<Value, ConversionErro
                 .map(Value::Array)
                 .map_err(Into::into)
         },
+        tag if tag == ValueTag::NativeHandle as u32 => {
+            let handle = unsafe { raw.payload.handle };
+            Ok(Value::Handle(crate::NativeHandle::from_parts(
+                handle.extension_id,
+                handle.type_id,
+                handle.slot,
+                handle.generation,
+            )))
+        }
         tag => Err(ConversionError::UnknownTag(tag)),
     }
 }

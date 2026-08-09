@@ -37,6 +37,16 @@ pub enum ValueTag {
     Utf8 = 4,
     Bytes = 5,
     DenseArray = 6,
+    NativeHandle = 7,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct AbiHandle {
+    pub extension_id: u64,
+    pub type_id: u64,
+    pub slot: u32,
+    pub generation: u32,
 }
 
 #[repr(u32)]
@@ -66,6 +76,7 @@ pub union ValuePayload {
     pub float: f64,
     pub slice: AbiSlice,
     pub array: *const AbiArrayView,
+    pub handle: AbiHandle,
 }
 
 #[repr(C)]
