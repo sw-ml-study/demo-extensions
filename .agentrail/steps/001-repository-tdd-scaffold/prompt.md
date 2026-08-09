@@ -1,0 +1,1 @@
+Use TDD to add the Rust workspace skeleton, MLPL source and test layout, root mlplunit configuration, tool-selection scripts, thin just recipes, and structural tests for the intended package layout. Preserve unrelated user changes. Verify Rust with scoped cargo test and MLPL with mlplunit; run the complete repository gate before committing.

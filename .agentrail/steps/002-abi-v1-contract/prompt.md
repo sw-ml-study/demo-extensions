@@ -1,0 +1,1 @@
+Specify the minimal versioned C-safe extension descriptor, value, and error types. Write failing Rust tests first for layout, version negotiation, malformed descriptors, ownership, panic containment, and fail-closed validation; then implement the smallest safe contract. Keep unsafe code isolated and do not modify ../sw-mlpl.

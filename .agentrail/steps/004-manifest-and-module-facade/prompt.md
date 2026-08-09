@@ -1,0 +1,1 @@
+Add deterministic extension manifest and platform artifact resolution plus an idiomatic MLPL module facade. Test path traversal, ABI/platform mismatch, missing artifacts, duplicate names, deterministic diagnostics, and public/private namespace separation. Use mlplunit for all executable MLPL behavior and scoped cargo test for Rust.

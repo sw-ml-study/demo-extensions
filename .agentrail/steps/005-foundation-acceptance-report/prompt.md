@@ -1,0 +1,1 @@
+Run the full Rust and MLPL gates and publish the foundation acceptance evidence. Classify REPL, interpreted-script, and compiled-program integration as proven, limited, or blocked with named evidence; reconcile docs/upstream-contract.md and the next saga, decide static-provider parity, close this saga, and stop.

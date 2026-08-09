@@ -1,0 +1,2329 @@
+ChatGPT Pro
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+I want to explore native 3D visualization (via Rust libraries, on Mac, Linux) but as a forcing function for demonstrating how to extend sw-mlpl via Rust extension.  We need a way to register and load an extension (preferably as a shared library that can be loaded/unloaded dynamically).  The goal is to show interactive 3D (without using a built-in browser, no html, no css, no WASM, no js libraries).  This interactive 3D needs to be drawable from .mlpl files (REPL, script, and compiled).  How are this kind of extensions to be surfaced to mlpl application developers?  Do they include a module that uses some FFI and dynamic binding.  What are the best options,  Come up with an extension architecture and a demo 3D extension.  Maybe the API is surfaced via what looks like UDF wrappers?  Need a mlpl-friendly API surface but also an extension developer friendly support library in Rust, possibly leveraging Rust macros.
+
+Worked for 28s
+Yes. I would make the 3D work a forcing function for a first-class sw-MLPL extension architecture, rather than adding graphics concepts to the language itself.
+
+The important separation is:
+
+                    MLPL application
+                         │
+                  import native3d
+                         │
+                 MLPL module facade
+                         │
+                Extension registry
+                         │
+             ┌───────────┴───────────┐
+             │                       │
+       dynamic extension       statically linked
+       .so / .dylib            compiled MLPL app
+             │                       │
+             └───────────┬───────────┘
+                         │
+                  stable MLPL ABI
+                         │
+                 Rust extension SDK
+                         │
+                 native3d extension
+                         │
+                  winit + wgpu
+                         │
+                  Metal / Vulkan
+That gives you a mechanism that eventually works equally well for visualization, codecs, database connectors, ML accelerators, native file parsers, CUDA/MLX integration, instruments, etc.
+
+wgpu is particularly attractive for the first graphics extension because it is a pure-Rust graphics abstraction that runs natively over Metal on macOS and Vulkan on Linux; using it does not imply a browser, JavaScript, HTML, CSS, WASM, or WebGPU runtime. winit gives you native window/event handling on those platforms.
+
+1. The fundamental abstraction: an MLPL extension is a module
+I would resist exposing anything resembling:
+
+ffi.call("native3d_create_cube", ...)
+to normal MLPL programmers.
+
+FFI should be an implementation mechanism, not the MLPL programming model.
+
+Instead:
+
+use native3d
+
+scene = native3d.scene("MLPL 3D Demo")
+
+cube = scene.cube(
+    position: [0, 0, 0],
+    size: 1
+)
+
+scene.camera(position: [3, 2, 5], look_at: [0, 0, 0])
+
+scene.show()
+or, leaning a little more toward MLPL's array nature:
+
+use native3d
+
+points = [
+    [0, 0, 0],
+    [1, 0, 0],
+    [1, 1, 0],
+    [0, 1, 0]
+]
+
+scene = native3d.scene()
+scene.points(points)
+scene.show()
+The application programmer should barely know that native3d is Rust.
+
+Conceptually:
+
+native3d.scene
+native3d.points
+native3d.lines
+native3d.mesh
+native3d.camera
+native3d.show
+should look just like ordinary MLPL functions.
+
+That means your intuition about UDF-like wrappers is exactly right.
+
+2. I would define three layers
+Layer	Audience	Responsibility
+MLPL module	MLPL programmer	Friendly functions, defaults, composition
+sw-mlpl-extension SDK	Rust extension developer	Types, macros, registration, conversion
+ABI	runtime/loader	Versioned binary compatibility
+The middle layer is important.
+
+You do not want every Rust extension author writing C-compatible structs and manually converting MLPL values.
+
+Instead they should write something close to:
+
+#[mlpl_extension(name = "native3d", version = "0.1")]
+mod native3d {
+    #[mlpl_fn]
+    fn scene(title: Option<String>) -> Result<Scene> {
+        ...
+    }
+
+    #[mlpl_fn]
+    fn points(
+        scene: Scene,
+        positions: Array2<f32>,
+    ) -> Result<Object> {
+        ...
+    }
+}
+The proc macros generate:
+
+ABI entry point
+argument checking
+MLPL → Rust conversion
+Rust → MLPL conversion
+error conversion
+function metadata
+documentation
+module registration
+lifetime/handle plumbing
+So the Rust developer experiences a normal Rust API.
+
+That is potentially one of the strongest features of the extension system.
+
+3. Don't use the Rust ABI as the plugin ABI
+I would make extensions cdylibs exporting one stable C-ABI entry point.
+
+Something conceptually like:
+
+#[no_mangle]
+pub extern "C" fn sw_mlpl_extension_v1() -> *const MlplExtensionV1
+The reason for using extern "C" isn't because the extensions need to be written in C. It is simply your binary compatibility boundary.
+
+Rust itself does not provide the kind of stable Rust ABI that you should build a long-lived independently compiled plugin ecosystem around. Rust discussions explicitly distinguish this issue from a deliberately specified C ABI boundary.
+
+Then the extension descriptor could effectively contain:
+
+struct MlplExtensionV1 {
+    abi_version: u32,
+
+    name: MlplStr,
+    version: MlplStr,
+
+    init: InitFn,
+    shutdown: ShutdownFn,
+
+    functions: *const MlplFunctionV1,
+    function_count: usize,
+}
+But extension authors should never manually build this structure.
+
+The SDK macro does that.
+
+4. Loading becomes extremely simple
+The runtime does approximately:
+
+let lib = Library::new(path)?;
+
+let entry =
+    lib.get::<ExtensionEntry>(
+        b"sw_mlpl_extension_v1"
+    )?;
+
+let extension = entry();
+
+validate(extension)?;
+register(extension)?;
+libloading provides exactly this cross-platform shared-library loading abstraction and ties loaded symbols to the lifetime of their library handle.
+
+Your files become naturally:
+
+libsw_mlpl_native3d.so
+on Linux and:
+
+libsw_mlpl_native3d.dylib
+on macOS.
+
+MLPL shouldn't care which.
+
+5. But make the ABI much narrower than MLPL itself
+I would not expose your entire interpreter implementation through the ABI.
+
+That's a trap.
+
+Instead define a compact value interface approximately equivalent to:
+
+nil
+bool
+
+i64
+u64
+f64
+
+string
+bytes
+
+array
+map
+
+opaque_handle
+And especially:
+
+dense numeric array
+should be a privileged ABI concept.
+
+For MLPL, that's crucial.
+
+Something like:
+
+MlplArrayView {
+    dtype,
+    rank,
+    shape,
+    strides,
+    data,
+}
+lets an extension operate directly on:
+
+vertices
+normals
+tensor data
+images
+point clouds
+matrices
+without turning every number into an individually boxed FFI object.
+
+That aligns unusually well with your APL-influenced language design.
+
+6. Zero-copy arrays should be a design goal
+For example:
+
+xyz = reshape(data, [-1, 3])
+
+scene.points(xyz)
+should ideally result in:
+
+MLPL array memory
+       ↓
+MlplArrayView<f32>
+       ↓
+native3d
+       ↓
+GPU upload
+rather than:
+
+MLPL
+ ↓
+list
+ ↓
+Rust Vec<Value>
+ ↓
+Vec<Vec<f64>>
+ ↓
+Vec<f32>
+ ↓
+GPU
+This extension exercise could consequently force you to formalize something broadly valuable:
+
+The MLPL Native Array Interface
+
+That may prove considerably more important than the graphics extension itself.
+
+It becomes useful for BLAS, CUDA, MLX, audio, codecs, image processing and memory-mapped files.
+
+7. Opaque objects solve native resources cleanly
+Graphics introduces another forcing function: MLPL values sometimes need to represent something owned by a native library.
+
+For instance:
+
+scene = native3d.scene()
+mesh = scene.mesh(vertices, indices)
+Neither should expose a Rust pointer.
+
+Instead the ABI has:
+
+NativeHandle {
+    extension_id
+    type_id
+    object_id
+}
+At the MLPL level:
+
+<native3d.Scene #3>
+<native3d.Mesh #27>
+The Rust extension owns:
+
+HashMap<ObjectId, Scene>
+HashMap<ObjectId, Mesh>
+or perhaps a slotmap/generational arena.
+
+That prevents dangling raw pointers crossing the language boundary.
+
+It also permits:
+
+type(scene)
+to produce:
+
+native3d.Scene
+and eventually supports methods elegantly.
+
+8. I'd allow these to appear as ordinary MLPL objects
+This:
+
+native3d.add_cube(scene, ...)
+is workable.
+
+But this:
+
+scene.add_cube(...)
+is substantially nicer.
+
+It doesn't require MLPL to suddenly adopt OO semantics internally.
+
+You can desugar:
+
+scene.add_cube(x)
+to:
+
+native3d.add_cube(scene, x)
+in exactly the same spirit as method syntax in languages that use functions underneath.
+
+That gives extension authors a clean way to construct MLPL-friendly APIs without extending the VM every time.
+
+9. The extension should provide both primitives and MLPL wrappers
+I wouldn't generate the entire public API straight from Rust.
+
+For example, Rust might expose these low-level native operations:
+
+_native3d.scene_create
+_native3d.object_points
+_native3d.object_lines
+_native3d.object_mesh
+_native3d.object_transform
+_native3d.camera_set
+_native3d.run
+Then the extension package contains MLPL:
+
+native3d/
+    module.mlpl
+    lib/
+        libsw_mlpl_native3d.dylib
+module.mlpl might say conceptually:
+
+scene = u:fn(title = "sw-MLPL") {
+    _native3d.scene_create(title)
+}
+
+points = u:fn(scene, xyz) {
+    _native3d.object_points(scene, xyz)
+}
+That distinction buys you a lot.
+
+The Rust side stays small and mechanical.
+
+The MLPL side provides idiomatic MLPL semantics.
+
+So convenience features can be written in MLPL instead of Rust:
+
+scatter3d
+surface
+vectors
+tensor_cloud
+heatmap3d
+axes
+grid
+That's dogfooding.
+
+10. The package therefore contains two things
+Something like:
+
+native3d/
+├── extension.toml
+├── module.mlpl
+└── native/
+    ├── aarch64-apple-darwin/
+    │   └── libnative3d.dylib
+    └── x86_64-unknown-linux-gnu/
+        └── libnative3d.so
+And:
+
+name = "native3d"
+version = "0.1.0"
+
+[mlpl]
+abi = 1
+module = "module.mlpl"
+
+[native]
+entrypoint = "sw_mlpl_extension_v1"
+Then:
+
+use native3d
+causes the runtime to:
+
+resolve package
+      ↓
+load shared library
+      ↓
+check ABI
+      ↓
+register native functions/types
+      ↓
+load module.mlpl
+      ↓
+publish native3d namespace
+This is much better than making application developers explicitly load .so files.
+
+You could retain an advanced REPL command:
+
+:extension load ./target/debug/libnative3d.dylib
+:extension list
+:extension info native3d
+:extension unload native3d
+but that's administration/debugging rather than the language API.
+
+11. Unloading deserves special treatment
+This is the one place where I'd be conservative.
+
+A graphics extension may own:
+
+window
+event loop
+GPU device
+GPU buffers
+threads
+callbacks
+native objects
+MLPL handles
+You cannot safely unload the .dylib while any of those can still invoke extension code.
+
+libloading itself protects a Symbol from outliving the loaded library handle, but your application-level object graph is necessarily more complicated.
+
+So define unloading as a protocol:
+
+request unload
+     ↓
+mark extension unavailable
+     ↓
+reject new calls
+     ↓
+drop all MLPL native handles
+     ↓
+extension.shutdown()
+     ↓
+verify active_call_count == 0
+     ↓
+verify native_handle_count == 0
+     ↓
+join extension threads
+     ↓
+drop Library
+If any condition fails:
+
+error: native3d cannot be unloaded:
+       1 Scene and 4 Mesh objects remain active
+For v1, I might even support:
+
+load dynamically
+disable dynamically
+reload after REPL reset
+while treating true dlclose() unloading as an optional capability.
+
+That avoids making an extremely hard lifecycle problem part of the initial milestone.
+
+12. 3D introduces an event-loop issue
+This needs explicit architectural handling.
+
+winit's main event loop is not Send or Sync, and its native application model normally runs the event loop on the calling thread. It does provide an EventLoopProxy specifically to wake/send events from another thread.
+
+You therefore shouldn't have MLPL call:
+
+scene.show()
+and blindly launch some arbitrary renderer thread without defining the runtime model.
+
+I see two modes.
+
+Blocking
+scene.show()
+means:
+
+MLPL execution pauses
+native window/event loop runs
+user closes window
+scene.show() returns
+MLPL resumes
+This is perfect for scripts.
+
+Interactive REPL
+viewer = scene.open()
+returns a live handle:
+
+viewer.rotate(...)
+viewer.add(points)
+viewer.camera(...)
+viewer.close()
+This requires a little host coordination.
+
+I would implement an MLPL host service/event subsystem rather than letting every extension invent one.
+
+Conceptually:
+
+MLPL runtime
+    │
+    ├── evaluator thread
+    │
+    └── host event loop
+             │
+             └── native3d viewer
+That eventually benefits audio, GUI, MIDI, instrumentation and other interactive extensions as well.
+
+13. I would use wgpu + winit, not Bevy, for this demo
+Bevy could certainly do it. Its current APIs support ordinary 3D meshes, cameras and materials, for example.
+
+But I don't think Bevy is the right forcing function.
+
+You want to demonstrate:
+
+MLPL can use Rust libraries to acquire capabilities it doesn't intrinsically possess.
+
+With Bevy you risk demonstrating:
+
+MLPL can launch a game engine.
+
+wgpu + winit exposes exactly the architectural issues you actually want to solve:
+
+native windows
+event handling
+GPU resources
+data transfer
+array interoperability
+resource lifetime
+opaque handles
+callbacks/events
+dynamic modules
+while keeping the extension implementation comprehensible.
+
+And wgpu currently maps natively to Metal, Vulkan, D3D12, and OpenGL-family backends.
+
+I'd probably use:
+
+winit
+wgpu
+glam
+bytemuck
+pollster
+and optionally:
+
+egui
+later.
+
+But not initially.
+
+Keep milestone one pure 3D.
+
+14. The first demo should emphasize arrays, not cubes
+A spinning cube is a lousy sw-MLPL demonstration.
+
+Make this:
+
+use native3d
+
+x = range(-10, 10, 0.1)
+y = range(-10, 10, 0.1)
+
+points =
+    table(x, y)
+    |> map([x, y] -> [x, y, sin(x) * cos(y)])
+
+native3d.scatter(points)
+Or whatever the final MLPL combinator syntax becomes.
+
+Then:
+
+┌────────────────────────────────────────────┐
+│                                            │
+│              native window                 │
+│                                            │
+│         interactive 3D point field         │
+│                                            │
+│   drag = orbit                             │
+│   wheel = zoom                             │
+│   shift-drag = pan                         │
+│                                            │
+└────────────────────────────────────────────┘
+Now the demonstration says something interesting:
+
+MLPL array computations flow directly into a native GPU renderer supplied by a dynamically loaded Rust extension.
+
+That is a very strong general-purpose-language completeness demonstration.
+
+15. Then make it live from the REPL
+This would be even better:
+
+mlpl> use native3d
+
+mlpl> view = native3d.open()
+
+mlpl> p = random([10000, 3])
+
+mlpl> cloud = view.points(p)
+
+mlpl> cloud.scale([2, 1, 1])
+
+mlpl> cloud.rotate([0, 0.5, 0])
+
+mlpl> p2 = transform(p)
+
+mlpl> cloud.data(p2)
+The window updates as you type.
+
+That's a compelling extension demo because it proves native objects can have useful lifetimes across evaluator calls.
+
+16. Arrays should support bulk updates
+You absolutely don't want:
+
+for point in points {
+    scene.add_point(point)
+}
+The extension API should be designed around:
+
+scene.points(points)
+and:
+
+object.data(new_points)
+If:
+
+points.shape == [1_000_000, 3]
+then the extension receives one contiguous array view.
+
+That is where MLPL's array orientation becomes an advantage rather than something extensions must work around.
+
+17. I would add extension-defined signatures
+A native function should register enough information that MLPL can understand:
+
+native3d.points(
+    scene: native3d.Scene,
+    xyz: Array<f32>[N, 3],
+    size?: f32
+) -> native3d.PointCloud
+That allows:
+
+REPL help
+documentation generation
+AI coding assistance
+argument validation
+better errors
+future static compilation
+Instead of:
+
+native call failed
+you can produce:
+
+native3d.points expected positions shaped [N,3]
+
+received:
+    shape: [1024,4]
+    dtype: f64
+
+perhaps:
+    take(points, [all, 0..3])
+This is exactly the kind of extension mechanism that reinforces your broader goal of MLPL being explainable to humans and coding agents.
+
+18. Rust macros can make signatures almost free
+For example:
+
+#[mlpl_fn(
+    doc = "Add points to a 3D scene"
+)]
+fn points(
+    scene: Handle<Scene>,
+    #[mlpl(shape = "[N,3]")]
+    xyz: ArrayView2<f32>,
+    #[mlpl(default = 3.0)]
+    size: f32,
+) -> Result<Handle<PointCloud>> {
+    ...
+}
+The macro can generate metadata equivalent to:
+
+function native3d.points
+
+arguments:
+  scene     Scene
+  xyz       f32[N,3]
+  size      f32 = 3
+
+returns:
+  PointCloud
+and the FFI trampoline.
+
+This is where I would spend significant design effort.
+
+An extension author should almost never touch:
+
+unsafe
+extern "C"
+*const
+*mut
+Your SDK owns that machinery.
+
+19. Compiled MLPL applications fit naturally
+This architecture solves the other issue you were discussing earlier: MLPL applications becoming native executables.
+
+There are actually two valid deployment modes.
+
+Dynamic deployment
+my-program
+my-program.mlpl
+extensions/
+    libnative3d.so
+Useful during development.
+
+Fused native executable
+At compile/package time:
+
+mlpl build demo.mlpl --embed-extension native3d
+can link the Rust extension directly into:
+
+demo
+The important observation is that the MLPL-visible API does not change.
+
+The registry can register an extension from either:
+
+DynamicExtension
+or:
+
+BuiltinExtension
+So:
+
+use native3d
+works in:
+
+REPL
+interpreted script
+compiled script + dylib
+fully linked executable
+That is exactly the abstraction boundary I'd want.
+
+20. Proposed crates
+I would initially build five small pieces:
+
+sw-mlpl-extension-abi
+    No interpreter implementation.
+    C-safe ABI structures only.
+
+sw-mlpl-extension-sdk
+    Safe Rust facade.
+    Value conversions.
+    NativeHandle.
+    ArrayView.
+
+sw-mlpl-extension-macros
+    #[mlpl_extension]
+    #[mlpl_fn]
+    #[mlpl_type]
+
+sw-mlpl-extension-loader
+    libloading
+    registry
+    lifecycle
+    ABI checking
+
+sw-mlpl-extension-native3d
+    winit
+    wgpu
+    glam
+Your main runtime only needs to depend on:
+
+extension-abi
+extension-loader
+not wgpu.
+
+That's an important test of modularity.
+
+Running:
+
+sw-mlpl
+should not suddenly pull graphics code into the executable just because native3d exists.
+
+21. The public 3D API I'd start with
+Don't attempt to make a complete scene-graph API initially.
+
+I'd make milestone one intentionally small:
+
+MLPL	Purpose
+native3d.open()	create interactive viewer
+viewer.points(xyz)	point cloud
+viewer.lines(xyz)	connected lines
+viewer.mesh(vertices, triangles)	indexed mesh
+object.data(array)	replace geometry
+object.position(xyz)	transform
+object.scale(xyz)	transform
+object.rotate(xyz)	transform
+viewer.camera(...)	camera
+viewer.clear()	clear scene
+viewer.close()	close window
+native3d.show(data)	simple blocking convenience
+I wouldn't initially expose:
+
+pipelines
+shaders
+textures
+render passes
+wgpu buffers
+bind groups
+Those are Rust implementation concepts, not MLPL concepts.
+
+Later, an advanced extension could expose shaders separately.
+
+22. Then exploit MLPL's strengths
+Once the primitive API works, almost everything interesting should live in native3d.mlpl.
+
+For example:
+
+scatter
+surface
+vector_field
+histogram3d
+tensor
+matrix
+voxel
+trajectory
+graph
+could all turn MLPL arrays into:
+
+points
+lines
+meshes
+This is another valuable forcing function:
+
+Can MLPL itself build useful abstractions around a tiny Rust primitive API?
+
+If yes, you've validated both the extension system and the language's composability.
+
+23. One additional architectural feature: extension capabilities
+I would have an extension advertise things like:
+
+name: native3d
+abi: 1
+
+capabilities:
+    native-window
+    gpu
+    interactive
+    array-zero-copy
+
+platforms:
+    macos-aarch64
+    macos-x86_64
+    linux-x86_64
+That lets:
+
+extension.info("native3d")
+explain what is happening and allows compiled applications to reject incompatible targets cleanly.
+
+Later this becomes useful for:
+
+cuda
+mlx
+audio
+serial
+i2c
+sqlite
+network
+extensions.
+
+24. The architectural result
+I would make this the long-term model:
+
+              sw-MLPL Language
+                    │
+        ┌───────────┴────────────┐
+        │                        │
+     MLPL code              Native types
+        │                        │
+        └───────────┬────────────┘
+                    │
+             Extension Registry
+                    │
+          MLPL Native ABI v1
+                    │
+       ┌────────────┼─────────────┐
+       │            │             │
+      Rust          C          future
+       │
+   Extension SDK
+       │
+ ┌─────┼─────┬───────┬───────────┐
+ │     │     │       │           │
+3D   MLX   CUDA    audio       codecs
+ │
+wgpu
+ │
+Metal/Vulkan
+Notice that FFI disappears from the application developer's mental model.
+
+That's the important part.
+
+25. What I think this demo should actually prove
+Rather than calling this merely a graphics demo, I'd treat it as an acceptance test for the extension system. The completed demo should prove that a Rust crate can be compiled independently as .dylib/.so, discovered and loaded at runtime, register MLPL-visible functions and native types, consume large MLPL numeric arrays efficiently, maintain state across REPL calls, create and service a native interactive window, return useful MLPL errors, unload or at least cleanly deactivate, and use the identical MLPL source in interpreted and compiled execution.
+
+If all of those work, native 3D is almost incidental. You will have answered the much more important question:
+
+Can sw-MLPL acquire substantial native capabilities without growing the core language/runtime for every new domain?
+
+And the answer will be yes.
+
+My recommended first implementation
+I would name the infrastructure something like:
+
+sw-mlpl-extension-abi
+sw-mlpl-extension-sdk
+sw-mlpl-extension-macros
+and create a demo repository:
+
+demo-native-extensions
+with:
+
+extensions/native3d/
+examples/scatter3d.mlpl
+examples/surface.mlpl
+examples/live-repl.mlpl
+rather than creating demo-3d alone.
+
+That makes the pedagogical point explicit: 3D is the demonstration; extensibility is the feature.
+
+The first vertical slice I'd implement is deliberately tiny:
+
+use native3d
+
+xyz = random([100000, 3])
+
+view = native3d.open()
+cloud = view.points(xyz)
+with mouse orbit/zoom in a real native macOS/Linux window. Once that works, add live cloud.data(...), lines, indexed meshes, transforms and finally MLPL-written higher-level visualization functions.
+
+That sequence forces exactly the infrastructure you're currently missing—extension registration → ABI → safe Rust SDK → native handles → array views → event integration → dynamic loading → compiled linking—without prematurely designing a giant graphics API.
+
+
+Yes — the interactive world-capitals quiz is an unusually good demo because the array programming is not decorative. It naturally appears in the data ingestion, geometry, rendering, hit-testing, filtering, scoring, and interaction logic.
+
+It could become the flagship example for the native-extension work:
+
+A real native 3D application written mostly in MLPL, with Rust supplying rendering/window/input primitives rather than application logic.
+
+What the demo should prove
+The demo should force sw-MLPL to exercise several different kinds of general-purpose capability at once:
+
+Concern	What it tests
+CSV/JSON/SVG/GeoJSON loading	file I/O and parsing
+Country/capital data	structured records / tables
+Coordinate transforms	array arithmetic
+Country borders	nested/ragged arrays
+3D globe generation	vectorized math
+Capital markers	broadcasting
+Rotation/view transforms	matrix operations
+Mouse picking	vector geometry
+Quiz state	ordinary application programming
+Popup/text entry	native UI extension
+Callbacks	MLPL ↔ Rust invocation
+Filtering	masks and predicates
+Statistics	reductions
+Dynamic visualization	mutation/state/native handles
+Compiled executable	extension packaging
+That is a much more convincing language demo than a rotating cube.
+
+The central array-programming opportunity
+Suppose the capital database ultimately becomes something like:
+
+countries = [
+    ["France", "Paris", 48.8566, 2.3522],
+    ["Japan", "Tokyo", 35.6762, 139.6503],
+    ...
+]
+More naturally, perhaps MLPL gets columnar arrays:
+
+names       = countries.country
+capitals    = countries.capital
+latitudes   = countries.latitude
+longitudes  = countries.longitude
+Then the transformation from geographic coordinates into 3D positions should be entirely array-oriented.
+
+Conceptually:
+
+lat = radians(latitudes)
+lon = radians(longitudes)
+
+x = cos(lat) * cos(lon)
+y = sin(lat)
+z = cos(lat) * sin(lon)
+
+positions = table(x, y, z)
+For ~200 capitals, that simultaneously calculates every point on the globe.
+
+No loop.
+
+That is precisely the kind of thing an APL/J programmer should recognize as natural array programming.
+
+Country borders make it more interesting
+The country boundary dataset might contain thousands or millions of geographic vertices.
+
+Conceptually:
+
+country
+polygon
+latitude
+longitude
+You transform all vertices using the same operation:
+
+xyz = geo_to_xyz(border_coordinates)
+where geo_to_xyz works equally well on:
+
+[lat, lon]
+
+[N, 2]
+
+[C, N, 2]
+depending upon the shape/broadcasting semantics MLPL develops.
+
+That creates a great demonstration of rank polymorphism or broadcasting.
+
+Ideally:
+
+xyz = geo_to_xyz(border_points)
+doesn't care whether border_points contains one location or 500,000 locations.
+
+That's exactly the kind of API where MLPL should feel better than conventional imperative code.
+
+The globe doesn't actually need a traditional mesh
+For the first version I'd make it almost entirely array-driven.
+
+Render:
+
+country borders → line strips
+capital cities  → points
+latitude lines  → line strips
+longitude lines → line strips
+Then the visual style is deliberately:
+
+interactive scientific/data visualization
+
+rather than trying to become Google Earth.
+
+Think:
+
+                 ● Reykjavík
+             ________
+         ___/        \___
+       /                  \
+      |       ● London     |
+      |                    |
+       \      ● Paris     /
+         \___        ____/
+             \______/
+but in a rotatable sphere.
+
+A wireframe aesthetic may actually make the array nature clearer.
+
+Mouse picking is another excellent array demo
+Suppose the user clicks at screen coordinates:
+
+mouse = [mx, my]
+Rust can expose the camera projection data or perhaps give MLPL a ray:
+
+ray = view.pick_ray(mouse)
+Then MLPL performs the selection.
+
+For every capital:
+
+capital position
+       ↓
+distance to ray
+       ↓
+boolean hit mask
+       ↓
+minimum
+       ↓
+selected city
+Conceptually:
+
+distances = distance_to_ray(capitals.xyz, ray)
+
+candidate = argmin(distances)
+
+selected =
+    candidate
+    if distances[candidate] < click_threshold
+Again, no loop.
+
+This is much more interesting than Rust itself telling MLPL:
+
+you clicked capital #37
+because that would hide one of the most illustrative array algorithms inside the extension.
+
+Make the Rust extension deliberately "dumb"
+This should be an explicit project rule.
+
+Rust should know how to:
+
+open a native window
+draw points
+draw line strips
+draw triangles
+draw text
+create buttons/text inputs
+report keyboard/mouse events
+convert screen coordinates to rays
+manage GPU resources
+But Rust should not know what a country is.
+
+It should not know:
+
+Paris
+France
+capital
+quiz
+score
+country border
+continent
+Those belong in MLPL.
+
+That's important because otherwise you're demonstrating a Rust application controlled by an MLPL script rather than an application written in MLPL.
+
+Native UI becomes the second extension challenge
+The quiz requires some UI primitives.
+
+You could put these in native3d, but I would probably split the architecture as:
+
+native-window
+native-ui
+native3d
+or eventually:
+
+native-app
+    ├── window
+    ├── input
+    ├── ui
+    └── 3d
+The MLPL API might look like:
+
+view = native3d.open("World Capitals")
+
+answer = ui.text_input(
+    title: "Capital of France?",
+    placeholder: "Enter capital"
+)
+or, for multiple choice:
+
+answer = ui.choose(
+    "Capital of France?",
+    ["Paris", "Madrid", "Brussels", "Vienna"]
+)
+But I would make the more interesting interaction embedded into the 3D view, rather than spawning modal OS dialogs.
+
+For example:
+
+┌────────────────────────────────────────────────────────┐
+│                                                        │
+│               rotatable globe                          │
+│                                                        │
+│                   ●                                    │
+│                  / France                              │
+│                                                        │
+│      ┌───────────────────────────────────────┐         │
+│      │ What is the capital of France?       │         │
+│      │                                       │         │
+│      │ [_______________________________]     │         │
+│      │                         [ Submit ]     │         │
+│      └───────────────────────────────────────┘         │
+└────────────────────────────────────────────────────────┘
+This forces your extension architecture to support 2D overlays on a 3D native renderer, which is useful for almost every visualization application afterward.
+
+Event handling may be the biggest language-design forcing function
+You need some way for MLPL code to express:
+
+view.on_click = u:fn(event) {
+    ...
+}
+Perhaps:
+
+view.on("click", handle_click)
+or:
+
+on(view.click, handle_click)
+I would favor a functional/event-stream representation rather than inventing JavaScript-style callbacks just because they're familiar.
+
+Potentially:
+
+clicks = events(view, "click")
+
+clicks
+    |> map(screen_to_ray)
+    |> map(select_capital)
+    |> each(ask_question)
+That would be extremely on-brand for MLPL.
+
+Later you could have:
+
+keys
+mouse_moves
+clicks
+resize_events
+timer_events
+all represented as streams/sequences.
+
+That may lead to a genuinely elegant functional application model.
+
+Quiz generation itself can use arrays
+Suppose the selected country is France.
+
+You need three plausible wrong answers.
+
+Instead of imperative selection:
+
+correct = capitals[selected]
+
+candidates =
+    capitals
+    |> where(continent == continent[selected])
+    |> without(selected)
+
+wrong =
+    shuffle(candidates)
+    |> take(3)
+
+answers =
+    shuffle(concat(correct, wrong))
+Even better, choose distractors by geographic proximity.
+
+Compute the distance from the selected capital to every other capital at once:
+
+d = great_circle_distance(
+    positions,
+    positions[selected]
+)
+
+nearest =
+    sort_indices(d)
+    |> drop(1)
+    |> take(12)
+
+wrong =
+    nearest
+    |> random_take(3)
+That makes the quiz better and gives you another meaningful vectorized algorithm.
+
+Visualize correct and incorrect answers
+Don't just display "right/wrong".
+
+Let the underlying arrays drive the visualization.
+
+For a correct answer:
+
+cloud.color(selected, green)
+For an incorrect answer:
+
+cloud.color(selected, red)
+and draw an arc from the selected country to its capital:
+
+arc = great_circle_arc(
+    country_center[selected],
+    capital_position[selected],
+    samples: 64
+)
+
+view.line(arc)
+The arc generation itself is array math.
+
+That means feedback becomes another demonstration.
+
+Add a "learning mode"
+This is where the app becomes especially useful pedagogically.
+
+Rather than only quiz mode, add:
+
+Explore
+Quiz
+Statistics
+Array Debug
+Explore lets users click capitals and see country/capital information.
+
+Quiz asks questions.
+
+Statistics might visualize performance geographically:
+
+marker size  = number of attempts
+marker color = accuracy
+Array Debug would be especially interesting for sw-MLPL.
+
+Click a "show data" button and display:
+
+capital_positions
+shape: [195, 3]
+
+selected_country_mask
+shape: [195]
+true count: 1
+
+europe_mask
+shape: [195]
+true count: 44
+Then the demo becomes a live teaching environment for MLPL itself.
+
+APL-inspired filtering could produce dramatic visualization changes
+Imagine entering:
+
+continent == "Europe"
+and immediately displaying only matching capitals.
+
+Or:
+
+latitude > 40
+Or:
+
+population > 5_000_000
+The visualization becomes essentially:
+
+data
+  ↓
+predicate
+  ↓
+boolean mask
+  ↓
+masked array
+  ↓
+GPU
+That's the perfect visual explanation of array masks.
+
+Selection by array operations
+You could even build a little REPL attached to the visualization:
+
+mlpl> population > 5_000_000
+
+47 capitals selected
+and 47 points illuminate.
+
+Then:
+
+mlpl> continent == "Asia" & population > 5_000_000
+
+18 capitals selected
+Then:
+
+mlpl> take(sort_by(population), 10)
+Ten points remain.
+
+That would make array programming visible rather than merely something happening in source code.
+
+I think that's potentially more important than the quiz itself.
+
+The galaxy example is good, but I'd make it demo #2
+A star map has most of the same benefits:
+
+right ascension
+declination
+distance
+magnitude
+spectral type
+proper name
+constellation
+Then array operations become:
+
+stars
+    |> where(magnitude < 4)
+    |> where(distance < 100)
+and spatial coordinates:
+
+xyz = celestial_to_cartesian(ra, dec, distance)
+You could click:
+
+Sirius
+Vega
+Betelgeuse
+Rigel
+Polaris
+and quiz on star names or constellations.
+
+The galaxy demo has one major additional benefit: the data genuinely exists in three dimensions, whereas country data is fundamentally a 2D spherical surface.
+
+But the world-capitals demo is probably better first because everyone immediately understands it.
+
+There's also an even better progression
+I would make these three demos share the same visualization extension.
+
+1. world-capitals.mlpl
+Tests:
+
+geospatial transformation
+borders
+point selection
+UI
+quiz logic
+2. star-explorer.mlpl
+Tests:
+
+large point clouds
+true 3D coordinates
+filtering
+classification
+distance
+3. model-space.mlpl
+Eventually visualize ML data:
+
+embeddings
+tensor distributions
+neural network layers
+quantization
+clusters
+Now the first two "fun" demos have actually built the exact infrastructure needed for your ML visualization plans.
+
+The data representation is itself an opportunity
+You mentioned a "database".
+
+I wouldn't begin with SQLite.
+
+I'd deliberately make the first dataset something MLPL can ingest and turn into a table/record-array structure.
+
+Something like:
+
+world =
+    geojson.read("countries.geojson")
+
+capitals =
+    csv.read("capitals.csv")
+Then:
+
+countries = world.features
+
+borders =
+    countries.geometry
+    |> flatten_polygons
+    |> geo_to_xyz
+
+capitals.xyz =
+    geo_to_xyz(capitals.latlon)
+Later, absolutely add a native SQLite extension and make the same application use:
+
+capitals =
+    sqlite.query(
+        db,
+        "select * from capitals"
+    )
+That would be another forcing function.
+
+But don't bundle too many unknowns into milestone one.
+
+One difficulty: ragged arrays
+Country borders expose an important weakness in many array languages.
+
+A country can be:
+
+one polygon
+many polygons
+polygon with holes
+islands
+So your geometry is naturally ragged:
+
+country
+  → polygons
+      → rings
+          → [N,2] vertices
+This could force MLPL to answer:
+
+What is the preferred representation of irregular nested array data?
+
+Possibilities include:
+
+nested arrays
+list-of-arrays
+offset arrays
+flat buffer + offsets
+For efficient native extensions, the latter is excellent:
+
+vertices: [N,3]
+
+ring_offsets: [...]
+polygon_offsets: [...]
+country_offsets: [...]
+That's very similar to how columnar/graphics systems frequently represent ragged structures.
+
+It could become another reusable MLPL data abstraction.
+
+I'd make the demo explicitly expose its pipeline
+The source could read almost literately:
+
+countries =
+    geojson.read("countries.geojson")
+
+capitals =
+    csv.read("capitals.csv")
+
+border_xyz =
+    countries
+    |> borders
+    |> radians
+    |> spherical_to_xyz
+
+capital_xyz =
+    capitals.[latitude, longitude]
+    |> radians
+    |> spherical_to_xyz
+
+view = native3d.open("World Capitals")
+
+view.lines(border_xyz)
+cities = view.points(capital_xyz)
+
+events(view, "click")
+    |> map(pick(capital_xyz))
+    |> each(quiz_country)
+The exact syntax can obviously evolve.
+
+But this is the shape of the demo I'd optimize for.
+
+It's concise, array-oriented, functional, and recognizably an application rather than a numerical benchmark.
+
+What the extension should expose to support it
+This demo gives you an excellent initial native API boundary.
+
+I would want roughly these primitives:
+
+Window / Viewer
+
+viewer.points(array)
+viewer.lines(array, offsets?)
+viewer.mesh(vertices, indices)
+
+viewer.text(...)
+viewer.overlay(...)
+
+viewer.pick_ray(screen_xy)
+
+viewer.camera(...)
+viewer.fit(...)
+
+events(viewer)
+And a separate native UI layer:
+
+text
+button
+text_input
+panel
+label
+Importantly, none of these knows anything about geography.
+
+Then the whole world-capitals application can stay MLPL.
+
+A particularly strong final demo
+The most compelling version, in my view, is not just a quiz.
+
+Call it something like World Array Explorer.
+
+It opens with the globe and allows three simultaneous interaction styles:
+
+mouse interaction
+quiz interaction
+MLPL expression interaction
+For example:
+
+Filter:
+> continent == "Africa"
+
+54 countries highlighted
+Then:
+
+> capitals.population > mean(capitals.population)
+
+92 cities highlighted
+Then:
+
+> nearest("Tokyo", 5)
+
+Seoul
+Pyongyang
+Beijing
+Taipei
+Manila
+The user sees each expression manifested spatially.
+
+That makes the central idea unmistakable:
+
+Arrays aren't merely a terse way of calculating numbers; they are a way of describing transformations over whole datasets, and those transformations can directly drive an interactive native application.
+
+That is exactly the kind of demo I'd put in front of APL/J/BQN programmers and conventional Rust/Python developers, because each group sees something interesting for different reasons.
+
+And it gives you an excellent requirements generator for sw-MLPL: dynamic extensions, native windows, event streams/callbacks, structured data, nested/ragged arrays, broadcasting, selection masks, reductions, coordinate transforms, native handles, zero-copy numeric arrays, native UI, compilation, and packaging all become real requirements rather than speculative language features.
+
+
+Another demo idea: dimensionality reduction, like T-SNE, UMAP, PCA, etc.  showing clickable dots in clusters, possibly different sized dots.  Maybe a visualization of a RAG vector database embeddings.
+
+Yes. I think this may be an even stronger first 3D demo than the globe, because dimensionality reduction turns an inherently high-dimensional array problem into an interactive 3D visualization. The computation and the visualization are naturally connected.
+
+A RAG embedding explorer would demonstrate something close to the core sw-MLPL proposition:
+
+Load large structured data → transform arrays → run numerical algorithms → interactively visualize the result → inspect individual records.
+
+A flagship demo: Embedding Explorer
+Imagine loading a small RAG corpus containing documentation, source code, articles, or perhaps the sw-MLPL repositories themselves.
+
+Each chunk has:
+
+embedding:  [768] or [1024] or [1536] floats
+document
+chunk text
+source
+category
+metadata
+similarity scores
+Suppose there are 20,000 chunks. MLPL sees an embedding matrix:
+
+embeddings.shape
+[20000, 768]
+The application reduces it:
+
+xyz = pca(embeddings, dimensions: 3)
+or:
+
+xyz = umap(embeddings, dimensions: 3)
+and then:
+
+cloud = view.points(xyz)
+Suddenly you're looking at the semantic organization of the corpus.
+
+That is an excellent demonstration of arrays because the fundamental object is literally:
+
+N embeddings × D dimensions
+rather than a collection of little application objects.
+
+Make every visual property array-driven
+This is where it gets especially MLPL-like.
+
+Don't make the renderer take a thousand individualized Point objects. Give it arrays:
+
+view.points(
+    positions: xyz,
+    sizes: sizes,
+    colors: colors,
+    ids: ids
+)
+where:
+
+positions   [N, 3]
+sizes       [N]
+colors      [N, 4]
+ids         [N]
+Then application logic computes those arrays.
+
+For example, point size could represent chunk length:
+
+sizes =
+    chunks.token_count
+    |> normalize
+    |> scale(2, 12)
+Or vector magnitude:
+
+sizes = norm(embeddings, axis: 1)
+Or document relevance to the current query:
+
+similarity =
+    cosine_similarity(embeddings, query_embedding)
+
+sizes =
+    similarity
+    |> normalize
+    |> scale(2, 20)
+The visualization is therefore just a projection of MLPL arrays.
+
+That is exactly the separation I'd want.
+
+Query the RAG database and watch the space change
+This could become much more than a static scatter plot.
+
+Have a native text box:
+
+Query: [ How do MLPL combinators work?                 ]
+MLPL obtains or loads the embedding for that query and computes:
+
+scores =
+    cosine_similarity(
+        embeddings,
+        query_embedding
+    )
+Then:
+
+top = arg_sort(scores, descending: true)
+      |> take(20)
+The visualization responds:
+
+all points           small/dim
+top-20 matches       larger
+selected result      emphasized
+Perhaps connecting the query to its nearest neighbors:
+
+neighbors_xyz = xyz[top]
+
+view.lines(
+    connect(query_xyz, neighbors_xyz)
+)
+Now the user can literally see semantic retrieval.
+
+Clicking a dot reveals the actual RAG chunk
+Click one:
+
+                     ●
+                    /
+               selected
+
+┌───────────────────────────────────┐
+│ sw-mlpl/docs/combinators.md       │
+│                                   │
+│ Chunk 37                          │
+│                                   │
+│ "A combinator accepts..."         │
+│                                   │
+│ similarity: 0.824                 │
+│ tokens: 384                       │
+└───────────────────────────────────┘
+That forces the native UI extension to provide:
+
+labels
+panels
+scrollable text
+buttons
+text input
+mouse interaction
+while keeping the meaning of the selected point in MLPL.
+
+Picking itself can remain array-oriented
+As with the capitals demo, don't necessarily have Rust resolve objects.
+
+Rust supplies:
+
+ray = view.pick_ray(event.position)
+MLPL can compute:
+
+distance =
+    point_ray_distance(xyz, ray)
+
+selected =
+    argmin(distance)
+Although for hundreds of thousands or millions of points, you'd eventually move accelerated picking into the renderer or build a spatial index.
+
+That itself creates a useful progression:
+
+v1  vectorized MLPL picking
+v2  MLPL spatial index
+v3  Rust/GPU accelerated picking
+and benchmarks them.
+
+PCA is particularly good for the first milestone
+I would implement PCA first, because PCA itself is a beautiful forcing function for array operations.
+
+At a high level:
+
+centered =
+    embeddings - mean(embeddings, axis: 0)
+
+components =
+    principal_components(centered)
+
+xyz =
+    centered × components[0..3]
+It exercises:
+
+matrix shape
+axis-wise mean
+broadcast subtraction
+matrix multiplication
+sorting eigenvalues/components
+slicing
+The point isn't merely that MLPL can call a PCA library.
+
+Ideally you can provide two PCA implementations:
+
+pca-library.mlpl
+pca-native-extension
+or perhaps:
+
+pure MLPL reference implementation
+accelerated Rust implementation
+Same API.
+
+That makes a terrific demonstration of the extension architecture itself.
+
+Then animate dimensionality reduction
+Here's something the globe demo can't do nearly as naturally.
+
+Suppose the original embeddings have 768 dimensions.
+
+Show PCA progressively:
+
+768-D
+  ↓
+64-D
+  ↓
+16-D
+  ↓
+3-D
+Or vary a UMAP parameter and have the cloud morph.
+
+Instead of replacing GPU geometry:
+
+cloud.positions(new_xyz)
+could update the point buffer.
+
+Animate:
+
+steps =
+    interpolate(old_xyz, new_xyz, 60)
+
+steps
+    |> each(cloud.positions)
+Now you've forced efficient:
+
+MLPL array
+    ↓
+native extension
+    ↓
+GPU buffer update
+repeatedly.
+
+That's a much stronger stress test of your extension ABI than drawing static geometry.
+
+Comparing PCA, t-SNE and UMAP side-by-side would be superb
+You could calculate:
+
+pca_xyz  = pca(embeddings, 3)
+tsne_xyz = tsne(embeddings, 3)
+umap_xyz = umap(embeddings, 3)
+and provide a selector:
+
+Projection:
+
+(•) PCA
+( ) UMAP
+( ) t-SNE
+Switching projection could morph the points rather than teleport them.
+
+This visually teaches an important concept:
+
+There isn't one intrinsic "3D location" for an embedding.
+
+Different dimensionality-reduction methods preserve different aspects of the high-dimensional relationships.
+
+That gives the demo educational value beyond MLPL itself.
+
+Better: synchronize multiple views
+Eventually:
+
+┌──────── PCA ────────┐ ┌────── UMAP ─────────┐
+│                     │ │                      │
+│   ●●       ●        │ │    ●●●               │
+│ ●●●    ●●           │ │        ●             │
+│          ●●●        │ │          ●●●●        │
+│                     │ │                      │
+└─────────────────────┘ └──────────────────────┘
+Click a point in one visualization and highlight that same row in every projection.
+
+That is fundamentally array indexing:
+
+selected = event.id
+
+pca.highlight(selected)
+umap.highlight(selected)
+tsne.highlight(selected)
+Or select an entire cluster and propagate its boolean mask:
+
+selected_mask.shape
+[N]
+This makes boolean array masks a first-class visual concept.
+
+Clustering adds another natural algorithmic layer
+Dimensionality reduction doesn't necessarily define clusters. Run clustering separately in the original embedding space:
+
+clusters =
+    kmeans(embeddings, k: 12)
+or something density-based.
+
+Then:
+
+colors = palette[clusters]
+Conceptually:
+
+cluster IDs:
+[2, 2, 7, 1, 1, 2, 4, ...]
+
+           ↓ array indexing
+
+colors:
+[[...], [...], [...], ...]
+That's another very APL-like transformation.
+
+Click on a cluster and:
+
+mask = clusters == selected_cluster
+
+documents =
+    chunks[mask]
+Again, visualization and array programming align perfectly.
+
+Point size could convey useful fourth-dimensional information
+Your suggestion of varying point sizes is important.
+
+Position already consumes three visual variables:
+
+X Y Z
+Point size gives you another scalar.
+
+Color gives another categorical or scalar dimension.
+
+Transparency gives yet another.
+
+For example:
+
+Visual property	Meaning
+XYZ	UMAP/PCA dimensions
+color	document/source/cluster
+size	similarity to query
+opacity	age/confidence
+shape	content type
+The renderer should support these as arrays rather than individual calls.
+
+Something akin to:
+
+cloud.position = xyz
+cloud.size     = similarity
+cloud.color    = clusters
+cloud.opacity  = confidence
+Ideally broadcasting lets scalars work too:
+
+cloud.opacity = 0.7
+while:
+
+cloud.opacity = confidence
+accepts [N].
+
+That's an excellent test for extension argument broadcasting.
+
+A "show me the arrays" mode would be valuable here too
+When a user selects a cluster:
+
+Cluster 7
+1,247 points
+the demo can expose exactly what happened:
+
+cluster_mask = clusters == 7
+shape: [20000]
+true: 1247
+false: 18753
+Then:
+
+selected_embeddings =
+    embeddings[cluster_mask]
+shape: [1247,768]
+Then:
+
+selected_xyz =
+    xyz[cluster_mask]
+shape: [1247,3]
+And visually those 1,247 dots become highlighted.
+
+This is a much better explanation of array programming than pages of syntax documentation.
+
+A RAG explorer also forces a useful data model
+The application probably has at least:
+
+chunks
+    id
+    document_id
+    path
+    text
+    token_count
+    metadata...
+
+embeddings
+    [N,D]
+
+projection
+    [N,3]
+
+cluster
+    [N]
+
+scores
+    [N]
+The important architectural question is whether MLPL represents these as:
+
+array of records
+or, preferably for many operations:
+
+record of arrays / columnar table
+For example:
+
+rag.text
+rag.path
+rag.embedding
+rag.cluster
+with:
+
+rag.embedding.shape == [N,D]
+This can help force the table/dataframe side of MLPL without adopting Python/Pandas semantics wholesale.
+
+It can demonstrate joining metadata to vectors
+Suppose embeddings are in one file and metadata another.
+
+Something akin to:
+
+vectors =
+    safetensors.read("embeddings.safetensors")
+
+chunks =
+    jsonl.read("chunks.jsonl")
+
+rag =
+    join(chunks, vectors, on: "chunk_id")
+or SQLite/vector-database access later.
+
+Now you have:
+
+file parsing
+tables
+joins
+large arrays
+ML algorithms
+native extensions
+interactive graphics
+all in one meaningful application.
+
+Don't initially require a real vector database
+For the first version I'd avoid introducing Qdrant/Chroma/etc.
+
+Use a portable dataset:
+
+embeddings.f32
+metadata.jsonl
+or your own MLPL-friendly format.
+
+Then similarity search itself is beautifully simple:
+
+scores =
+    embeddings
+    |> cosine(query)
+
+top =
+    scores
+    |> grade_down
+    |> take(10)
+That's a great array demo.
+
+Later you can add an actual vector DB extension and compare:
+
+brute-force MLPL search
+SIMD Rust search
+HNSW extension
+external vector DB
+All from the same interactive explorer.
+
+That would be excellent.
+
+This suggests a family of demos rather than one demo
+I'd distinguish the extension demo from the application datasets.
+
+Something like:
+
+demo-native-visualization
+containing:
+
+examples/
+    capitals.mlpl
+    stars.mlpl
+    embeddings.mlpl
+    rag-explorer.mlpl
+But if you want each repo to tell one strong story, I'd seriously consider:
+
+demo-array-visualization
+or:
+
+demo-data-visualization
+The latter is broader but loses the point somewhat.
+
+I particularly like:
+
+demo-array-visualization
+
+because the headline is not "MLPL has graphics."
+
+It is:
+
+Array computations can directly drive interactive native visualizations.
+
+I would prioritize the embedding demo ahead of the globe
+Given the goals we've been discussing, I'd now order them:
+
+Embedding/PCA explorer
+
+RAG semantic-space explorer
+
+World capitals
+
+Star catalog
+
+The reason is architectural.
+
+The embedding explorer initially needs only:
+
+points
+camera
+mouse picking
+text panel
+array updates
+No polygons, ragged country boundaries, map data cleanup, geographic projections, or complicated line-strip representation.
+
+So it gets you to the extension's interesting parts faster.
+
+The first vertical slice can literally be:
+
+embeddings = load("embeddings.mlpa")
+
+xyz = pca(embeddings, 3)
+
+view = native3d.open()
+cloud = view.points(xyz)
+Then mouse orbit.
+
+Then:
+
+click point
+↓
+return row index
+↓
+display metadata
+Then:
+
+size array
+color array
+selection masks
+Then UMAP/t-SNE.
+
+Then RAG queries.
+
+That is a beautifully incremental development path.
+
+The especially compelling end-state
+Picture this interaction:
+
+Query:
+┌───────────────────────────────────────────────┐
+│ How does MLPL implement broadcasting?         │
+└───────────────────────────────────────────────┘
+
+                    semantic space
+
+          ●     ●●
+       ●●●●●              ○
+        ●●●               │
+                     ●────┤
+               ●●         │
+                          ● selected
+
+Nearest chunks:
+
+1. broadcasting.md              0.91
+2. array-semantics.md           0.87
+3. shape-algebra.md             0.83
+Then the user enters an MLPL expression:
+
+scores > 0.75
+and the visualization immediately highlights the corresponding subset.
+
+Then:
+
+mean(embeddings[scores > 0.75], axis: 0)
+generates a centroid that appears as another point.
+
+Then:
+
+nearest(centroid, 20)
+selects another group.
+
+At that point you're not merely showing a 3D plot.
+
+You're showing interactive exploratory array programming over high-dimensional data, with the native renderer functioning as a direct view of MLPL computations.
+
+I think that should probably be the first serious application built on the extension architecture. It is smaller than the world-map application, closer to sw-MLPL's ML mission, extraordinarily array-oriented, and provides a direct stepping stone into the GGUF/safetensors/model-analysis visualization work you already want to pursue.
+
+
+so a new repo in the same vein as demo-algorithms. demo-functional-pipelines, demo-memory etc.  What would we call this repo?  demo-extensions?
+
+demo-extensions is probably the best top-level name if the primary purpose is to demonstrate how sw-MLPL gains capabilities through Rust extensions. It also matches the abstraction level of demo-algorithms, demo-memory, demo-combinators, and demo-functional-pipelines.
+
+I would structure the distinction this way:
+
+Repo name	What it implies	My view
+demo-extensions	General MLPL native-extension mechanism	Best choice
+demo-native-extensions	Specifically native/shared-library extensions	More precise, but unnecessarily narrow
+demo-array-visualization	Array-driven visualization	Great demo, wrong umbrella
+demo-visualization	Graphics/data visualization	Hides the extension goal
+demo-native-visualization	Native graphics	Too implementation-specific
+demo-3d	3D rendering	Much too narrow
+I would use demo-extensions
+Then the repo itself demonstrates progressively more capable extensions:
+
+demo-extensions/
+├── README.md
+├── extensions/
+│   ├── hello/
+│   ├── native3d/
+│   └── native-ui/
+│
+├── demos/
+│   ├── hello-extension/
+│   ├── point-cloud/
+│   ├── embedding-explorer/
+│   ├── rag-explorer/
+│   ├── world-capitals/
+│   └── star-explorer/
+│
+└── docs/
+    ├── extension-api.md
+    ├── rust-extension-sdk.md
+    ├── dynamic-loading.md
+    └── packaging.md
+That provides a useful pedagogical progression.
+
+hello proves dynamic loading and registration:
+
+use hello
+hello.greet("world")
+point-cloud proves arrays crossing the extension boundary:
+
+xyz = random([100000, 3])
+
+view = native3d.open()
+view.points(xyz)
+embedding-explorer proves meaningful array programming:
+
+vectors = load_embeddings(...)
+xyz = pca(vectors, 3)
+view.points(xyz)
+rag-explorer adds metadata, filtering, similarity, picking, UI, and application state.
+
+Then world capitals and stars demonstrate that the extension isn't ML-specific.
+
+One architectural wrinkle
+I would not necessarily put the actual reusable extension SDK implementation permanently inside demo-extensions.
+
+Ultimately I'd expect something more like:
+
+sw-mlpl
+sw-mlpl-extension-sdk        # perhaps initially a crate/workspace component
+
+demo-extensions              # teaches and exercises it
+and possibly a separate reusable native visualization project later:
+
+sw-mlpl-native3d
+The demo repo should consume the same extension API that third-party developers would consume. Otherwise it risks becoming privileged example code that doesn't actually validate external extensibility.
+
+So the relationship becomes:
+
+                sw-mlpl
+                   │
+          extension ABI/loader
+                   │
+        sw-mlpl-extension-sdk
+                   │
+             public API
+                   │
+          ┌────────┴────────┐
+          │                 │
+ demo-extensions       third parties
+          │
+    native3d example
+          │
+   embedding-explorer
+That is important: demo-extensions should dogfood the public extension-development experience.
+
+I also like the naming semantically
+Your existing demo names describe a language/general-programming capability:
+
+demo-algorithms
+demo-combinators
+demo-functional-pipelines
+demo-memory
+demo-extensions
+That's a coherent set.
+
+By contrast,
+
+demo-3d
+demo-rag
+demo-embeddings
+would start organizing repos around applications/domains rather than language capabilities.
+
+Those are better thought of as demonstrations within demo-extensions, at least initially.
+
+And demo-extensions leaves you room to add non-graphics forcing functions later:
+
+Rust extension
+    ├── native 3D
+    ├── native UI
+    ├── audio
+    ├── SQLite
+    ├── compression/codecs
+    ├── MLX
+    ├── CUDA
+    └── hardware/instrument access
+So yes: I'd call the new repo demo-extensions.
+
+I'd make Embedding Explorer / RAG Explorer the flagship application, while a tiny hello extension establishes the minimal mechanism first. That gives the repository both a clean tutorial path and a sufficiently ambitious end-to-end demonstration.

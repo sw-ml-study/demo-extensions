@@ -1,0 +1,8 @@
+number = 4
+slug = "manifest-and-module-facade"
+status = "pending"
+description = "Add deterministic extension manifest and platform artifact resolution plus an..."
+role = "production"
+context_files = []
+created_at = "2026-08-08T19:16:18"
+commits = []

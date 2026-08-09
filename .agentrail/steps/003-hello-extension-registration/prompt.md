@@ -1,0 +1,1 @@
+Build an independently compiled hello cdylib and a safe test registry using TDD. Prove load, validation, namespaced registration, invocation, typed results and errors, library lifetime retention, panic containment, and deactivation. Record any real sw-MLPL host integration gap rather than claiming a mock as end-to-end.

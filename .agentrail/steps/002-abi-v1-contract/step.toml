@@ -1,0 +1,8 @@
+number = 2
+slug = "abi-v1-contract"
+status = "pending"
+description = "Specify the minimal versioned C-safe extension descriptor, value, and error t..."
+role = "production"
+context_files = []
+created_at = "2026-08-08T19:16:18"
+commits = []
