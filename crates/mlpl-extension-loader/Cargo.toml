@@ -11,6 +11,9 @@ mlpl-extension-abi = { path = "../mlpl-extension-abi" }
 serde = { version = "1", features = ["derive"] }
 toml = "0.8"
 
+[dev-dependencies]
+mlpl-extension-hello = { path = "../../extensions/hello" }
+
 [lints.rust]
 unsafe_code = "warn"
 unsafe_op_in_unsafe_fn = "deny"

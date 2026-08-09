@@ -121,3 +121,5 @@ mod export {
         ErrorCode::Panic as u32
     }
 }
+
+pub use export::sw_mlpl_extension_v1 as static_entry;

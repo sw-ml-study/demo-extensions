@@ -29,9 +29,11 @@ the user-facing namespace hides FFI; malformed or incompatible extensions fail
 closed; and every unavailable upstream integration is documented rather than
 mocked as complete.
 
-## Queued: extension-sdk-arrays-handles
+## Active: extension-sdk-arrays-handles
 
 Purpose: make the proven ABI pleasant and safe for third-party Rust authors.
+
+Executable AgentRail plan: `docs/extension-sdk-arrays-handles-saga.md`.
 
 1. Factor descriptor registration behind dynamic and static provider guards,
    then run the identical hello contract against both without claiming the

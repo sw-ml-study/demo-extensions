@@ -1,0 +1,1 @@
+Add read-only dense numeric array views using TDD. Specify dtype, rank, shape, strides, alignment, overflow, ownership, and call lifetime; reject malformed cases and prove one bulk [N,3] call without claiming zero-copy beyond measured evidence.

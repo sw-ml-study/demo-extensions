@@ -1,0 +1,1 @@
+Use TDD to factor descriptor validation and registration behind retained dynamic and static provider guards. Run the identical hello success, typed failure, contained panic, namespace, lifetime, and deactivation contract against both providers. Do not change ../sw-mlpl; keep its missing compiler/registry hook documented.

@@ -1,0 +1,1 @@
+Add test-first safe SDK conversions for nil, bool, i64, f64, UTF-8, bytes, and owned errors. Cover malformed tags, non-zero reserved fields, invalid UTF-8, null/length mismatches, numeric boundaries, and ownership/lifetime behavior without exposing unsafe code to extension authors.

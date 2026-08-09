@@ -1,0 +1,1 @@
+Add authoring macros only for stabilized ABI/SDK boilerplate, migrate hello to the safe SDK, run dynamic/static parity plus all Rust and MLPL gates, publish acceptance and remaining upstream blockers, close the saga, and stop.

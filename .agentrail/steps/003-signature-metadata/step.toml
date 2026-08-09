@@ -1,0 +1,8 @@
+number = 3
+slug = "signature-metadata"
+status = "pending"
+description = "Add deterministic function and native-type metadata for documentation, argume..."
+role = "production"
+context_files = []
+created_at = "2026-08-08T20:02:48"
+commits = []

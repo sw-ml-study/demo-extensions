@@ -29,6 +29,12 @@ function pointers, checks lifecycle and arity before invocation, and copies
 results/errors before returning. Deactivation rejects every later call while
 the registry continues to own the library until it is dropped.
 
+The same descriptor is also exposed as a statically linked provider. Dynamic
+and static providers enter one validation/registration function and run the
+identical success, failure, contained-panic, namespace, and deactivation tests.
+The provider guard either retains the `Library` or records process-lifetime
+static linkage; callable behavior does not branch on provider kind.
+
 ## Deliberate limits
 
 The slice accepts no arguments and decodes only signed 64-bit results. General

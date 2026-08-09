@@ -1,7 +1,9 @@
+#![allow(unsafe_code)]
+
 use std::fs;
 use std::path::PathBuf;
 
-use mlpl_extension_loader::{CallError, LoadError, Registry, ResolvedPackage, Value};
+use mlpl_extension_loader::{CallError, LoadError, ProviderKind, Registry, ResolvedPackage, Value};
 
 fn hello_library() -> PathBuf {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -14,6 +16,20 @@ fn hello_library() -> PathBuf {
         std::env::consts::DLL_SUFFIX
     ));
     path
+}
+
+fn dynamic_registry() -> Registry {
+    Registry::load(hello_library()).unwrap()
+}
+
+fn static_registry() -> Registry {
+    // SAFETY: hello's static entry returns its immutable process-lifetime V1
+    // descriptor and function table.
+    unsafe { Registry::load_static(mlpl_extension_hello::static_entry) }.unwrap()
+}
+
+fn registries() -> [Registry; 2] {
+    [dynamic_registry(), static_registry()]
 }
 
 struct PackageFixture(PathBuf);
@@ -49,45 +65,51 @@ impl Drop for PackageFixture {
 
 #[test]
 fn independently_built_library_registers_namespaced_functions() {
-    let registry = Registry::load(hello_library()).unwrap();
-    assert_eq!(registry.extension_name(), "_hello");
-    assert_eq!(
-        registry.function_names(),
-        ["_hello.answer", "_hello.fail", "_hello.panic"]
-    );
-    assert_eq!(registry.call("_hello.answer", &[]), Ok(Value::I64(42)));
+    let registries = registries();
+    assert_eq!(registries[0].provider_kind(), ProviderKind::Dynamic);
+    assert_eq!(registries[1].provider_kind(), ProviderKind::Static);
+    for registry in &registries {
+        assert_eq!(registry.extension_name(), "_hello");
+        assert_eq!(
+            registry.function_names(),
+            ["_hello.answer", "_hello.fail", "_hello.panic"]
+        );
+        assert_eq!(registry.call("_hello.answer", &[]), Ok(Value::I64(42)));
+    }
 }
 
 #[test]
 fn typed_errors_and_panics_do_not_escape_the_boundary() {
-    let registry = Registry::load(hello_library()).unwrap();
-    assert_eq!(
-        registry.call("_hello.fail", &[]),
-        Err(CallError::Extension("hello requested failure".into()))
-    );
-    assert_eq!(
-        registry.call("_hello.panic", &[]),
-        Err(CallError::ExtensionPanicked)
-    );
-    assert_eq!(
-        registry.call("_hello.answer", &[Value::I64(1)]),
-        Err(CallError::WrongArity {
-            expected: 0,
-            actual: 1,
-        })
-    );
+    for registry in registries() {
+        assert_eq!(
+            registry.call("_hello.fail", &[]),
+            Err(CallError::Extension("hello requested failure".into()))
+        );
+        assert_eq!(
+            registry.call("_hello.panic", &[]),
+            Err(CallError::ExtensionPanicked)
+        );
+        assert_eq!(
+            registry.call("_hello.answer", &[Value::I64(1)]),
+            Err(CallError::WrongArity {
+                expected: 0,
+                actual: 1,
+            })
+        );
+    }
 }
 
 #[test]
 fn registry_retains_library_until_deactivation() {
-    let mut registry = Registry::load(hello_library()).unwrap();
-    assert!(registry.is_active());
-    registry.deactivate();
-    assert!(!registry.is_active());
-    assert_eq!(
-        registry.call("_hello.answer", &[]),
-        Err(CallError::Inactive("_hello".into()))
-    );
+    for mut registry in registries() {
+        assert!(registry.is_active());
+        registry.deactivate();
+        assert!(!registry.is_active());
+        assert_eq!(
+            registry.call("_hello.answer", &[]),
+            Err(CallError::Inactive("_hello".into()))
+        );
+    }
     assert!(matches!(
         Registry::load(hello_library().with_file_name("missing-extension")),
         Err(LoadError::Open)

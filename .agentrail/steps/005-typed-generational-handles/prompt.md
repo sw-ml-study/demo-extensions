@@ -1,0 +1,1 @@
+Add extension-scoped, type-tagged generational handles using TDD. Cover stale generations, wrong types, cross-extension use, exhaustion, deterministic finalization, and deactivation; never expose raw pointers to MLPL.

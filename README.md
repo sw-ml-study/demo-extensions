@@ -97,9 +97,8 @@ The completed foundation proves:
 
 General argument conversion, dense array views, native handles, safe authoring
 macros, real unload/hot reload, native 3D, and sw-MLPL language integration are
-future work. Dynamic/static provider parity is the next planned downstream
-foundation so compiled and interpreted applications can eventually share one
-MLPL-facing API.
+future work. Dynamic/static provider parity now shares one tested registration
+path; safe scalar conversion is the next SDK step.
 
 ## Documentation
 

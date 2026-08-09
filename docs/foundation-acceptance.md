@@ -49,16 +49,16 @@ separately authorized `../sw-mlpl` task.
 
 ## Static-provider parity decision
 
-Static-provider parity is required and becomes the first step of the next
-downstream saga. The registry must validate and register a provider through one
-common path whether its descriptor comes from a retained `libloading::Library`
-or a statically linked entry function. This avoids making compiled MLPL source
-or extension APIs differ from REPL/script APIs.
+Static-provider parity was selected as the first step of the next downstream
+saga. The registry must validate and register a provider through one common
+path whether its descriptor comes from a retained `libloading::Library` or a
+statically linked entry function. This avoids making compiled MLPL source or
+extension APIs differ from REPL/script APIs.
 
-The next implementation should introduce a provider guard with dynamic and
-static variants, factor descriptor registration out of `Registry::load`, and
-run the same hello behavior tests against both providers. It must not pretend
-that this local parity supplies the missing sw-MLPL compiler hook.
+That downstream step is now implemented: provider guards have dynamic and
+static variants, descriptor registration is shared, and both run the same
+hello behavior tests. This local parity does not supply the missing sw-MLPL
+compiler hook.
 
 ## Deferred and blocked work
 

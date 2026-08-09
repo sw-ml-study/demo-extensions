@@ -15,8 +15,27 @@ struct RegisteredFunction {
     invoke: InvokeFnV1,
 }
 
-pub struct Registry {
+struct DynamicGuard {
     _library: Library,
+}
+
+enum ProviderGuard {
+    #[expect(
+        dead_code,
+        reason = "variant ownership keeps dynamic callables resident"
+    )]
+    Dynamic(DynamicGuard),
+    Static,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ProviderKind {
+    Dynamic,
+    Static,
+}
+
+pub struct Registry {
+    provider: ProviderGuard,
     extension_name: String,
     functions: BTreeMap<String, RegisteredFunction>,
     active: bool,
@@ -33,6 +52,21 @@ impl Registry {
         // SAFETY: all foreign symbols and pointers are validated and copied
         // before registration; the Library remains owned by the Registry.
         unsafe { Self::load_foreign(path.as_ref()) }
+    }
+
+    /// Registers a statically linked V1 provider through the same validation
+    /// and registry path used for dynamic libraries.
+    ///
+    /// # Errors
+    ///
+    /// Returns the same descriptor and registration errors as dynamic loading.
+    ///
+    /// # Safety
+    ///
+    /// The entry function must return immutable, readable descriptor storage
+    /// and callable code that remain valid for the process lifetime.
+    pub unsafe fn load_static(entry: ExtensionEntryV1) -> Result<Self, LoadError> {
+        unsafe { Self::from_entry(entry, ProviderGuard::Static) }
     }
 
     /// Loads the native artifact selected by a validated package manifest.
@@ -54,8 +88,16 @@ impl Registry {
 
     unsafe fn load_foreign(path: &Path) -> Result<Self, LoadError> {
         let library = unsafe { Library::new(path) }.map_err(|_| LoadError::Open)?;
-        let entry = unsafe { library.get::<ExtensionEntryV1>(ENTRY_SYMBOL) }
+        let entry = *unsafe { library.get::<ExtensionEntryV1>(ENTRY_SYMBOL) }
             .map_err(|_| LoadError::MissingEntry)?;
+        let provider = ProviderGuard::Dynamic(DynamicGuard { _library: library });
+        unsafe { Self::from_entry(entry, provider) }
+    }
+
+    unsafe fn from_entry(
+        entry: ExtensionEntryV1,
+        provider: ProviderGuard,
+    ) -> Result<Self, LoadError> {
         let pointer = unsafe { entry() };
         let raw = unsafe { pointer.as_ref() }.ok_or(LoadError::NullDescriptor)?;
         let extension =
@@ -63,7 +105,7 @@ impl Registry {
         let extension_name = extension.name().to_owned();
         let functions = register_functions(&extension_name, extension.functions())?;
         Ok(Self {
-            _library: library,
+            provider,
             extension_name,
             functions,
             active: true,
@@ -73,6 +115,14 @@ impl Registry {
     #[must_use]
     pub fn extension_name(&self) -> &str {
         &self.extension_name
+    }
+
+    #[must_use]
+    pub fn provider_kind(&self) -> ProviderKind {
+        match &self.provider {
+            ProviderGuard::Dynamic(_) => ProviderKind::Dynamic,
+            ProviderGuard::Static => ProviderKind::Static,
+        }
     }
 
     #[must_use]

@@ -63,6 +63,7 @@ version = "0.0.0"
 dependencies = [
  "libloading",
  "mlpl-extension-abi",
+ "mlpl-extension-hello",
  "serde",
  "toml",
 ]

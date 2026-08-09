@@ -1,0 +1,1 @@
+Add deterministic function and native-type metadata for documentation, arguments, defaults, return types, and validation. Start with failing fixtures for malformed, duplicate, incompatible, and stable help output cases.
