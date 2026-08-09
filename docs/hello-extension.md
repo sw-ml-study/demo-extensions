@@ -22,6 +22,8 @@ descriptor registers three zero-argument functions in the private namespace:
 - `_hello.fail` returns a copied, typed extension error.
 - `_hello.panic` intentionally panics inside Rust and converts that panic into
   the ABI panic status before returning across `extern "C"`.
+- `_hello.sum_positions` accepts one dense f32 `[N,3]` array and returns its
+  f64 sum, proving one bulk call through both provider modes.
 
 The loader validates and copies descriptor metadata, prefixes callable names
 with the extension namespace, retains the `libloading::Library` beside all
@@ -47,9 +49,9 @@ static linkage; callable behavior does not branch on provider kind.
 
 ## Deliberate limits
 
-The hello functions accept no arguments and return only signed 64-bit values;
-the SDK and loader support all scalar copies independently. Dense arrays and
-native handles have later sagas. The library's panic hook may still print the contained panic during a
+The first three hello functions accept no arguments. `sum_positions` is a
+deliberately headless bulk-array proof rather than a visualization claim.
+Native handles have a later saga. The library's panic hook may still print the contained panic during a
 test, but the test process continues and receives `ExtensionPanicked`.
 
 The package manifest resolves the public `hello` facade separately from the

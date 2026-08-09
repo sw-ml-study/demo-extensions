@@ -15,7 +15,7 @@ mod export {
         FunctionDescriptorV1,
     };
 
-    struct SharedFunctions([FunctionDescriptorV1; 3]);
+    struct SharedFunctions([FunctionDescriptorV1; 4]);
     // SAFETY: every pointer targets immutable static bytes or function code.
     unsafe impl Sync for SharedFunctions {}
 
@@ -30,6 +30,7 @@ mod export {
         FunctionDescriptorV1::with_invoke(AbiSlice::from_bytes(b"answer"), 0, answer),
         FunctionDescriptorV1::with_invoke(AbiSlice::from_bytes(b"fail"), 0, fail),
         FunctionDescriptorV1::with_invoke(AbiSlice::from_bytes(b"panic"), 0, panic_call),
+        FunctionDescriptorV1::with_invoke(AbiSlice::from_bytes(b"sum_positions"), 1, sum_positions),
     ]);
 
     static METADATA: &[u8] = br#"
@@ -47,6 +48,15 @@ returns = "i64"
 name = "panic"
 documentation = "Demonstrate containment of an extension panic."
 returns = "i64"
+
+[[functions]]
+name = "sum_positions"
+documentation = "Sum one dense N by 3 f32 position array."
+returns = "f64"
+
+[[functions.arguments]]
+name = "positions"
+type = "array<f32>[N,3]"
 "#;
 
     static DESCRIPTOR: LazyLock<SharedDescriptor> = LazyLock::new(|| {
@@ -91,6 +101,41 @@ returns = "i64"
         error: *mut AbiErrorV1,
     ) -> u32 {
         unsafe { run(|| panic!("contained hello panic"), output, error) }
+    }
+
+    unsafe extern "C" fn sum_positions(
+        arguments: *const AbiValue,
+        argument_count: usize,
+        output: *mut AbiValue,
+        error: *mut AbiErrorV1,
+    ) -> u32 {
+        if argument_count != 1 || arguments.is_null() || output.is_null() || error.is_null() {
+            return ErrorCode::InvalidArgument as u32;
+        }
+        let value = unsafe { mlpl_extension_sdk::copy_foreign_value(&*arguments) };
+        let sum = match value {
+            Ok(mlpl_extension_sdk::Value::Array(array))
+                if array.view().shape().get(1) == Some(&3) =>
+            {
+                match array.view().as_f32() {
+                    Ok(values) => values.iter().map(|value| f64::from(*value)).sum(),
+                    Err(_) => return ErrorCode::InvalidArgument as u32,
+                }
+            }
+            _ => return ErrorCode::InvalidArgument as u32,
+        };
+        unsafe {
+            ptr::write(
+                output,
+                AbiValue {
+                    tag: mlpl_extension_abi::ValueTag::F64 as u32,
+                    reserved: 0,
+                    payload: mlpl_extension_abi::ValuePayload { float: sum },
+                },
+            );
+            ptr::write(error, AbiErrorV1::none());
+        }
+        ErrorCode::Ok as u32
     }
 
     unsafe fn run(

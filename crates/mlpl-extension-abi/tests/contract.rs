@@ -4,8 +4,8 @@ use std::mem::{align_of, size_of};
 use std::ptr;
 
 use mlpl_extension_abi::{
-    ABI_VERSION_V1, AbiErrorV1, AbiSlice, AbiValue, DescriptorError, ErrorCode,
-    ExtensionDescriptorV1, FunctionDescriptorV1, HostCallError, ValuePayload, ValueTag,
+    ABI_VERSION_V1, AbiArrayView, AbiErrorV1, AbiSlice, AbiValue, DTypeTag, DescriptorError,
+    ErrorCode, ExtensionDescriptorV1, FunctionDescriptorV1, HostCallError, ValuePayload, ValueTag,
     catch_extension_call, validate_descriptor as validate_raw,
 };
 
@@ -41,9 +41,15 @@ fn c_layout_has_stable_tags_and_payload_alignment() {
     assert_eq!(ValueTag::F64 as u32, 3);
     assert_eq!(ValueTag::Utf8 as u32, 4);
     assert_eq!(ValueTag::Bytes as u32, 5);
+    assert_eq!(ValueTag::DenseArray as u32, 6);
+    assert_eq!(DTypeTag::U8 as u32, 1);
+    assert_eq!(DTypeTag::I64 as u32, 2);
+    assert_eq!(DTypeTag::F32 as u32, 3);
+    assert_eq!(DTypeTag::F64 as u32, 4);
     assert_eq!(size_of::<AbiSlice>(), size_of::<usize>() * 2);
     assert!(size_of::<AbiValue>() >= size_of::<ValuePayload>() + 8);
     assert!(align_of::<AbiValue>() >= align_of::<ValuePayload>());
+    assert!(size_of::<AbiArrayView>() >= size_of::<AbiSlice>() + 24);
     assert_eq!(ErrorCode::Ok as u32, 0);
     assert_eq!(ErrorCode::InvalidArgument as u32, 1);
     assert_eq!(ErrorCode::ExtensionFailure as u32, 2);

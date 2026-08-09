@@ -30,6 +30,11 @@ pub unsafe fn copy_foreign_value(raw: &AbiValue) -> Result<Value, ConversionErro
         tag if tag == ValueTag::F64 as u32 => Ok(Value::F64(unsafe { raw.payload.float })),
         tag if tag == ValueTag::Utf8 as u32 => unsafe { copy_string(raw) },
         tag if tag == ValueTag::Bytes as u32 => unsafe { copy_bytes(raw).map(Value::Bytes) },
+        tag if tag == ValueTag::DenseArray as u32 => unsafe {
+            crate::DenseArray::copy_foreign(raw.payload.array)
+                .map(Value::Array)
+                .map_err(Into::into)
+        },
         tag => Err(ConversionError::UnknownTag(tag)),
     }
 }

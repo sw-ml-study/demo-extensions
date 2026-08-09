@@ -1,10 +1,16 @@
-use mlpl_extension_abi::{AbiErrorV1, AbiSlice, AbiValue, ValuePayload, ValueTag};
+use mlpl_extension_abi::{AbiArrayView, AbiErrorV1, AbiSlice, AbiValue, ValuePayload, ValueTag};
 
 use crate::{OwnedError, Value};
 
 pub struct EncodedValue {
     raw: AbiValue,
     _storage: Option<Box<[u8]>>,
+    _array: Option<EncodedArray>,
+}
+
+struct EncodedArray {
+    _value: crate::DenseArray,
+    _descriptor: Box<AbiArrayView>,
 }
 
 impl EncodedValue {
@@ -27,6 +33,7 @@ impl EncodedValue {
             }),
             Value::String(value) => Self::with_storage(ValueTag::Utf8, value.into_bytes()),
             Value::Bytes(value) => Self::with_storage(ValueTag::Bytes, value),
+            Value::Array(value) => Self::with_array(value),
         }
     }
 
@@ -34,6 +41,7 @@ impl EncodedValue {
         Self {
             raw,
             _storage: None,
+            _array: None,
         }
     }
 
@@ -49,6 +57,33 @@ impl EncodedValue {
         Self {
             raw,
             _storage: Some(storage),
+            _array: None,
+        }
+    }
+
+    fn with_array(value: crate::DenseArray) -> Self {
+        let (dtype, data, len, shape, strides) = value.abi_parts();
+        let descriptor = Box::new(AbiArrayView {
+            dtype: dtype as u32,
+            rank: u32::try_from(shape.len()).unwrap_or(u32::MAX),
+            data: AbiSlice::from_raw_parts(data, len),
+            shape: shape.as_ptr(),
+            strides: strides.as_ptr(),
+        });
+        let raw = AbiValue {
+            tag: ValueTag::DenseArray as u32,
+            reserved: 0,
+            payload: ValuePayload {
+                array: descriptor.as_ref(),
+            },
+        };
+        Self {
+            raw,
+            _storage: None,
+            _array: Some(EncodedArray {
+                _value: value,
+                _descriptor: descriptor,
+            }),
         }
     }
 

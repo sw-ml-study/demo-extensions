@@ -9,4 +9,12 @@ pub enum ConversionError {
     ReservedError,
     InvalidErrorCode(u32),
     EmptyError,
+    Array(ArrayError),
 }
+
+impl From<ArrayError> for ConversionError {
+    fn from(error: ArrayError) -> Self {
+        Self::Array(error)
+    }
+}
+use crate::ArrayError;

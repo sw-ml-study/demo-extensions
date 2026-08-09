@@ -72,12 +72,26 @@ fn independently_built_library_registers_namespaced_functions() {
         assert_eq!(registry.extension_name(), "_hello");
         assert_eq!(
             registry.function_names(),
-            ["_hello.answer", "_hello.fail", "_hello.panic"]
+            [
+                "_hello.answer",
+                "_hello.fail",
+                "_hello.panic",
+                "_hello.sum_positions"
+            ]
         );
         assert_eq!(registry.call("_hello.answer", &[]), Ok(Value::I64(42)));
         assert_eq!(
             registry.help("_hello.answer").unwrap(),
             "_hello.answer() -> i64\nReturn the canonical extension answer."
+        );
+        let points = mlpl_extension_sdk::DenseArray::from_f32(
+            vec![2, 3],
+            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+        )
+        .unwrap();
+        assert_eq!(
+            registry.call("_hello.sum_positions", &[Value::Array(points)]),
+            Ok(Value::F64(21.0))
         );
     }
 }

@@ -4,7 +4,7 @@ use std::ptr;
 
 use libloading::Library;
 use mlpl_extension_abi::{AbiErrorV1, AbiValue, ExtensionEntryV1, InvokeFnV1, validate_descriptor};
-use mlpl_extension_sdk::{ExtensionMetadata, MetadataError};
+use mlpl_extension_sdk::{EncodedValue, ExtensionMetadata, MetadataError};
 
 use crate::foreign::decode_result;
 use crate::{CallError, LoadError, ResolvedPackage, Value};
@@ -191,13 +191,12 @@ impl Registry {
                 actual: arguments.len(),
             });
         }
-        if !arguments.is_empty() {
-            return Err(CallError::UnsupportedArguments);
-        }
+        let encoded: Vec<_> = arguments.iter().cloned().map(EncodedValue::new).collect();
+        let raw: Vec<_> = encoded.iter().map(|value| *value.as_raw()).collect();
         // SAFETY: the function pointer was copied from a validated descriptor,
         // output pointers reference live host stack values, and the library is
         // retained by self for the complete invocation.
-        unsafe { invoke(function.invoke) }
+        unsafe { invoke(function.invoke, &raw) }
     }
 }
 
@@ -222,9 +221,14 @@ fn register_functions(
     Ok(registered)
 }
 
-unsafe fn invoke(function: InvokeFnV1) -> Result<Value, CallError> {
+unsafe fn invoke(function: InvokeFnV1, arguments: &[AbiValue]) -> Result<Value, CallError> {
     let mut output = AbiValue::nil();
     let mut error = AbiErrorV1::none();
-    let status = unsafe { function(ptr::null(), 0, &raw mut output, &raw mut error) };
+    let pointer = if arguments.is_empty() {
+        ptr::null()
+    } else {
+        arguments.as_ptr()
+    };
+    let status = unsafe { function(pointer, arguments.len(), &raw mut output, &raw mut error) };
     unsafe { decode_result(status, &output, &error) }
 }

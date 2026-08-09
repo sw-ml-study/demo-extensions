@@ -55,6 +55,7 @@ name = "mlpl-extension-hello"
 version = "0.0.0"
 dependencies = [
  "mlpl-extension-abi",
+ "mlpl-extension-sdk",
 ]
 
 [[package]]

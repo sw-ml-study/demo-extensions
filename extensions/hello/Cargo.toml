@@ -10,6 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 mlpl-extension-abi = { path = "../../crates/mlpl-extension-abi" }
+mlpl-extension-sdk = { path = "../../crates/mlpl-extension-sdk" }
 
 [lints.rust]
 unsafe_code = "warn"

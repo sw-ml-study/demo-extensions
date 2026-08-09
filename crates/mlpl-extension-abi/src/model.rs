@@ -36,6 +36,26 @@ pub enum ValueTag {
     F64 = 3,
     Utf8 = 4,
     Bytes = 5,
+    DenseArray = 6,
+}
+
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DTypeTag {
+    U8 = 1,
+    I64 = 2,
+    F32 = 3,
+    F64 = 4,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct AbiArrayView {
+    pub dtype: u32,
+    pub rank: u32,
+    pub data: AbiSlice,
+    pub shape: *const usize,
+    pub strides: *const isize,
 }
 
 #[repr(C)]
@@ -45,6 +65,7 @@ pub union ValuePayload {
     pub integer: i64,
     pub float: f64,
     pub slice: AbiSlice,
+    pub array: *const AbiArrayView,
 }
 
 #[repr(C)]

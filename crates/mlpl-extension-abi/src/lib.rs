@@ -13,8 +13,8 @@ mod validated;
 pub use call::{HostCallError, catch_extension_call};
 pub use error::{AbiErrorV1, DescriptorError, ErrorCode};
 pub use model::{
-    ABI_VERSION_V1, AbiSlice, AbiValue, ExtensionDescriptorV1, ExtensionEntryV1,
-    FunctionDescriptorV1, InvokeFnV1, ValuePayload, ValueTag,
+    ABI_VERSION_V1, AbiArrayView, AbiSlice, AbiValue, DTypeTag, ExtensionDescriptorV1,
+    ExtensionEntryV1, FunctionDescriptorV1, InvokeFnV1, ValuePayload, ValueTag,
 };
 pub use validate::validate_descriptor;
 pub use validated::{ValidatedExtension, ValidatedFunction};
