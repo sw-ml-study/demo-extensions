@@ -51,17 +51,18 @@ loading, V1 validation, namespaced invocation, typed result/error copying,
 panic containment, library retention, and deactivation. This is not a mock of
 the binary boundary: it loads the independently built hello shared library.
 
-As of reported `sw-mlpl` binary `c3452aa1`, a static registry supports actual
-MLPL invocation with colon-qualified names. The next acceptance step must prove
-that path against hello before this repository marks it supported. `use` facade
+The installed `sw-mlpl` release binary supports actual MLPL invocation with
+colon-qualified names. `test_upstream_static_registry.mlpl` proves
+`hello:answer()` returns `42`, and a local REPL probe proves
+`:describe hello:answer` exposes its signature and documentation. `use` facade
 resolution, compiler parity, packaged dynamic loading, arrays at the host
-boundary, and native-handle values remain upstream work. No upstream files are
-changed by this repository.
+boundary, native-handle values, and an adapter for this repository's descriptor
+remain upstream work. No upstream files are changed by this repository.
 
 ### Execution modes as of foundation acceptance
 
-- REPL/interpreted scalar invocation: reported available through the static
-  registry's colon spelling; downstream acceptance is pending.
+- REPL/interpreted scalar invocation: proven through the static registry's
+  colon spelling.
 - `use hello` facade invocation: blocked pending the upstream facade saga.
 - Compiled native invocation: blocked; no static-provider or packaged dynamic
   provider hook exists in the compiler/runtime contract.

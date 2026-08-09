@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+source_file="$repo_root/extensions/hello/src/lib.rs"
+
+if rg -n '\bunsafe\b|mlpl_extension_abi' "$source_file"; then
+  echo "hello extension bypasses the safe SDK authoring surface" >&2
+  exit 1
+fi
+
+rg -q 'mlpl_extension_sdk::export_extension!' "$source_file"
+echo "PASS safe SDK authoring policy"

@@ -7,10 +7,11 @@ current foundation deliberately starts with a headless `hello` extension so
 ABI, loading, packaging, ownership, and lifecycle behavior can be tested apart
 from GPU and window-system concerns.
 
-The repository currently proves the downstream extension boundary with a real
-`.dylib`/`.so` and a Rust host harness. sw-MLPL does not yet expose the registry
-and import hooks needed for `use hello` from the REPL, scripts, or compiled
-programs. That upstream blocker is documented rather than hidden behind a mock.
+The repository proves the downstream extension boundary with a real
+`.dylib`/`.so` and a Rust host harness. sw-MLPL now exposes a separate static
+scalar registry: interpreted `hello:answer()` and REPL description are proven
+locally. Adapting this repository's descriptor, `use hello`, compilation,
+dynamic loading, arrays, and handles remain explicitly tracked contracts.
 
 ## What is here
 
@@ -99,6 +100,8 @@ The completed foundation proves:
   alignment, storage length, and one-call `[N,3]` acceptance;
 - extension-scoped, type-tagged generational handles with stale/cross-extension
   rejection and deterministic resource finalization;
+- macro-generated ABI descriptors/trampolines around safe Rust handlers, with
+  hello containing no handwritten unsafe code;
 - a public MLPL facade kept separate from private native functions.
 
 General argument marshalling, safe authoring
@@ -125,6 +128,10 @@ acceptance are next.
   call lifetime, and measured copy behavior.
 - [Native handles](docs/native-handles.md) — capability identity, generations,
   exhaustion, finalization, and deactivation.
+- [SDK acceptance](docs/sdk-acceptance.md) — evidence matrix, upstream static
+  registry proof, and remaining integration boundaries.
+- [SDK authoring](docs/sdk-authoring.md) — safe handler signature and generated
+  descriptor/trampoline contract.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and

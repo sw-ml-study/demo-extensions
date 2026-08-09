@@ -1,6 +1,6 @@
 number = 6
 slug = "sdk-macros-acceptance"
-status = "pending"
+status = "in-progress"
 description = "Add authoring macros only for stabilized ABI/SDK boilerplate, migrate hello t..."
 role = "validation"
 context_files = []

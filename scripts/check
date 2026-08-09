@@ -7,6 +7,7 @@ sh -n "$repo_root"/scripts/* "$repo_root/tests/test-layout"
 "$repo_root/tests/test-layout"
 "$repo_root/scripts/check-gitignore"
 "$repo_root/scripts/check-namespaces"
+"$repo_root/scripts/check-sdk-authoring"
 "$repo_root/scripts/check-tracked"
 cargo fmt --manifest-path "$repo_root/Cargo.toml" --all --check
 "$repo_root/scripts/run-rust-tests" --no-run

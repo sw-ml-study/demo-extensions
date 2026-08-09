@@ -12,7 +12,8 @@ just check
 repository layout, `.gitignore`, tracked source/docs/configuration, Rust
 formatting, compilation, clippy, workspace tests, native mlplunit tests, and
 whitespace errors. It also enforces that public MLPL tests do not bypass the
-private native namespace.
+private native namespace and that extension author source uses the safe SDK
+instead of handwritten unsafe or direct ABI access.
 
 ## Tool selection
 

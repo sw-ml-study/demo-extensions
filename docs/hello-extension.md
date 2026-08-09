@@ -15,7 +15,8 @@ On macOS the artifact is a `.dylib`; on Linux it is a `.so`. Tests derive the
 platform prefix and suffix through Rust's `DLL_PREFIX` and `DLL_SUFFIX` rather
 than hard-coding one operating system.
 
-The library exports exactly one symbol, `sw_mlpl_extension_v1`. Its immutable
+The safe SDK macro generates exactly one exported symbol,
+`sw_mlpl_extension_v1`. Its immutable
 descriptor registers three zero-argument functions in the private namespace:
 
 - `_hello.answer` returns the typed integer `42`.
@@ -58,7 +59,8 @@ The package manifest resolves the public `hello` facade separately from the
 private `_hello` descriptor. See `extension-packages.md` for platform and path
 rules.
 
-sw-MLPL does not currently expose a public registry/import API for this
-descriptor. Therefore this test proves the downstream ABI, dynamic loader, and
-lifecycle model only. It does not claim that `.mlpl` code can invoke the native
-function yet.
+sw-MLPL's static scalar registry now proves interpreted `hello:answer()` and
+REPL description through its in-repo provider. Its safe descriptor API is not
+this repository's C descriptor, so direct registration of this hello artifact,
+facade imports, compilation, dynamic loading, arrays, and handles remain
+separate integration work.
