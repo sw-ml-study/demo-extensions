@@ -1,0 +1,1 @@
+Added opaque extension/type/slot/generation handle values and a safe extension-owned registry with stale, wrong-type, cross-extension, exhaustion, deterministic finalization, and deactivation behavior, plus tests and updated upstream capability documentation.

@@ -1,8 +1,9 @@
 number = 5
 slug = "typed-generational-handles"
-status = "in-progress"
+status = "completed"
 description = "Add extension-scoped, type-tagged generational handles using TDD. Cover stale..."
 role = "production"
 context_files = []
 created_at = "2026-08-08T20:02:48"
-commits = []
+completed_at = "2026-08-09T12:14:33"
+commits = ["bf0fa6fefe05047e8b42aedb06ec6d431286b228"]
