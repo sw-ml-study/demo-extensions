@@ -11,16 +11,18 @@ crates/mlpl-extension-loader/src/lib.rs
 crates/mlpl-extension-sdk/Cargo.toml
 crates/mlpl-extension-sdk/src/lib.rs
 extensions/hello/Cargo.toml
+extensions/hello/extension.toml
+extensions/hello/module.mlpl
 extensions/hello/src/lib.rs
 mlplunit.conf
 scripts/check
 scripts/check-gitignore
+scripts/check-namespaces
 scripts/check-tracked
 scripts/run-rust-tests
 scripts/run-tests
 scripts/select-mlpl
 scripts/select-mlplunit
-src/hello/module.mlpl
 tests/test_hello_module.mlpl'
 
 printf '%s\n' "$required_files" | while IFS= read -r path; do

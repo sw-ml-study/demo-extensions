@@ -6,10 +6,12 @@
 mod error;
 #[allow(unsafe_code)]
 mod foreign;
+mod manifest;
 #[allow(unsafe_code)]
 mod registry;
 mod value;
 
-pub use error::{CallError, LoadError};
+pub use error::{CallError, LoadError, PackageError};
+pub use manifest::{PackageCatalog, ResolvedPackage};
 pub use registry::Registry;
 pub use value::Value;

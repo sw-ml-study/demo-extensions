@@ -36,7 +36,7 @@ mod export {
         SharedDescriptor(ExtensionDescriptorV1 {
             struct_size: u32::try_from(size_of::<ExtensionDescriptorV1>()).unwrap_or(u32::MAX),
             abi_version: ABI_VERSION_V1,
-            name: AbiSlice::from_bytes(b"hello"),
+            name: AbiSlice::from_bytes(b"_hello"),
             version: AbiSlice::from_bytes(b"0.1.0"),
             functions: FUNCTIONS.0.as_ptr(),
             function_count: FUNCTIONS.0.len(),

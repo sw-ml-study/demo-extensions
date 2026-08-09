@@ -1,8 +1,13 @@
-include "src/hello/module.mlpl";
+include "extensions/hello/module.mlpl";
 
 @test {name: "extension module scaffold is loadable", tags: ["extensions", "scaffold"]}
 def u:test_extension_scaffold() { "Keep the MLPL facade executable while native registration is deferred.";
   u:assert_eq(u:extension_scaffold_version(), 1, "scaffold contract version")
+}
+
+@test {name: "public facade presents private native values", tags: ["extensions", "facade"]}
+def u:test_public_facade() { "Exercise public MLPL composition without pretending the host hook exists.";
+  u:assert_eq(u:hello_present_answer(42), 42, "public facade preserves typed native result")
 }
 
 u:run_registered_tests()

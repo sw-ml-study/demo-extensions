@@ -11,7 +11,7 @@ for path in Cargo.toml Cargo.lock AGENTS.md .gitignore mlplunit.conf justfile; d
   fi
 done
 
-find .agentrail crates docs extensions scripts src tests -type f -print |
+find .agentrail crates docs extensions scripts tests -type f -print |
   while IFS= read -r path; do
     if ! git ls-files --error-unmatch "$path" >/dev/null 2>&1; then
       echo "project file is not tracked: $path" >&2

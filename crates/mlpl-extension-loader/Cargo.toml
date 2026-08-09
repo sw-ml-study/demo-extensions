@@ -8,6 +8,8 @@ rust-version.workspace = true
 [dependencies]
 libloading = "0.8"
 mlpl-extension-abi = { path = "../mlpl-extension-abi" }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
 
 [lints.rust]
 unsafe_code = "warn"

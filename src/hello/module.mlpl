@@ -1,2 +1,0 @@
-# Pure MLPL facade seed. Native registration is added after ABI validation.
-def u:extension_scaffold_version() { 1 }

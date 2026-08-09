@@ -6,7 +6,7 @@ use libloading::Library;
 use mlpl_extension_abi::{AbiErrorV1, AbiValue, ExtensionEntryV1, InvokeFnV1, validate_descriptor};
 
 use crate::foreign::decode_result;
-use crate::{CallError, LoadError, Value};
+use crate::{CallError, LoadError, ResolvedPackage, Value};
 
 const ENTRY_SYMBOL: &[u8] = b"sw_mlpl_extension_v1\0";
 
@@ -33,6 +33,23 @@ impl Registry {
         // SAFETY: all foreign symbols and pointers are validated and copied
         // before registration; the Library remains owned by the Registry.
         unsafe { Self::load_foreign(path.as_ref()) }
+    }
+
+    /// Loads the native artifact selected by a validated package manifest.
+    ///
+    /// # Errors
+    ///
+    /// Returns normal loading errors and additionally rejects a descriptor
+    /// whose private namespace differs from the manifest contract.
+    pub fn load_package(package: &ResolvedPackage) -> Result<Self, LoadError> {
+        let registry = Self::load(package.library_path())?;
+        if registry.extension_name != package.native_namespace() {
+            return Err(LoadError::NamespaceMismatch {
+                expected: package.native_namespace().to_owned(),
+                actual: registry.extension_name,
+            });
+        }
+        Ok(registry)
     }
 
     unsafe fn load_foreign(path: &Path) -> Result<Self, LoadError> {

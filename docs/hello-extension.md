@@ -16,11 +16,11 @@ platform prefix and suffix through Rust's `DLL_PREFIX` and `DLL_SUFFIX` rather
 than hard-coding one operating system.
 
 The library exports exactly one symbol, `sw_mlpl_extension_v1`. Its immutable
-descriptor registers three zero-argument functions:
+descriptor registers three zero-argument functions in the private namespace:
 
-- `hello.answer` returns the typed integer `42`.
-- `hello.fail` returns a copied, typed extension error.
-- `hello.panic` intentionally panics inside Rust and converts that panic into
+- `_hello.answer` returns the typed integer `42`.
+- `_hello.fail` returns a copied, typed extension error.
+- `_hello.panic` intentionally panics inside Rust and converts that panic into
   the ABI panic status before returning across `extern "C"`.
 
 The loader validates and copies descriptor metadata, prefixes callable names
@@ -35,6 +35,10 @@ The slice accepts no arguments and decodes only signed 64-bit results. General
 value conversion is SDK work; dense arrays and native handles have later
 sagas. The library's panic hook may still print the contained panic during a
 test, but the test process continues and receives `ExtensionPanicked`.
+
+The package manifest resolves the public `hello` facade separately from the
+private `_hello` descriptor. See `extension-packages.md` for platform and path
+rules.
 
 sw-MLPL does not currently expose a public registry/import API for this
 descriptor. Therefore this test proves the downstream ABI, dynamic loader, and

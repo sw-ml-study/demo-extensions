@@ -1,0 +1,29 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+manifest=$repo_root/extensions/hello/extension.toml
+module=$repo_root/extensions/hello/module.mlpl
+
+rg -q '^name = "hello"$' "$manifest" || {
+  echo "hello public package name changed" >&2
+  exit 1
+}
+rg -q '^native_namespace = "_hello"$' "$manifest" || {
+  echo "hello private native namespace changed" >&2
+  exit 1
+}
+rg -q '^def u:_hello_' "$module" || {
+  echo "hello facade has no private native seam" >&2
+  exit 1
+}
+rg -q '^def u:hello_' "$module" || {
+  echo "hello facade has no public function" >&2
+  exit 1
+}
+if rg -q 'u:_hello_' "$repo_root/tests"/*.mlpl; then
+  echo "MLPL tests bypass the public hello facade" >&2
+  exit 1
+fi
+
+echo "PASS public/private namespace policy"
