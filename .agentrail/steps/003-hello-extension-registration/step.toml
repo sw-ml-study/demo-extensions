@@ -1,8 +1,9 @@
 number = 3
 slug = "hello-extension-registration"
-status = "in-progress"
+status = "completed"
 description = "Build an independently compiled hello cdylib and a safe test registry using T..."
 role = "production"
 context_files = []
 created_at = "2026-08-08T19:16:18"
-commits = []
+completed_at = "2026-08-08T19:44:55"
+commits = ["b0b9d184722566fa968931eafdd60360c26eae79"]
