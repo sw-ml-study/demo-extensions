@@ -1,0 +1,1 @@
+Proved sw-MLPL's public byte-compatible C adapter registers this repository's actual static hello descriptor and dispatches scalar success and failure through the upstream interpreter; isolated the read-only host harness from the main workspace, integrated it into just check, and updated all capability documentation.

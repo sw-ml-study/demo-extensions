@@ -1,8 +1,9 @@
 number = 1
 slug = "downstream-c-provider-acceptance"
-status = "in-progress"
+status = "completed"
 description = "Prove sw-mlpl's new register_c_extension path with this repository's statical..."
 role = "validation"
 context_files = []
 created_at = "2026-08-09T16:20:04"
-commits = []
+completed_at = "2026-08-09T16:24:38"
+commits = ["9522deef1f415cfa7dbaae8c7ef8bda40b05185c"]
