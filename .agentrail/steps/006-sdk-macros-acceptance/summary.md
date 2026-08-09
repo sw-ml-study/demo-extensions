@@ -1,0 +1,1 @@
+Added stabilized export macros and hidden trampoline runtime, migrated hello to safe handlers with no handwritten unsafe/direct ABI use, proved unchanged dynamic/static behavior and real sw-MLPL colon-qualified static registry invocation, and published final acceptance with exact remaining adapter/upstream boundaries.

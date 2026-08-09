@@ -1,8 +1,9 @@
 number = 6
 slug = "sdk-macros-acceptance"
-status = "in-progress"
+status = "completed"
 description = "Add authoring macros only for stabilized ABI/SDK boilerplate, migrate hello t..."
 role = "validation"
 context_files = []
 created_at = "2026-08-08T20:02:48"
-commits = []
+completed_at = "2026-08-09T12:32:43"
+commits = ["9758919797cd05b5b3430b38118ea2f52e380217"]
