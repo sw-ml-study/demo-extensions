@@ -32,17 +32,18 @@ command `:describe hello:answer` returned the native signature and canonical
 documentation. This proves the shipped upstream static scalar registry in
 script and REPL modes.
 
-That provider is `sw-mlpl`'s in-repo `mlpl-ext-hello-static`. It consumes the
-host's safe `ExtValue`/`ExtensionDescriptorV1` API, while this repository owns a
-C-compatible dynamic ABI descriptor. No public adapter currently registers
-this repository's descriptor into the host registry. The two evidence rows are
-therefore intentionally separate rather than presented as end-to-end loading.
+The host's built-in provider uses its safe `ExtValue` descriptor. The shipped
+`mlpl-extension-cabi` adapter now additionally publishes a byte-for-byte V1 C
+layout and accepts this repository's `static_entry()` descriptor pointer.
+`upstream_c_provider.rs` links those public upstream crates read-only, registers
+the real downstream provider, and proves `_hello:answer()` returns `42` while
+`_hello:fail()` becomes an MLPL error Result.
 
 | Mode | Classification |
 |---|---|
 | Downstream dynamic and static Rust providers | Proven through the same validated registry path |
 | sw-MLPL interpreted/REPL static scalar registry | Proven by `test_upstream_static_registry.mlpl` and local REPL description |
-| This hello descriptor inside sw-MLPL | Blocked on a public descriptor adapter or compatible provider hook |
+| This hello C descriptor inside sw-MLPL | Proven for statically linked scalar success and failure through `upstream_c_provider.rs` |
 | `use hello` and dotted facade | Blocked on the queued facade/module saga |
 | Compiled extension invocation | Blocked on compiler parity |
 | Packaged dynamic loading | Blocked on host dynamic loading, trust, and manifest integration |

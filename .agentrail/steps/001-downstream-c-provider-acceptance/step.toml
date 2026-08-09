@@ -1,0 +1,8 @@
+number = 1
+slug = "downstream-c-provider-acceptance"
+status = "in-progress"
+description = "Prove sw-mlpl's new register_c_extension path with this repository's statical..."
+role = "validation"
+context_files = []
+created_at = "2026-08-09T16:20:04"
+commits = []

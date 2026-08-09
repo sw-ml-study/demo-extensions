@@ -1,0 +1,19 @@
+[package]
+name = "demo-extensions-upstream-host-acceptance"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+mlpl-extension-hello = { path = "../../extensions/hello" }
+mlpl-eval = { path = "../../../sw-mlpl/components/eval/crates/mlpl-eval" }
+mlpl-extension-cabi = { path = "../../../sw-mlpl/components/runtime-core/crates/mlpl-extension-cabi" }
+mlpl-parser = { path = "../../../sw-mlpl/components/syntax-parser/crates/mlpl-parser" }
+
+[lints.rust]
+unsafe_code = "warn"
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = "deny"
+pedantic = "deny"

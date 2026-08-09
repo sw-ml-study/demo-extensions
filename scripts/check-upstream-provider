@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+manifest="$repo_root/tests/upstream-host/Cargo.toml"
+acceptance_target="$repo_root/target/upstream-host"
+
+CARGO_TARGET_DIR="$acceptance_target" cargo fmt --manifest-path "$manifest" --check
+CARGO_TARGET_DIR="$acceptance_target" cargo clippy --offline --manifest-path "$manifest" --all-targets -- -D warnings
+CARGO_TARGET_DIR="$acceptance_target" cargo test --offline --manifest-path "$manifest"

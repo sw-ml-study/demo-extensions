@@ -59,8 +59,9 @@ The package manifest resolves the public `hello` facade separately from the
 private `_hello` descriptor. See `extension-packages.md` for platform and path
 rules.
 
-sw-MLPL's static scalar registry now proves interpreted `hello:answer()` and
-REPL description through its in-repo provider. Its safe descriptor API is not
-this repository's C descriptor, so direct registration of this hello artifact,
-facade imports, compilation, dynamic loading, arrays, and handles remain
+sw-MLPL's static scalar registry proves interpreted `hello:answer()` and REPL
+description through its in-repo provider. Its C adapter also accepts this
+repository's actual `static_entry()` pointer: `upstream_c_provider.rs` proves
+`_hello:answer()` and `_hello:fail()` dispatch through the upstream interpreter.
+Facade imports, compilation, dynamic loading, arrays, and handles remain
 separate integration work.

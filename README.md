@@ -9,9 +9,10 @@ from GPU and window-system concerns.
 
 The repository proves the downstream extension boundary with a real
 `.dylib`/`.so` and a Rust host harness. sw-MLPL now exposes a separate static
-scalar registry: interpreted `hello:answer()` and REPL description are proven
-locally. Adapting this repository's descriptor, `use hello`, compilation,
-dynamic loading, arrays, and handles remain explicitly tracked contracts.
+scalar registry plus a byte-compatible C-descriptor adapter: both its built-in
+`hello:answer()` and this repository's `_hello:answer()` provider are proven
+through the interpreter. `use hello`, compilation, dynamic loading, arrays, and
+handles remain explicitly tracked contracts.
 
 ## What is here
 
@@ -132,6 +133,8 @@ acceptance are next.
   registry proof, and remaining integration boundaries.
 - [SDK authoring](docs/sdk-authoring.md) — safe handler signature and generated
   descriptor/trampoline contract.
+- [C provider host acceptance](docs/c-provider-host-acceptance.md) — direct
+  downstream descriptor registration and remaining upstream scope.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and
