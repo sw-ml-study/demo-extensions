@@ -1,0 +1,1 @@
+Published docs/extensions-blockers.md as the authoritative handoff contract, recording the proven static scalar baseline plus eight remaining host blockers with owners, dependencies, requirements, acceptance gates, workarounds, and completion rules; linked it from README and corrected current evidence paths.
