@@ -56,8 +56,8 @@ colon-qualified names. `test_upstream_static_registry.mlpl` proves
 `hello:answer()` returns `42`, and a local REPL probe proves
 `:describe hello:answer` exposes its signature and documentation. The public C
 adapter now accepts this repository's byte-compatible static descriptor;
-`upstream_c_provider.rs` proves `_hello:answer()` and `_hello:fail()` through
-the upstream interpreter. `use` facade resolution, compiler parity, packaged
+`tests/upstream-host/tests/c_provider.rs` proves `_hello:answer()` and
+`_hello:fail()` through the upstream interpreter. `use` facade resolution, compiler parity, packaged
 dynamic loading, arrays at the host boundary, and native-handle values remain
 upstream work. No upstream files are changed by this repository.
 
@@ -74,3 +74,5 @@ upstream work. No upstream files are changed by this repository.
   for the proposed boundary, not evidence that sw-MLPL already implements it.
 
 See `foundation-acceptance.md` for the complete evidence matrix and limitations.
+See `extensions-blockers.md` for the actionable requirements and acceptance
+criteria for every remaining host capability.

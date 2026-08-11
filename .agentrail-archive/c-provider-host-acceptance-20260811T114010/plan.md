@@ -1,0 +1,1 @@
+Prove the newly shipped sw-mlpl C-descriptor adapter against this repository's statically linked provider without modifying upstream. Add a downstream-distinguishable scalar acceptance marker if required, automate colon-qualified MLPL invocation, update the capability matrix, run all gates, commit, push, close, and stop.

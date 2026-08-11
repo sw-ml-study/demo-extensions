@@ -1,0 +1,8 @@
+number = 1
+slug = "document-extension-blockers"
+status = "in-progress"
+description = "Create docs/extensions-blockers.md with current proven baseline and actionabl..."
+role = "validation"
+context_files = []
+created_at = "2026-08-11T11:40:10"
+commits = []

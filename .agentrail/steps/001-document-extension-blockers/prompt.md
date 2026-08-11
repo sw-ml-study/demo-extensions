@@ -1,0 +1,1 @@
+Create docs/extensions-blockers.md with current proven baseline and actionable requirements/acceptance criteria for facade imports, compiler parity, dynamic loading, arrays, native handles, event loop, packaging/trust, help metadata, and execution modes. Update README, run just check, commit details, complete AgentRail, commit metadata, and push main. Modify only this repository.

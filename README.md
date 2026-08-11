@@ -135,6 +135,8 @@ acceptance are next.
   descriptor/trampoline contract.
 - [C provider host acceptance](docs/c-provider-host-acceptance.md) — direct
   downstream descriptor registration and remaining upstream scope.
+- [Extension blockers](docs/extensions-blockers.md) — actionable host
+  requirements, dependencies, workarounds, and acceptance gates.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and
