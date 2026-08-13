@@ -29,7 +29,7 @@ the user-facing namespace hides FFI; malformed or incompatible extensions fail
 closed; and every unavailable upstream integration is documented rather than
 mocked as complete.
 
-## Active: extension-sdk-arrays-handles
+## Completed: extension-sdk-arrays-handles
 
 Purpose: make the proven ABI pleasant and safe for third-party Rust authors.
 
@@ -48,6 +48,22 @@ Executable AgentRail plan: `docs/extension-sdk-arrays-handles-saga.md`.
 Acceptance: ordinary extension authors write no unsafe code, bulk `[N,3]`
 arrays cross once, stale/wrong handles fail closed, and generated metadata is
 identical to the hand-written contract.
+
+## Active: native-wireframe-cube
+
+Purpose: make immediate, honest visual progress with an array-generated cube
+and a generic native line renderer while upstream array/handle integration is
+still pending.
+
+1. Specify the MLPL-owned cube scene and generic renderer-neutral Rust schema.
+2. Implement deterministic headless transform, projection, clipping, and line planning.
+3. Add the opt-in macOS/Linux wgpu/winit window and interactive controls.
+4. Connect deterministic scene generation to the native executable, document evidence, and publish acceptance.
+
+Acceptance: MLPL bulk array operations define the cube; Rust contains no cube
+semantics; headless evidence is authoritative; and the opt-in native window
+rotates and adjusts dimensions, speed, color, and thickness without web
+technology.
 
 ## Queued: native3d-point-cloud
 

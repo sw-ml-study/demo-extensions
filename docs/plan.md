@@ -120,7 +120,24 @@ Gate: an extension author implements a typed function without writing unsafe
 code; MLPL help can describe it; a bulk `[N,3]` input crosses in one call; all
 negative contract tests fail closed.
 
-### 3. Native point-cloud vertical slice
+### 3. Native wireframe renderer fixture
+
+Build the smallest visible vertical slice first: MLPL generates bulk `[8,3]`
+cube positions and `[12,2]` edges, while a renderer-neutral Rust crate validates
+the generic line-scene contract. Add deterministic headless projection and draw
+planning before an opt-in wgpu/winit window. Keyboard input adjusts width,
+height, length, signed rotation speed, RGBA presets, and line thickness.
+
+Until upstream arrays and handles reach third-party providers, use deterministic
+JSON as an explicit file bridge. Do not describe that bridge as final extension
+integration or zero-copy transport.
+
+Gate: MLPL and Rust contract tests agree on shapes, bounds, and serialization;
+headless renderer tests are deterministic; macOS and Linux compile native
+wgpu/winit code; and an opt-in smoke run displays the rotating cube without a
+browser stack.
+
+### 4. Native point-cloud vertical slice
 
 Implement only a viewer, orbit/zoom camera, and point cloud with scalar or
 per-point size/color/id attributes. Begin with a deterministic generated array
@@ -131,7 +148,7 @@ Gate: macOS and Linux builds compile through native wgpu/winit backends;
 headless geometry/camera/upload tests pass; an opt-in native smoke run displays
 a real window with no browser stack.
 
-### 4. Live viewer, updates, and picking
+### 5. Live viewer, updates, and picking
 
 Define the host event-loop service before adding `open`. Add bulk position and
 attribute updates, close/deactivate behavior, resize/input events, and either a
@@ -143,7 +160,7 @@ Gate: a viewer survives multiple REPL evaluations, bulk updates reuse the
 object safely, picking maps to an MLPL row, and close/deactivation leaves no
 callable stale handles or background work.
 
-### 5. Embedding and PCA explorer
+### 6. Embedding and PCA explorer
 
 Use a tiny checked-in or deterministically generated embedding matrix. Keep
 centering, PCA/projection, cluster/color/size arrays, masks, selection, and
@@ -155,7 +172,7 @@ sizes points with parallel arrays, selects a row, and explains every array
 shape. The demo runs as script and from the REPL; compiled parity is exercised
 when the upstream compiler supports extension packaging.
 
-### 6. RAG semantic-space explorer
+### 7. RAG semantic-space explorer
 
 Add portable chunk metadata and embeddings, vectorized cosine similarity,
 top-k selection, query-driven size/highlight arrays, and a native text/details
@@ -166,7 +183,7 @@ Gate: deterministic queries return golden ranked rows, the same row IDs drive
 visual selection and metadata, and unsupported/malformed datasets fail without
 partial native state.
 
-### 7. Broader visualization demonstrations
+### 8. Broader visualization demonstrations
 
 Add world capitals, then star catalog, only after the point/line/event APIs are
 stable. Capitals introduces geographic transforms and ragged line strips;
@@ -180,17 +197,18 @@ third-party extension path without privileged runtime hooks.
 ## Explicit demo order
 
 1. `hello` — loading, registration, signature, result, error, deactivation.
-2. `point-cloud` — one bulk `[N,3]` array in a blocking native window.
-3. `live-point-cloud` — persistent handle, bulk update, picking, close.
-4. `embedding-pca` — meaningful array computation and visual encodings.
-5. `rag-explorer` — similarity, filtering, selection, and metadata UI.
-6. `world-capitals` — spherical transforms and ragged border lines.
-7. `star-explorer` — larger true-3D catalog and filtering.
+2. `wireframe-cube` — array-generated lines and adjustable native controls.
+3. `point-cloud` — one bulk `[N,3]` array in a blocking native window.
+4. `live-point-cloud` — persistent handle, bulk update, picking, close.
+5. `embedding-pca` — meaningful array computation and visual encodings.
+6. `rag-explorer` — similarity, filtering, selection, and metadata UI.
+7. `world-capitals` — spherical transforms and ragged border lines.
+8. `star-explorer` — larger true-3D catalog and filtering.
 
 UMAP and t-SNE follow PCA, not precede it: PCA is deterministic, easier to
 test, and exercises the core array algebra without adding stochastic optimizer
-and dependency questions. A spinning cube may be a renderer fixture but is not
-a headline demo.
+and dependency questions. The spinning cube remains a renderer fixture and
+teaching bridge rather than the headline application.
 
 ## Deferred decisions
 

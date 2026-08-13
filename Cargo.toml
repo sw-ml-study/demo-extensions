@@ -3,6 +3,7 @@ members = [
     "crates/mlpl-extension-abi",
     "crates/mlpl-extension-loader",
     "crates/mlpl-extension-sdk",
+    "crates/mlpl-native3d-scene",
     "extensions/hello",
 ]
 resolver = "2"

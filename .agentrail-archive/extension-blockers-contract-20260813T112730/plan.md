@@ -1,0 +1,1 @@
+Consolidate proven extension capabilities, remaining upstream blockers, concrete requirements, dependencies, and acceptance gates in docs/extensions-blockers.md. Update README documentation links, run all repository gates, commit, close the saga, and push main.

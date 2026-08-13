@@ -20,6 +20,8 @@ handles remain explicitly tracked contracts.
 crates/mlpl-extension-abi/      Versioned C-compatible ABI and validation
 crates/mlpl-extension-loader/   Package resolver, dynamic loader, and registry
 crates/mlpl-extension-sdk/      Safe author-facing SDK scaffold
+crates/mlpl-native3d-scene/      Generic line-scene parser and validation
+demos/wireframe-cube/            MLPL-owned bulk-array cube scene
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
 tests/                          Native mlplunit and structural tests
 docs/                           Architecture, contracts, plans, and evidence
@@ -104,10 +106,13 @@ The completed foundation proves:
 - macro-generated ABI descriptors/trampolines around safe Rust handlers, with
   hello containing no handwritten unsafe code;
 - a public MLPL facade kept separate from private native functions.
+- a deterministic MLPL wireframe-cube scene with independently adjustable
+  dimensions, rotation speed, RGBA line color, and thickness;
+- a renderer-neutral Rust line-scene contract that validates bulk `[N,3]`
+  positions and `[M,2]` edges before later GPU work.
 
-General argument marshalling, safe authoring
-macros, real unload/hot reload, native 3D, and sw-MLPL language integration are
-future work. Dynamic/static provider parity shares one tested registration
+General argument marshalling, real unload/hot reload, the wgpu/winit window,
+and complete sw-MLPL language integration are future work. Dynamic/static provider parity shares one tested registration
 path, safe SDK scalar/result copying replaces the loader's original one-off
 decoder, signature metadata is checked against every descriptor, and dense
 arrays cross the provider boundary as validated host-owned values, and native
@@ -137,6 +142,8 @@ acceptance are next.
   downstream descriptor registration and remaining upstream scope.
 - [Extension blockers](docs/extensions-blockers.md) — actionable host
   requirements, dependencies, workarounds, and acceptance gates.
+- [Wireframe cube scene](docs/wireframe-cube-scene.md) — array-generated cube,
+  generic line-scene schema, controls, validation, and current bridge.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and

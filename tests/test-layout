@@ -10,6 +10,9 @@ crates/mlpl-extension-loader/Cargo.toml
 crates/mlpl-extension-loader/src/lib.rs
 crates/mlpl-extension-sdk/Cargo.toml
 crates/mlpl-extension-sdk/src/lib.rs
+crates/mlpl-native3d-scene/Cargo.toml
+crates/mlpl-native3d-scene/src/lib.rs
+demos/wireframe-cube/scene.mlpl
 extensions/hello/Cargo.toml
 extensions/hello/extension.toml
 extensions/hello/module.mlpl
@@ -23,7 +26,8 @@ scripts/run-rust-tests
 scripts/run-tests
 scripts/select-mlpl
 scripts/select-mlplunit
-tests/test_hello_module.mlpl'
+tests/test_hello_module.mlpl
+tests/test_wireframe_cube_scene.mlpl'
 
 printf '%s\n' "$required_files" | while IFS= read -r path; do
   if [ ! -f "$repo_root/$path" ]; then

@@ -1,0 +1,8 @@
+number = 2
+slug = "headless-wireframe-renderer"
+status = "pending"
+description = "Add a renderer-independent 3D transform, camera, clipping, and wireframe line..."
+role = "production"
+context_files = []
+created_at = "2026-08-13T11:27:30"
+commits = []
