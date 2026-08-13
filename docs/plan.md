@@ -125,8 +125,9 @@ negative contract tests fail closed.
 Build the smallest visible vertical slice first: MLPL generates bulk `[8,3]`
 cube positions and `[12,2]` edges, while a renderer-neutral Rust crate validates
 the generic line-scene contract. Add deterministic headless projection and draw
-planning before an opt-in wgpu/winit window. Keyboard input adjusts width,
-height, length, signed rotation speed, RGBA presets, and line thickness.
+planning before an opt-in wgpu/winit window. The native API reports generic
+events; MLPL maps keyboard input to width, height, length, signed rotation
+speed, RGBA presets, and line thickness and submits bulk scene updates.
 
 Until upstream arrays and handles reach third-party providers, use deterministic
 JSON as an explicit file bridge. Do not describe that bridge as final extension
@@ -135,7 +136,8 @@ integration or zero-copy transport.
 Gate: MLPL and Rust contract tests agree on shapes, bounds, and serialization;
 headless renderer tests are deterministic; macOS and Linux compile native
 wgpu/winit code; and an opt-in smoke run displays the rotating cube without a
-browser stack.
+browser stack. A Rust-owned cube-specific control loop does not satisfy the
+interactive acceptance gate.
 
 ### 4. Native point-cloud vertical slice
 

@@ -1,6 +1,6 @@
 number = 2
 slug = "headless-wireframe-renderer"
-status = "pending"
+status = "in-progress"
 description = "Add a renderer-independent 3D transform, camera, clipping, and wireframe line..."
 role = "production"
 context_files = []

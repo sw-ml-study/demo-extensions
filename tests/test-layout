@@ -12,6 +12,7 @@ crates/mlpl-extension-sdk/Cargo.toml
 crates/mlpl-extension-sdk/src/lib.rs
 crates/mlpl-native3d-scene/Cargo.toml
 crates/mlpl-native3d-scene/src/lib.rs
+crates/mlpl-native3d-scene/src/renderer.rs
 demos/wireframe-cube/scene.mlpl
 extensions/hello/Cargo.toml
 extensions/hello/extension.toml

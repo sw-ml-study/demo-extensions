@@ -7,6 +7,11 @@ current foundation deliberately starts with a headless `hello` extension so
 ABI, loading, packaging, ownership, and lifecycle behavior can be tested apart
 from GPU and window-system concerns.
 
+The wireframe cube is a first-pass proof of concept for an extension supplying
+interactive native-3D primitives to MLPL. It prioritizes a truthful public API,
+MLPL-owned application behavior, portability, and testability over visual
+polish; later iterations can refine rendering, controls, and performance.
+
 The repository proves the downstream extension boundary with a real
 `.dylib`/`.so` and a Rust host harness. sw-MLPL now exposes a separate static
 scalar registry plus a byte-compatible C-descriptor adapter: both its built-in
@@ -110,6 +115,8 @@ The completed foundation proves:
   dimensions, rotation speed, RGBA line color, and thickness;
 - a renderer-neutral Rust line-scene contract that validates bulk `[N,3]`
   positions and `[M,2]` edges before later GPU work.
+- a deterministic headless transform, perspective projection, clipping, and
+  thick-line raster pipeline with portable PPM evidence.
 
 General argument marshalling, real unload/hot reload, the wgpu/winit window,
 and complete sw-MLPL language integration are future work. Dynamic/static provider parity shares one tested registration
@@ -144,6 +151,9 @@ acceptance are next.
   requirements, dependencies, workarounds, and acceptance gates.
 - [Wireframe cube scene](docs/wireframe-cube-scene.md) — array-generated cube,
   generic line-scene schema, controls, validation, and current bridge.
+- [Headless wireframe renderer](docs/headless-wireframe-renderer.md) — pure
+  transform/projection/clipping pipeline, deterministic evidence, and the
+  MLPL-owned interactive boundary.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and

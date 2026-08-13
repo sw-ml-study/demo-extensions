@@ -2,6 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
+mod renderer;
+
+pub use renderer::{Camera, HeadlessImage, PlannedLine, RenderError, Viewport};
+
 const SCHEMA: &str = "sw-ml-study.native3d.line-scene";
 const MAX_VERTICES: usize = 1_000_000;
 const MAX_EDGES: usize = 2_000_000;
@@ -88,6 +92,35 @@ impl LineScene {
     #[must_use]
     pub fn to_json(&self) -> String {
         serde_json::to_string(self).expect("validated scene is serializable")
+    }
+
+    /// Transforms, near-clips, projects, and viewport-clips generic scene edges.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for invalid camera values or a non-finite rotation.
+    pub fn plan_lines(
+        &self,
+        camera: Camera,
+        viewport: Viewport,
+        rotation_y: f32,
+    ) -> Result<Vec<PlannedLine>, RenderError> {
+        renderer::plan_lines(self, camera, viewport, rotation_y)
+    }
+
+    /// Produces a deterministic CPU-rasterized image for tests and evidence.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for invalid camera values or a non-finite rotation.
+    pub fn render_headless(
+        &self,
+        camera: Camera,
+        viewport: Viewport,
+        rotation_y: f32,
+    ) -> Result<HeadlessImage, RenderError> {
+        let lines = self.plan_lines(camera, viewport, rotation_y)?;
+        Ok(renderer::rasterize(&lines, viewport))
     }
 
     fn validate(&self) -> Result<(), SceneError> {

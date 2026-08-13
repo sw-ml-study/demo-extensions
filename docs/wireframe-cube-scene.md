@@ -39,11 +39,11 @@ API. The renderer remains reusable for any MLPL-generated line scene.
 
 ## Interaction boundary
 
-The later window step will map keyboard controls to width, height, length,
-rotation speed, color presets, and thickness. Those controls update generic
-scene/camera state in Rust for immediate visual feedback. The initial values
-and reproducible geometry remain MLPL-owned. Direct MLPL bulk updates require
-the upstream array and handle contracts recorded in
+The native layer will report generic keyboard, resize, and close events. MLPL
+will map those events to width, height, length, rotation speed, color, and
+thickness, regenerate/update scene arrays, and drive the application loop. Rust
+will not contain cube-specific key bindings or control policy. Direct MLPL bulk
+updates require the upstream event, array, and handle contracts recorded in
 [`upstream-contract.md`](upstream-contract.md).
 
 Headless parsing, geometry, projection, and draw-planning tests are required

@@ -37,6 +37,23 @@ acceptance can claim end-to-end MLPL integration.
 - Deterministic extension search paths, platform triples, manifest validation,
   and a trust/integrity policy.
 
+### Native application primitive surface
+
+The downstream renderer must surface generic primitives through the public
+extension boundary rather than implement application behavior in Rust:
+
+- create a native window/viewer and return a typed generational handle;
+- poll a bounded batch of key, pointer, resize, and close events as MLPL data;
+- update positions, edges, and parallel style/ID arrays in bulk;
+- render/present using explicit time or rotation state supplied by MLPL;
+- query monotonic time and current drawable size;
+- close/deactivate deterministically and reject stale handles.
+
+MLPL owns the loop and maps events to cube dimensions, rotation speed, color,
+and thickness. This same source should remain compilable when compiler parity
+lands. The native implementation may translate winit event variants and wgpu
+resources, but must not encode cube controls or other application semantics.
+
 ## Capability reporting
 
 Every foundation acceptance report classifies each item as supported, proven
