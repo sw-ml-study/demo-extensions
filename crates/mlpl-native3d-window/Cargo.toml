@@ -1,0 +1,16 @@
+[package]
+name = "mlpl-native3d-window"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+bytemuck = { version = "1", features = ["derive"] }
+mlpl-native3d-scene = { path = "../mlpl-native3d-scene" }
+pollster = "0.4"
+wgpu = "24"
+winit = "0.30"
+
+[lints]
+workspace = true

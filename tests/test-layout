@@ -13,6 +13,10 @@ crates/mlpl-extension-sdk/src/lib.rs
 crates/mlpl-native3d-scene/Cargo.toml
 crates/mlpl-native3d-scene/src/lib.rs
 crates/mlpl-native3d-scene/src/renderer.rs
+crates/mlpl-native3d-window/Cargo.toml
+crates/mlpl-native3d-window/src/lib.rs
+crates/mlpl-native3d-window/src/main.rs
+demos/wireframe-cube/default-scene.mlpl
 demos/wireframe-cube/scene.mlpl
 extensions/hello/Cargo.toml
 extensions/hello/extension.toml
@@ -24,6 +28,7 @@ scripts/check-gitignore
 scripts/check-namespaces
 scripts/check-tracked
 scripts/run-rust-tests
+scripts/run-3d-cube
 scripts/run-tests
 scripts/select-mlpl
 scripts/select-mlplunit

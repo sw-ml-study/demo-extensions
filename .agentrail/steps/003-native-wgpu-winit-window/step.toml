@@ -1,6 +1,6 @@
 number = 3
 slug = "native-wgpu-winit-window"
-status = "pending"
+status = "in-progress"
 description = "Add the native wgpu/winit window using the proven renderer model. Render the ..."
 role = "production"
 context_files = []

@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+mlpl=$($repo_root/scripts/select-mlpl)
+scene_file=$(mktemp "${TMPDIR:-/tmp}/mlpl-3d-cube.XXXXXX.json")
+trap 'rm -f "$scene_file"' EXIT HUP INT TERM
+
+cd "$repo_root"
+"$mlpl" demos/wireframe-cube/default-scene.mlpl >"$scene_file"
+cargo run --release -p mlpl-native3d-window -- "$scene_file"

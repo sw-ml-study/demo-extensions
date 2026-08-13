@@ -23,6 +23,10 @@ mlpl-path:
 mlplunit-path:
     ./scripts/select-mlplunit
 
+# Open the opt-in native rotating-cube smoke window.
+cube-3d:
+    ./scripts/run-3d-cube
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

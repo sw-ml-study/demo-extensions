@@ -63,6 +63,17 @@ cargo build --workspace
 cargo build -p mlpl-extension-hello
 ```
 
+Open the opt-in native rotating-cube smoke window:
+
+```sh
+just cube-3d
+```
+
+The MLPL script generates the scene before the shared wgpu/winit application
+opens. Escape or the native close control exits. Cube-specific interactive
+controls remain MLPL-owned and require the upstream live extension contracts;
+the current window is an honest visual PoC, not the completed live API.
+
 Run focused Rust or MLPL tests:
 
 ```sh
@@ -154,6 +165,8 @@ acceptance are next.
 - [Headless wireframe renderer](docs/headless-wireframe-renderer.md) — pure
   transform/projection/clipping pipeline, deterministic evidence, and the
   MLPL-owned interactive boundary.
+- [Native window](docs/native-window.md) — opt-in cube command, wgpu/winit
+  architecture, macOS/Linux handling, and live-interaction blocker.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and

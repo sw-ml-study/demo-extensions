@@ -1,6 +1,6 @@
 # Extension Blockers and Host Requirements
 
-Status date: 2026-08-11
+Status date: 2026-08-13
 
 This document is the handoff contract between `demo-extensions` and
 `../sw-mlpl`. It distinguishes capabilities already proven from work that is
@@ -163,14 +163,21 @@ Requirement:
 - Host calls never hold evaluator locks while extension callbacks re-enter the
   language unless an explicit reentrancy protocol permits it.
 - Window/resource handles follow B5 lifecycle rules.
+- The extension exposes generic `open`, bounded `poll_events`, bulk
+  `set_lines`, explicit `render`/`present`, time/size queries, and `close`
+  primitives. MLPL owns the application loop and maps events to domain state;
+  no cube-specific controls are implemented in Rust.
 
 Acceptance:
 
 - A headless lifecycle harness and a real-window smoke test cover repeated
   open/update/poll/close, bounded events, callback errors, and shutdown.
 
-Current workaround: none; visualization must not be added before this policy is
-implemented.
+Current workaround: `just cube-3d` opens a real opt-in wgpu/winit window from
+an MLPL-generated scene and proves native rendering and close behavior. Its
+standalone smoke harness advances rotation from the MLPL-provided speed, but it
+cannot return a handle or events to MLPL. It is visual evidence only, not proof
+of open/update/poll/close through the public extension API.
 
 ## B7: package discovery, deployment, and trust
 

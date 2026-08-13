@@ -1,0 +1,2 @@
+include "scene.mlpl";
+unwrap(u:wireframe_cube_json(u:wireframe_cube_defaults()))
