@@ -1,8 +1,9 @@
 number = 3
 slug = "native-wgpu-winit-window"
-status = "in-progress"
+status = "completed"
 description = "Add the native wgpu/winit window using the proven renderer model. Render the ..."
 role = "production"
 context_files = []
 created_at = "2026-08-13T11:27:30"
-commits = []
+completed_at = "2026-08-13T11:56:12"
+commits = ["1bccec566772b7c11b41e2fdec70e081d13f841f"]
