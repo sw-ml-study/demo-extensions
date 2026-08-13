@@ -8,6 +8,9 @@ still blocked on the host. A blocker is closed only by the named downstream
 acceptance evidence; an upstream implementation or synthetic fixture alone is
 not sufficient.
 
+For the focused native-3D handoff, see
+[`sw-mlpl-blockers.md`](sw-mlpl-blockers.md).
+
 ## Proven baseline
 
 The following are no longer blockers:

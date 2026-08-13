@@ -167,6 +167,10 @@ acceptance are next.
   MLPL-owned interactive boundary.
 - [Native window](docs/native-window.md) — opt-in cube command, wgpu/winit
   architecture, macOS/Linux handling, and live-interaction blocker.
+- [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
+  matrix and deliberately narrow PoC claims.
+- [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,
+  viewer-call, and compiler requirements for MLPL-owned interaction.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and
