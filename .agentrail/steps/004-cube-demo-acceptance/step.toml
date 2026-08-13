@@ -1,8 +1,9 @@
 number = 4
 slug = "cube-demo-acceptance"
-status = "in-progress"
+status = "completed"
 description = "Add the deterministic MLPL-to-native cube demo workflow, thin just/scripts co..."
 role = "validation"
 context_files = []
 created_at = "2026-08-13T11:27:31"
-commits = []
+completed_at = "2026-08-13T11:59:29"
+commits = ["2fbd999e1a2b9307dd409d91dcc0288b233ee8fa"]
