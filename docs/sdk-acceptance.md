@@ -48,6 +48,6 @@ the real downstream provider, and proves `_hello:answer()` returns `42` while
 | `use hello` and dotted facade | Blocked on the queued facade/module saga |
 | Compiled extension invocation | Blocked on compiler parity |
 | Packaged dynamic loading | Blocked on host dynamic loading, trust, and manifest integration |
-| Host arrays, native handles, and record returns | Shipped upstream; real downstream-provider interpreter acceptance is the next gate |
+| Host arrays, native handles, and record returns | Proven through the real `_boundary` descriptor and adjacent interpreter in `data_boundary.rs` |
 
 No file in `../sw-mlpl` was changed during this saga.

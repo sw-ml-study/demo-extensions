@@ -16,8 +16,9 @@ The repository proves the downstream extension boundary with a real
 `.dylib`/`.so` and a Rust host harness. sw-MLPL now exposes a separate static
 scalar registry plus a byte-compatible C-descriptor adapter: both its built-in
 `hello:answer()` and this repository's `_hello:answer()` provider are proven
-through the interpreter. `use hello`, compilation, dynamic loading, arrays, and
-handles remain explicitly tracked contracts.
+through the interpreter. Arrays, persistent handles, and nested records are now
+also proven through the real downstream descriptor. `use hello`, compilation,
+dynamic loading, and live native event delivery remain tracked contracts.
 
 ## What is here
 
@@ -28,6 +29,7 @@ crates/mlpl-extension-sdk/      Safe author-facing SDK scaffold
 crates/mlpl-native3d-scene/      Generic line-scene parser and validation
 demos/wireframe-cube/            MLPL-owned bulk-array cube scene
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
+extensions/boundary-probe/      Public-SDK array/handle/record host probe
 tests/                          Native mlplunit and structural tests
 docs/                           Architecture, contracts, plans, and evidence
 ```
@@ -158,6 +160,8 @@ acceptance are next.
   descriptor/trampoline contract.
 - [C provider host acceptance](docs/c-provider-host-acceptance.md) — direct
   downstream descriptor registration and remaining upstream scope.
+- [sw-MLPL data-boundary acceptance](docs/upstream-data-boundary-acceptance.md)
+  — real interpreter proof for arrays, handles, records, and invalid values.
 - [Extension blockers](docs/extensions-blockers.md) — actionable host
   requirements, dependencies, workarounds, and acceptance gates.
 - [Wireframe cube scene](docs/wireframe-cube-scene.md) — array-generated cube,

@@ -6,6 +6,7 @@ publish = false
 
 [dependencies]
 mlpl-extension-hello = { path = "../../extensions/hello" }
+mlpl-extension-boundary-probe = { path = "../../extensions/boundary-probe" }
 mlpl-eval = { path = "../../../sw-mlpl/components/eval/crates/mlpl-eval" }
 mlpl-extension-cabi = { path = "../../../sw-mlpl/components/runtime-core/crates/mlpl-extension-cabi" }
 mlpl-parser = { path = "../../../sw-mlpl/components/syntax-parser/crates/mlpl-parser" }

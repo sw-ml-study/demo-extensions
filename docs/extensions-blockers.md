@@ -37,8 +37,8 @@ the blockers below by implication.
 | B1 | `use`/facade surface | sw-MLPL | Only colon-qualified native names are callable | modules/namespaces and facade saga |
 | B2 | Compiler parity | sw-MLPL | Extension calls work only in interpreter/REPL paths | compiler I/O parity, then extension startup hook |
 | B3 | Dynamic host loading | sw-MLPL | Host adapter accepts process-resident static descriptors only | loader, manifest, trust, and lifecycle policy |
-| B4 | Dense arrays at host boundary | downstream verification | Shipped upstream in both directions; real provider proof pending here | current direct-boundary saga |
-| B5 | Native handles at host boundary | downstream verification | Shipped upstream; real provider lifecycle proof pending here | current direct-boundary saga |
+| B4 | Dense arrays at host boundary | closed | Real provider round-trip proven through adjacent interpreter | `data_boundary.rs` |
+| B5 | Native handles at host boundary | closed | Persistent, closed, stale, foreign, and malformed cases proven through adjacent interpreter | `data_boundary.rs` |
 | B6 | Event loop and callbacks | sw-MLPL + extension | No host policy for native windows or event delivery | B5 plus main-thread/reentrancy policy |
 | B7 | Package discovery and trust | sw-MLPL | Downstream manifests are not a host search/load contract | B3 and deployment policy |
 | B8 | C-provider help metadata | sw-MLPL | Adapter registers empty signature metadata | metadata parsing and catalog bridge |
@@ -130,8 +130,10 @@ Acceptance:
 - Fixtures reject wrong dtype/rank/shape, non-contiguous strides, overflow,
   misalignment, excessive size, mutation requests, and expired call storage.
 
-Current workaround: the downstream SDK and loader prove the ABI and one bulk
-call, but the host C adapter rejects the array tag.
+Closed for interpreted static providers: `_boundary:echo_array` round-trips a
+dense `[2,3]` array through the real C adapter and rejects a non-array value.
+Copy/borrow performance and unsupported-layout coverage remain future depth,
+not blockers for the current PoC.
 
 ## B5: native handles
 
@@ -152,8 +154,9 @@ Acceptance:
   cross-extension use, exhaustion, duplicate drop, provider deactivation, and
   deterministic finalization order.
 
-Current workaround: `HandleRegistry` proves these rules inside the downstream
-SDK; the host cannot yet transport the handle value.
+Closed for interpreted static providers: a real MLPL variable retains the
+provider handle across calls, while closed, stale, cross-extension, and
+non-handle values fail cleanly in `data_boundary.rs`.
 
 ## B6: event loop, callbacks, and persistent resources
 

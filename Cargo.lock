@@ -793,6 +793,13 @@ name = "mlpl-extension-abi"
 version = "0.0.0"
 
 [[package]]
+name = "mlpl-extension-boundary-probe"
+version = "0.0.0"
+dependencies = [
+ "mlpl-extension-sdk",
+]
+
+[[package]]
 name = "mlpl-extension-hello"
 version = "0.0.0"
 dependencies = [

@@ -38,6 +38,7 @@ name = "demo-extensions-upstream-host-acceptance"
 version = "0.0.0"
 dependencies = [
  "mlpl-eval",
+ "mlpl-extension-boundary-probe",
  "mlpl-extension-cabi",
  "mlpl-extension-hello",
  "mlpl-parser",
@@ -512,6 +513,13 @@ version = "0.0.0"
 [[package]]
 name = "mlpl-extension-abi"
 version = "0.20.0"
+
+[[package]]
+name = "mlpl-extension-boundary-probe"
+version = "0.0.0"
+dependencies = [
+ "mlpl-extension-sdk",
+]
 
 [[package]]
 name = "mlpl-extension-cabi"

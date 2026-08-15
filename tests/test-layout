@@ -23,6 +23,8 @@ extensions/hello/Cargo.toml
 extensions/hello/extension.toml
 extensions/hello/module.mlpl
 extensions/hello/src/lib.rs
+extensions/boundary-probe/Cargo.toml
+extensions/boundary-probe/src/lib.rs
 mlplunit.conf
 scripts/check
 scripts/check-gitignore
@@ -34,7 +36,8 @@ scripts/run-tests
 scripts/select-mlpl
 scripts/select-mlplunit
 tests/test_hello_module.mlpl
-tests/test_wireframe_cube_scene.mlpl'
+tests/test_wireframe_cube_scene.mlpl
+tests/upstream-host/tests/data_boundary.rs'
 
 printf '%s\n' "$required_files" | while IFS= read -r path; do
   if [ ! -f "$repo_root/$path" ]; then

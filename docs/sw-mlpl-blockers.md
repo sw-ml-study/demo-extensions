@@ -1,18 +1,18 @@
 # sw-MLPL Blockers for Interactive Native 3D
 
-Status date: 2026-08-13
+Status date: 2026-08-15
 
 The native wgpu/winit renderer and MLPL-generated cube scene work today.
 sw-MLPL commits `5c695fe1`, `03c7559b`, `797d910f`, and `f8585846` have now
 shipped dense arrays in both directions, opaque native handles, and nested
-structured record returns. The remaining upstream blocker is live native event
-delivery and event-loop ownership; downstream must still prove the new data
-boundary with this repository's provider.
+structured record returns, and this repository now proves that boundary with a
+real provider. Live native event delivery and event-loop ownership remain the
+sole upstream blocker for interpreted interaction.
 This repository does not modify `../sw-mlpl`.
 
 ## Required host primitives
 
-### Typed persistent native handles — shipped, downstream proof pending
+### Typed persistent native handles — closed for interpreted static providers
 
 sw-MLPL must transport extension-scoped, type-tagged generational handles as
 language values. A viewer returned by `native3d:open(...)` must remain valid
@@ -36,7 +36,7 @@ Downstream acceptance: MLPL opens a viewer, polls bounded batches, handles
 resize and close, and exits cleanly under repeated open/poll/close cycles.
 Overflow and provider deactivation have deterministic results.
 
-### Bulk arrays through the public C-provider boundary — shipped, downstream proof pending
+### Bulk arrays through the public C-provider boundary — closed for interpreted static providers
 
 The host C adapter must accept dense numeric arrays with dtype, rank, shape,
 strides, ownership, and call lifetime. The PoC needs `[N,3]` positions and
@@ -94,11 +94,10 @@ extension API or the MLPL-owned interactive loop.
 
 ## Upstream handoff order
 
-1. Prove the shipped handles, arrays, and nested records using this provider.
-2. Implement the generic headless viewer calls and MLPL control reducer here.
-3. Define main-thread event-loop ownership and add bounded polling upstream.
-4. Connect real native events to the already-tested MLPL reducer.
-5. Add provider startup, linkage/package, and call parity to compiled output.
+1. Implement the generic headless viewer calls and MLPL control reducer here.
+2. Define main-thread event-loop ownership and add bounded polling upstream.
+3. Connect real native events to the already-tested MLPL reducer.
+4. Add provider startup, linkage/package, and call parity to compiled output.
 
 Each upstream delivery should be followed by the named downstream acceptance
 test here. Until then, the PoC remains visually runnable but partially blocked

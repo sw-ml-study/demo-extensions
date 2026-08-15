@@ -6,6 +6,7 @@ members = [
     "crates/mlpl-native3d-scene",
     "crates/mlpl-native3d-window",
     "extensions/hello",
+    "extensions/boundary-probe",
 ]
 resolver = "2"
 exclude = ["tests/upstream-host"]
