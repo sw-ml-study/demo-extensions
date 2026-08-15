@@ -37,8 +37,8 @@ the blockers below by implication.
 | B1 | `use`/facade surface | sw-MLPL | Only colon-qualified native names are callable | modules/namespaces and facade saga |
 | B2 | Compiler parity | sw-MLPL | Extension calls work only in interpreter/REPL paths | compiler I/O parity, then extension startup hook |
 | B3 | Dynamic host loading | sw-MLPL | Host adapter accepts process-resident static descriptors only | loader, manifest, trust, and lifecycle policy |
-| B4 | Dense arrays at host boundary | sw-MLPL | Host C adapter rejects array tags | array representation and call-lifetime rooting |
-| B5 | Native handles at host boundary | sw-MLPL | Host value model cannot carry SDK handles | handle value, ownership, and finalization contract |
+| B4 | Dense arrays at host boundary | downstream verification | Shipped upstream in both directions; real provider proof pending here | current direct-boundary saga |
+| B5 | Native handles at host boundary | downstream verification | Shipped upstream; real provider lifecycle proof pending here | current direct-boundary saga |
 | B6 | Event loop and callbacks | sw-MLPL + extension | No host policy for native windows or event delivery | B5 plus main-thread/reentrancy policy |
 | B7 | Package discovery and trust | sw-MLPL | Downstream manifests are not a host search/load contract | B3 and deployment policy |
 | B8 | C-provider help metadata | sw-MLPL | Adapter registers empty signature metadata | metadata parsing and catalog bridge |

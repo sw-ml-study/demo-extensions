@@ -1,0 +1,8 @@
+number = 3
+slug = "headless_native3d_provider"
+status = "pending"
+description = "Build a generic headless native3d provider through the public ABI/SDK using T..."
+role = "production"
+context_files = []
+created_at = "2026-08-15T13:28:25"
+commits = []

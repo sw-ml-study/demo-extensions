@@ -10,6 +10,12 @@ pub enum ConversionError {
     InvalidErrorCode(u32),
     EmptyError,
     Array(ArrayError),
+    NullRecord,
+    NullRecordFields,
+    TooManyRecordFields(usize),
+    EmptyRecordFieldName,
+    DuplicateRecordField(String),
+    RecordNestingTooDeep,
 }
 
 impl From<ArrayError> for ConversionError {

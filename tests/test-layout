@@ -10,6 +10,7 @@ crates/mlpl-extension-loader/Cargo.toml
 crates/mlpl-extension-loader/src/lib.rs
 crates/mlpl-extension-sdk/Cargo.toml
 crates/mlpl-extension-sdk/src/lib.rs
+crates/mlpl-extension-sdk/tests/records.rs
 crates/mlpl-native3d-scene/Cargo.toml
 crates/mlpl-native3d-scene/src/lib.rs
 crates/mlpl-native3d-scene/src/renderer.rs

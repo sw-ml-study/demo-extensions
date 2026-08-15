@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use mlpl_extension_abi::ErrorCode;
 
 use crate::{DenseArray, NativeHandle};
@@ -12,6 +14,7 @@ pub enum Value {
     Bytes(Vec<u8>),
     Array(DenseArray),
     Handle(NativeHandle),
+    Record(BTreeMap<String, Value>),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

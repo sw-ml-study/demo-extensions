@@ -1,6 +1,6 @@
 # Extension SDK Acceptance
 
-Date: 2026-08-09
+Date: 2026-08-15
 
 Saga: `extension-sdk-arrays-handles`
 
@@ -22,6 +22,7 @@ resources cross only as opaque generational capabilities.
 | Signatures, defaults, types, stable help | `metadata.rs` plus hello registry help | Proven |
 | Dense numeric arrays | `arrays.rs`; `_hello.sum_positions` | Proven with one defensive foreign-to-owned copy; no end-to-end zero-copy claim |
 | Typed native handles | `handles.rs` | Proven for identity, stale/type/extension rejection, exhaustion, and deterministic finalization |
+| Nested structured records | `records.rs` | Proven for owned encoding/copying, pointer/count/name/value rejection, duplicate fields, and depth bounds |
 | Repository gate | `just check` | Passed: policies, formatting, compile, clippy, Rust tests, mlplunit, and whitespace |
 
 ## sw-MLPL execution modes
@@ -47,6 +48,6 @@ the real downstream provider, and proves `_hello:answer()` returns `42` while
 | `use hello` and dotted facade | Blocked on the queued facade/module saga |
 | Compiled extension invocation | Blocked on compiler parity |
 | Packaged dynamic loading | Blocked on host dynamic loading, trust, and manifest integration |
-| Host arrays and native handles | Blocked on upstream value/lifetime contracts |
+| Host arrays, native handles, and record returns | Shipped upstream; real downstream-provider interpreter acceptance is the next gate |
 
 No file in `../sw-mlpl` was changed during this saga.

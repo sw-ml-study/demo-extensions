@@ -1,11 +1,14 @@
+use std::collections::BTreeMap;
 use std::slice;
 use std::str;
 
-use mlpl_extension_abi::{AbiErrorV1, AbiSlice, AbiValue, ErrorCode, ValueTag};
+use mlpl_extension_abi::{AbiErrorV1, AbiRecordView, AbiSlice, AbiValue, ErrorCode, ValueTag};
 
 use crate::{ConversionError, OwnedError, Value};
 
 const MAX_DATA_BYTES: usize = 16 * 1024 * 1024;
+const MAX_RECORD_FIELDS: usize = 4096;
+const MAX_RECORD_DEPTH: usize = 32;
 
 /// Copies one foreign ABI value into safe owned Rust storage.
 ///
@@ -20,6 +23,13 @@ const MAX_DATA_BYTES: usize = 16 * 1024 * 1024;
 /// length during this call. Generated extension trampolines own this host-only
 /// precondition; ordinary extension functions receive `Value` instead.
 pub unsafe fn copy_foreign_value(raw: &AbiValue) -> Result<Value, ConversionError> {
+    unsafe { copy_foreign_value_at_depth(raw, 0) }
+}
+
+unsafe fn copy_foreign_value_at_depth(
+    raw: &AbiValue,
+    depth: usize,
+) -> Result<Value, ConversionError> {
     if raw.reserved != 0 {
         return Err(ConversionError::ReservedValue);
     }
@@ -44,8 +54,47 @@ pub unsafe fn copy_foreign_value(raw: &AbiValue) -> Result<Value, ConversionErro
                 handle.generation,
             )))
         }
+        tag if tag == ValueTag::Record as u32 => unsafe {
+            copy_record(raw.payload.record, depth).map(Value::Record)
+        },
         tag => Err(ConversionError::UnknownTag(tag)),
     }
+}
+
+unsafe fn copy_record(
+    raw: *const AbiRecordView,
+    depth: usize,
+) -> Result<BTreeMap<String, Value>, ConversionError> {
+    if depth >= MAX_RECORD_DEPTH {
+        return Err(ConversionError::RecordNestingTooDeep);
+    }
+    if raw.is_null() {
+        return Err(ConversionError::NullRecord);
+    }
+    let view = unsafe { &*raw };
+    if view.field_count > MAX_RECORD_FIELDS {
+        return Err(ConversionError::TooManyRecordFields(view.field_count));
+    }
+    if view.field_count > 0 && view.fields.is_null() {
+        return Err(ConversionError::NullRecordFields);
+    }
+    let fields = if view.field_count == 0 {
+        &[]
+    } else {
+        unsafe { slice::from_raw_parts(view.fields, view.field_count) }
+    };
+    let mut copied = BTreeMap::new();
+    for field in fields {
+        let name = unsafe { copy_text(field.name)? };
+        if name.is_empty() {
+            return Err(ConversionError::EmptyRecordFieldName);
+        }
+        let value = unsafe { copy_foreign_value_at_depth(&field.value, depth + 1)? };
+        if copied.insert(name.clone(), value).is_some() {
+            return Err(ConversionError::DuplicateRecordField(name));
+        }
+    }
+    Ok(copied)
 }
 
 /// Copies one foreign ABI error into safe owned Rust storage.

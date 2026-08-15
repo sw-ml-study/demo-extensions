@@ -45,12 +45,17 @@ not permitted.
 ## Current limits
 
 - V1 values model nil, bool, signed 64-bit integers, 64-bit floats, UTF-8,
-  bytes, bounded dense numeric arrays, and opaque native handles.
+  bytes, bounded dense numeric arrays, opaque native handles, and nested
+  named-field records. Record is fixed tag `8`, matching the public sw-MLPL
+  adapter shipped in `f8585846`.
 - Function descriptors contain name, arity, and an optional V1 invocation
   trampoline. The loader refuses missing trampolines and metadata/export drift.
 - Dense arrays carry a fixed dtype tag, rank, data slice, shape pointer, and
   byte-stride pointer. V1 accepts only bounded contiguous row-major input;
   handles carry extension ID, type ID, slot, and generation without pointers.
-- Struct layout is C-compatible, but no claim of end-to-end sw-MLPL integration
-  is made. The upstream registry/value hooks remain listed in
-  `docs/upstream-contract.md`.
+- Records carry a borrowed field pointer/count; each field has a borrowed UTF-8
+  name and recursively tagged value. SDK encoders retain the complete nested
+  allocation graph through the call, while decoders immediately copy it with
+  4,096-field and 32-level nesting bounds and duplicate-name rejection.
+- Struct layout is C-compatible. End-to-end sw-MLPL evidence is tracked
+  separately so local round trips are not mistaken for interpreter proof.

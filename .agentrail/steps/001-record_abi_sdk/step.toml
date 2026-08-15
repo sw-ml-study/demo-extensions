@@ -1,0 +1,8 @@
+number = 1
+slug = "record_abi_sdk"
+status = "in-progress"
+description = "Use TDD to synchronize the public downstream C ABI and safe SDK with sw-MLPL'..."
+role = "production"
+context_files = []
+created_at = "2026-08-15T13:28:25"
+commits = []

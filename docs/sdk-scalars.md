@@ -7,8 +7,10 @@ lifetimes.
 ## Author-facing values
 
 `Value` supports nil, bool, signed 64-bit integers, 64-bit floats, UTF-8
-strings, and arbitrary bytes. `EncodedValue` owns any string/byte allocation
-and exposes a stable ABI view only while the encoder remains alive.
+strings, arbitrary bytes, dense arrays, opaque handles, and deterministic
+nested records. `EncodedValue` owns every string, byte buffer, array
+descriptor, record name, nested encoded value, field array, and record
+descriptor and exposes a stable ABI view only while the encoder remains alive.
 `OwnedError` and `EncodedError` provide the same ownership rule for invalid
 argument and ordinary extension failures.
 
@@ -30,12 +32,16 @@ Decoding fails closed on:
 - boolean payloads other than zero or one;
 - null pointers paired with non-zero lengths;
 - payloads larger than 16 MiB;
-- invalid UTF-8 and empty error messages.
+- invalid UTF-8 and empty error messages;
+- null record descriptors or non-empty field lists with null pointers;
+- more than 4,096 fields, empty/duplicate/invalid UTF-8 names, malformed nested
+  values, or nesting deeper than 32 records.
 
 Empty strings and byte arrays are valid and may use a null pointer with zero
 length. Integer minimum/maximum, infinities, and NaN retain their exact scalar
-semantics. No array or native-handle claims are made by this slice.
+semantics. Record copying is recursive and fully owned after the foreign call.
 
 The loader now uses these SDK copies for dynamic and static provider results,
-removing its earlier one-off `i64` decoder. General argument marshalling remains
-future work.
+removing its earlier one-off `i64` decoder. Arrays, handles, and structured
+records now align with the public sw-MLPL C adapter; real interpreter
+acceptance remains a separate gate.

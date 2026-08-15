@@ -1,0 +1,1 @@
+Completed native wireframe cube PoC; starting direct extension-boundary integration after sw-MLPL shipped arrays, handles, and structured returns.

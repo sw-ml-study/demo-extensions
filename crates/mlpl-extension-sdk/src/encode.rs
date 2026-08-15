@@ -1,5 +1,6 @@
 use mlpl_extension_abi::{
-    AbiArrayView, AbiErrorV1, AbiHandle, AbiSlice, AbiValue, ValuePayload, ValueTag,
+    AbiArrayView, AbiErrorV1, AbiField, AbiHandle, AbiRecordView, AbiSlice, AbiValue, ValuePayload,
+    ValueTag,
 };
 
 use crate::{OwnedError, Value};
@@ -8,11 +9,19 @@ pub struct EncodedValue {
     raw: AbiValue,
     _storage: Option<Box<[u8]>>,
     _array: Option<EncodedArray>,
+    _record: Option<EncodedRecord>,
 }
 
 struct EncodedArray {
     _value: crate::DenseArray,
     _descriptor: Box<AbiArrayView>,
+}
+
+struct EncodedRecord {
+    _names: Vec<Box<[u8]>>,
+    _values: Vec<EncodedValue>,
+    _fields: Box<[AbiField]>,
+    _descriptor: Box<AbiRecordView>,
 }
 
 impl EncodedValue {
@@ -48,6 +57,7 @@ impl EncodedValue {
                     },
                 },
             }),
+            Value::Record(fields) => Self::with_record(fields),
         }
     }
 
@@ -56,6 +66,7 @@ impl EncodedValue {
             raw,
             _storage: None,
             _array: None,
+            _record: None,
         }
     }
 
@@ -72,6 +83,7 @@ impl EncodedValue {
             raw,
             _storage: Some(storage),
             _array: None,
+            _record: None,
         }
     }
 
@@ -96,6 +108,45 @@ impl EncodedValue {
             _storage: None,
             _array: Some(EncodedArray {
                 _value: value,
+                _descriptor: descriptor,
+            }),
+            _record: None,
+        }
+    }
+
+    fn with_record(fields: std::collections::BTreeMap<String, Value>) -> Self {
+        let names: Vec<Box<[u8]>> = fields
+            .keys()
+            .map(|name| name.as_bytes().to_vec().into_boxed_slice())
+            .collect();
+        let values: Vec<Self> = fields.into_values().map(Self::new).collect();
+        let raw_fields: Box<[AbiField]> = names
+            .iter()
+            .zip(&values)
+            .map(|(name, value)| AbiField {
+                name: AbiSlice::from_bytes(name),
+                value: *value.as_raw(),
+            })
+            .collect();
+        let descriptor = Box::new(AbiRecordView {
+            fields: raw_fields.as_ptr(),
+            field_count: raw_fields.len(),
+        });
+        let raw = AbiValue {
+            tag: ValueTag::Record as u32,
+            reserved: 0,
+            payload: ValuePayload {
+                record: descriptor.as_ref(),
+            },
+        };
+        Self {
+            raw,
+            _storage: None,
+            _array: None,
+            _record: Some(EncodedRecord {
+                _names: names,
+                _values: values,
+                _fields: raw_fields,
                 _descriptor: descriptor,
             }),
         }

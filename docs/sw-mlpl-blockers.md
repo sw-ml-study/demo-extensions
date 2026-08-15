@@ -2,14 +2,17 @@
 
 Status date: 2026-08-13
 
-The native wgpu/winit renderer and MLPL-generated cube scene work today. The
-remaining blocker is not drawing a cube; it is letting MLPL own a persistent,
-interactive native application through the public third-party extension API.
+The native wgpu/winit renderer and MLPL-generated cube scene work today.
+sw-MLPL commits `5c695fe1`, `03c7559b`, `797d910f`, and `f8585846` have now
+shipped dense arrays in both directions, opaque native handles, and nested
+structured record returns. The remaining upstream blocker is live native event
+delivery and event-loop ownership; downstream must still prove the new data
+boundary with this repository's provider.
 This repository does not modify `../sw-mlpl`.
 
 ## Required host primitives
 
-### Typed persistent native handles
+### Typed persistent native handles — shipped, downstream proof pending
 
 sw-MLPL must transport extension-scoped, type-tagged generational handles as
 language values. A viewer returned by `native3d:open(...)` must remain valid
@@ -33,7 +36,7 @@ Downstream acceptance: MLPL opens a viewer, polls bounded batches, handles
 resize and close, and exits cleanly under repeated open/poll/close cycles.
 Overflow and provider deactivation have deterministic results.
 
-### Bulk arrays through the public C-provider boundary
+### Bulk arrays through the public C-provider boundary — shipped, downstream proof pending
 
 The host C adapter must accept dense numeric arrays with dtype, rank, shape,
 strides, ownership, and call lifetime. The PoC needs `[N,3]` positions and
@@ -45,7 +48,7 @@ Downstream acceptance: one MLPL call updates a complete line scene in bulk.
 Tests cover wrong dtype/rank/shape, invalid indices, overflow, non-contiguous
 storage, expired storage, and explicit copy-versus-borrow evidence.
 
-### Generic viewer calls exposed to MLPL
+### Generic viewer calls exposed to MLPL — downstream work now unblocked
 
 The public extension surface must be able to register and invoke these generic
 operations:
@@ -91,10 +94,10 @@ extension API or the MLPL-owned interactive loop.
 
 ## Upstream handoff order
 
-1. Carry typed native handles through the host value model and C adapter.
-2. Carry bounded dense arrays through the same adapter.
-3. Define main-thread event-loop ownership and add bounded polling.
-4. Prove the generic viewer functions through interpreted MLPL.
+1. Prove the shipped handles, arrays, and nested records using this provider.
+2. Implement the generic headless viewer calls and MLPL control reducer here.
+3. Define main-thread event-loop ownership and add bounded polling upstream.
+4. Connect real native events to the already-tested MLPL reducer.
 5. Add provider startup, linkage/package, and call parity to compiled output.
 
 Each upstream delivery should be followed by the named downstream acceptance

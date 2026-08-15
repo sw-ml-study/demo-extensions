@@ -38,6 +38,7 @@ pub enum ValueTag {
     Bytes = 5,
     DenseArray = 6,
     NativeHandle = 7,
+    Record = 8,
 }
 
 #[repr(C)]
@@ -70,6 +71,20 @@ pub struct AbiArrayView {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct AbiField {
+    pub name: AbiSlice,
+    pub value: AbiValue,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct AbiRecordView {
+    pub fields: *const AbiField,
+    pub field_count: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub union ValuePayload {
     pub boolean: u8,
     pub integer: i64,
@@ -77,6 +92,7 @@ pub union ValuePayload {
     pub slice: AbiSlice,
     pub array: *const AbiArrayView,
     pub handle: AbiHandle,
+    pub record: *const AbiRecordView,
 }
 
 #[repr(C)]
