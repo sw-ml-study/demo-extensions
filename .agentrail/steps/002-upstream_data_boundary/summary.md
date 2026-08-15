@@ -1,0 +1,1 @@
+Proved the public SDK descriptor through the actual adjacent sw-MLPL interpreter for dense arrays in/out, persistent handles, closed/stale/foreign/malformed rejection, and nested record returns; documented that only event-loop delivery blocks interpreted interactive 3D.
