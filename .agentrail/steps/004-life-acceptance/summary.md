@@ -1,0 +1,1 @@
+Completed native Life acceptance and corrected severe interactive lag by retaining geometry, adding generic camera/help set_view diffs, suppressing idle and nonvisual scene submissions, and documenting bounds, ownership, macOS evidence, Linux limitations, and the next ID-addressed shadow-scene patch refinement.
