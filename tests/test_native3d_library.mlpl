@@ -1,0 +1,55 @@
+include "lib/native3d/app.mlpl";
+
+@test {name: "native3d camera reducer owns orbit zoom and pan", tags: ["native3d", "camera", "library"]}
+def u:test_native3d_camera_reduce() {
+  camera=u:n3d_camera_defaults();
+  camera=u:n3d_camera_reduce(camera,{kind:"pointer_down",button:"left",x:100,y:100,shift:0});
+  camera=u:n3d_camera_reduce(camera,{kind:"pointer_move",x:130,y:80,left:1,shift:0});
+  u:assert_eq([camera.yaw,camera.pitch],[0.3,0.2],"left drag orbits in MLPL");
+  zoomed=u:n3d_camera_reduce(camera,{kind:"wheel",dx:0,dy:40,x:130,y:80,shift:0});
+  u:assert_true(lt(zoomed.distance,camera.distance),"positive wheel zooms toward target")?;
+  stopped=u:n3d_camera_reduce(zoomed,{kind:"pointer_up",button:"left",x:130,y:80,shift:0});
+  panning=u:n3d_camera_reduce(stopped,{kind:"pointer_down",button:"middle",x:10,y:10,shift:0});
+  panned=u:n3d_camera_reduce(panning,{kind:"pointer_move",x:20,y:30,left:0,shift:0});
+  u:assert_true(1-equal(panned.target,panning.target),"middle drag pans target")?;
+  u:assert_eq(u:n3d_camera_reduce(panned,{kind:"key",key:"w"}),panned,"unrelated events are no-ops")
+}
+
+@test {name: "native3d pick ray intersects a plane", tags: ["native3d", "picking", "library"]}
+def u:test_native3d_pick_ray_plane() {
+  camera=u:n3d_camera_defaults(); ray=unwrap(u:n3d_pick_ray(camera,{viewport:{width:800,height:600},xy:[400,300]}));
+  hit=unwrap(u:n3d_ray_plane_hit(ray,[0,0,0],[0,0,1]));
+  u:assert_eq(hit.hit,1,"center ray hits origin plane");
+  u:assert_true(lt(reduce(:max,abs(hit.point)),0.000001),"center hit is the origin")?;
+  parallel=unwrap(u:n3d_ray_plane_hit({origin:[0,0,0],direction:[1,0,0]},[0,1,0],[0,1,0]));
+  u:assert_eq(parallel.hit,0,"parallel ray has no hit")
+}
+
+@test {name: "native3d generic styles lines and plane grids keep bulk shapes", tags: ["native3d", "arrays", "library"]}
+def u:test_native3d_geometry() {
+  style=unwrap(u:n3d_uniform_line_style(2,[0.2,0.8,1,1],2));
+  lines=unwrap(u:n3d_lines(reshape([0,0,0,1,0,0,1,1,0],[3,3]),reshape([0,1,1,2],[2,2]),style,0));
+  grid=unwrap(u:n3d_plane_grid(2,3,1,[0.4,0.4,0.4,1],1));
+  u:assert_eq(shape(lines.positions),[3,3],"generic position matrix shape")?;
+  u:assert_eq(shape(lines.edges),[2,2],"generic edge matrix shape")?;
+  u:assert_eq(shape(lines.colors),[2,4],"parallel color matrix shape")?;
+  u:assert_eq(shape(lines.thicknesses),[2],"parallel thickness vector shape")?;
+  u:assert_eq(shape(lines.ids),[2],"parallel id vector shape")?;
+  u:assert_eq(shape(grid.positions),[14,3],"2x3 grid position shape")?;
+  u:assert_eq(shape(grid.edges),[7,2],"2x3 grid edge shape")
+}
+
+def u:n3d_test_reduce(state,event) { {value: state.value+event.delta,camera: state.camera,revision: state.revision+1} }
+def u:n3d_test_render(state) { style=unwrap(u:n3d_uniform_line_style(1,[1,1,1,1],1)); u:n3d_lines(reshape([0,0,0,state.value,0,0],[2,3]),reshape([0,1],[1,2]),style,0) }
+
+@test {name: "native3d app transition assembles one owned command", tags: ["native3d", "lifecycle", "library"]}
+def u:test_native3d_transition() {
+  initial={value:1,camera: u:n3d_camera_defaults(),revision:0};
+  result=unwrap(u:n3d_transition(initial,{kind:"test",delta:2},:u:n3d_test_reduce,:u:n3d_test_render,"HELP"));
+  u:assert_eq([result.state.value,result.command.revision],[3,1],"generic reducer and renderer callbacks own app state")?;
+  u:assert_eq(result.command.help,"HELP","application text remains MLPL-owned")?;
+  u:assert_eq(result.command.op,"set_scene","library hides native command spelling");
+  u:assert_eq(result.command.camera,u:n3d_camera_record(result.state.camera),"camera command is MLPL-owned")
+}
+
+u:run_registered_tests()

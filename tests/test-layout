@@ -37,6 +37,9 @@ extensions/boundary-probe/src/lib.rs
 extensions/native3d/Cargo.toml
 extensions/native3d/src/lib.rs
 extensions/native3d/tests/provider.rs
+lib/native3d/app.mlpl
+lib/native3d/camera.mlpl
+lib/native3d/geometry.mlpl
 mlplunit.conf
 scripts/check
 scripts/check-gitignore
@@ -48,6 +51,7 @@ scripts/run-tests
 scripts/select-mlpl
 scripts/select-mlplunit
 tests/test_hello_module.mlpl
+tests/test_native3d_library.mlpl
 tests/test_wireframe_cube_scene.mlpl
 tests/test_wireframe_cube_controls.mlpl
 tests/upstream-host/tests/data_boundary.rs

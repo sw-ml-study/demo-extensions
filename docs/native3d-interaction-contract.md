@@ -59,6 +59,8 @@ invalid clipping, and invalid field of view. Commands without `camera` retain
 the backward-compatible default view. The same pure camera is consumed by CPU
 headless planning and wgpu line planning.
 
-The current cube does not yet register pointer/frame handlers or emit camera
-state, so its visible controls remain keyboard-only in this step. The ordinary
-MLPL library and mouse mappings belong to steps 3 and 4.
+The reusable ordinary MLPL layer now implements camera reduction, pick rays,
+plane hits, generic grids, and the Port application lifecycle. Its contract and
+test evidence are documented in [Native3D MLPL library](native3d-mlpl-library.md).
+The current cube remains keyboard-only until the next saga step migrates it to
+that library and registers the pointer mappings in the visible demo.

@@ -27,6 +27,7 @@ crates/mlpl-extension-abi/      Versioned C-compatible ABI and validation
 crates/mlpl-extension-loader/   Package resolver, dynamic loader, and registry
 crates/mlpl-extension-sdk/      Safe author-facing SDK scaffold
 crates/mlpl-native3d-scene/      Generic line-scene parser and validation
+lib/native3d/                    Reusable MLPL camera, picking, geometry, app loop
 demos/wireframe-cube/            MLPL-owned bulk-array cube scene
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
 extensions/boundary-probe/      Public-SDK array/handle/record host probe
@@ -180,6 +181,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   architecture, macOS/Linux handling, and live-interaction blocker.
 - [Native3D interaction contract](docs/native3d-interaction-contract.md) —
   bounded pointer/frame events, orbit-camera coordinates, and pick rays.
+- [Native3D MLPL library](docs/native3d-mlpl-library.md) — reusable camera,
+  picking, grid/line, callback, and application-lifecycle helpers.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

@@ -1,6 +1,6 @@
 number = 3
 slug = "mlpl_native3d_library"
-status = "pending"
+status = "in-progress"
 description = "Using native mlplunit TDD, implement reusable ordinary MLPL libraries for app..."
 role = "production"
 context_files = []

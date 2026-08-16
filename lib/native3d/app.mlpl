@@ -1,0 +1,27 @@
+# Generic MLPL app lifecycle and scene-command facade.
+include "camera.mlpl";
+include "geometry.mlpl";
+
+def u:n3d_scene_command(scene,camera,revision,app_text) {
+  if (1-u:n3d_camera_valid(camera))+lt(revision,0)+(1-eq(revision,floor(revision))) { err({kind:"native3d_command",message:"camera or revision is invalid"}) } else {
+    ok({op:"set_scene",positions: scene.positions,edges: scene.edges,colors: scene.colors,thicknesses: scene.thicknesses,ids: scene.ids,rotation_y_speed: scene.rotation_y_speed,revision: revision,help: app_text,camera: u:n3d_camera_record(camera)})
+  }
+}
+
+def u:n3d_transition(state,event,reduce_app,render_app,app_text) {
+  next=call(reduce_app,state,event); scene=call(render_app,next)?; message=u:n3d_scene_command(scene,next.camera,next.revision,app_text)?; ok({state: next,command: message})
+}
+
+def u:n3d_on_event(reduce_app,render_app,app_text,event,state) {
+  transition=u:n3d_transition(state,event,reduce_app,render_app,app_text)?; port_send(port,transition.command); transition.state
+}
+
+def u:n3d_run_app(initial,reduce_app,render_app,app_text) {
+  rendered=call(render_app,initial)?;
+  app_camera=initial.camera; app_revision=initial.revision;
+  packaged=u:n3d_scene_command(rendered,app_camera,app_revision,app_text)?;
+  port_send(port,packaged);
+  handler=call(:u:n3d_on_event,reduce_app,render_app,app_text);
+  on(port,"key",handler); on(port,"pointer_move",handler); on(port,"pointer_down",handler); on(port,"pointer_up",handler); on(port,"wheel",handler); on(port,"frame",handler); on(port,"resize",handler); on(port,"close",handler);
+  run(port,initial)
+}
