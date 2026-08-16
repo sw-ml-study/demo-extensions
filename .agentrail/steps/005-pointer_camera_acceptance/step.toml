@@ -1,9 +1,10 @@
 number = 5
 slug = "pointer_camera_acceptance"
-status = "in-progress"
+status = "completed"
 description = "Run and document final pointer-camera acceptance: bounded event behavior, pic..."
 role = "production"
 context_files = []
 created_at = "2026-08-16T08:22:24"
+completed_at = "2026-08-16T09:11:02"
 task_type = "native3d"
-commits = []
+commits = ["df4a05e0a81445c9878e5f09d7a551ef52671d39"]
