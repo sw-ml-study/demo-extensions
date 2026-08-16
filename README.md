@@ -80,8 +80,10 @@ Open the playable native tic-tac-toe game:
 just tic-tac-toe
 ```
 
-Click an empty square to move. X/O chooses the human mark, 1/2 chooses first
-or second, R restarts with those choices, and Escape closes. The board rules,
+Click an empty square to move. Left-drag orbits/tilts, the wheel zooms, and
+Shift-left-drag or middle-drag pans; crossing the four-pixel drag threshold
+suppresses mark placement. X/O chooses the human mark, 1/2 chooses first or
+second, R restarts with those choices, and Escape closes. The board rules,
 perfect-play strategy, picking, choices, turns, hover, and scene arrays are
 MLPL-owned; the shared Rust host only normalizes input and renders generic
 lines.

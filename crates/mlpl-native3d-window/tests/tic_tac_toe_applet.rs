@@ -25,8 +25,8 @@ fn mlpl_tic_tac_toe_click_drives_a_variable_styled_scene() {
     assert!(result.is_ok(), "tic-tac-toe applet failed: {result:?}");
     assert_eq!(commands[0].scene.edges().len(), 4);
     assert_eq!(commands[1].scene.edges().len(), 14);
-    assert!(commands[0].help.contains("CLICK AN EMPTY SQUARE"));
-    assert!(commands[0].help.contains("X/O CHOOSE MARK"));
+    assert!(commands[0].help.contains("CLICK EMPTY SQUARE"));
+    assert!(commands[0].help.contains("X/O MARK"));
 }
 
 #[test]
@@ -54,4 +54,37 @@ fn choosing_o_then_clicking_center_keeps_the_applet_alive() {
     assert_eq!(commands.len(), 3);
     assert!(commands[1].help.contains("YOU ARE O / FIRST"));
     assert_eq!(commands[2].scene.edges().len(), 14);
+}
+
+#[test]
+fn camera_drag_changes_view_and_suppresses_board_click() {
+    let mut commands = Vec::new();
+    let result = run_applet_with_host(&tic_tac_toe_applet_source(), |receiver, sender| {
+        let Ok(initial) = receiver.recv() else { return };
+        commands.push(parse_scene_command(initial).unwrap());
+        for event in [
+            InputEvent::pointer_button(PointerButton::Left, true, [400.0, 300.0], Modifiers::NONE),
+            InputEvent::pointer_move(
+                [430.0, 280.0],
+                mlpl_native3d_window::interaction::PointerButtons::LEFT,
+                Modifiers::NONE,
+            ),
+            InputEvent::pointer_button(PointerButton::Left, false, [430.0, 280.0], Modifiers::NONE),
+        ] {
+            sender.send(input_event(event)).unwrap();
+            let Ok(value) = receiver.recv() else { return };
+            commands.push(parse_scene_command(value).unwrap());
+        }
+        sender.send(close_event()).unwrap();
+    });
+    assert!(result.is_ok(), "camera drag applet failed: {result:?}");
+    assert_eq!(commands.len(), 4);
+    assert_eq!(
+        commands[3].scene.edges().len(),
+        4,
+        "drag must not place marks"
+    );
+    assert!((commands[3].camera.yaw() - commands[0].camera.yaw()).abs() > f32::EPSILON);
+    assert!(commands[0].help.contains("LEFT DRAG ORBIT/TILT"));
+    assert!(commands[0].help.contains("DRAG NEVER PLACES A MARK"));
 }

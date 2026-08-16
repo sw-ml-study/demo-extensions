@@ -59,6 +59,12 @@ changes turn order, R restarts with the selected choices, and Escape closes.
 The visible overlay states these controls and the selected mark/order; hover
 and a gold winning line provide graphical feedback.
 
+The same reducer owns camera gesture arbitration. A stationary left
+press/release is a board click. Movement beyond four physical pixels converts
+the gesture to left-drag orbit/tilt or Shift-left/middle-drag pan and suppresses
+placement on release. Wheel input zooms. Hover resumes after the drag ends.
+Rust still supplies only normalized pointer/button/modifier/wheel records.
+
 Exhaustive alpha-beta minimax remains the deterministic reference tested by
 mlplunit. The live worker uses a bounded-loop perfect-play policy—win, block,
 center, opposite corner, corner, then edge—because the host intentionally has

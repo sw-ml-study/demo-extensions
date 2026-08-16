@@ -2,8 +2,12 @@ include "scene.mlpl";
 include "../../lib/native3d/camera.mlpl";
 
 def u:ttt_app_state(board,user_mark,ai_mark,user_first,turn,camera,viewport_width,viewport_height,hover_cell,revision,close_requested) {
+  u:ttt_app_state_gesture(board,user_mark,ai_mark,user_first,turn,camera,viewport_width,viewport_height,hover_cell,revision,close_requested,0,0,0)
+}
+
+def u:ttt_app_state_gesture(board,user_mark,ai_mark,user_first,turn,camera,viewport_width,viewport_height,hover_cell,revision,close_requested,press_x,press_y,gesture_dragged) {
   outcome=u:ttt_outcome(board);
-  {board: board,user_mark: user_mark,ai_mark: ai_mark,user_first: user_first,turn: turn,status: outcome.status,winner: outcome.winner,camera: camera,viewport_width: viewport_width,viewport_height: viewport_height,hover_cell: hover_cell,revision: revision,close_requested: close_requested}
+  {board: board,user_mark: user_mark,ai_mark: ai_mark,user_first: user_first,turn: turn,status: outcome.status,winner: outcome.winner,camera: camera,viewport_width: viewport_width,viewport_height: viewport_height,hover_cell: hover_cell,revision: revision,close_requested: close_requested,press_x: press_x,press_y: press_y,gesture_dragged: gesture_dragged}
 }
 
 def u:ttt_app_defaults() {
@@ -42,14 +46,23 @@ def u:ttt_user_move(state,cell) {
   } }
 }
 
+def u:ttt_gesture_state(state,camera,hover,press_x,press_y,dragged) { u:ttt_app_state_gesture(state.board,state.user_mark,state.ai_mark,state.user_first,state.turn,camera,state.viewport_width,state.viewport_height,hover,state.revision+1,state.close_requested,press_x,press_y,dragged) }
+
 def u:ttt_reduce(state,event) {
   if equal(event.kind,"key") {
     if equal(event.key,"x") { u:ttt_restart(state,1,state.user_first) } else { if equal(event.key,"o") { u:ttt_restart(state,-1,state.user_first) } else { if equal(event.key,"1") { u:ttt_restart(state,state.user_mark,1) } else { if equal(event.key,"2") { u:ttt_restart(state,state.user_mark,0) } else { if equal(event.key,"r") { u:ttt_restart(state,state.user_mark,state.user_first) } else { state } } } } }
+  } else { if equal(event.kind,"pointer_down") {
+    camera=u:n3d_camera_reduce(state.camera,event); u:ttt_gesture_state(state,camera,-1,event.x,event.y,0)
   } else { if equal(event.kind,"pointer_move") {
-    cell=u:ttt_pointer_cell(state,event)?; u:ttt_app_state(state.board,state.user_mark,state.ai_mark,state.user_first,state.turn,state.camera,state.viewport_width,state.viewport_height,cell,state.revision+1,state.close_requested)
+    if state.camera.dragging {
+      distance2=(event.x-state.press_x)*(event.x-state.press_x)+(event.y-state.press_y)*(event.y-state.press_y); dragged=state.gesture_dragged+gt(distance2,16); dragged=if dragged { 1 } else { 0 }; camera=if dragged { u:n3d_camera_reduce(state.camera,event) } else { state.camera }; u:ttt_gesture_state(state,camera,-1,state.press_x,state.press_y,dragged)
+    } else { cell=u:ttt_pointer_cell(state,event)?; u:ttt_gesture_state(state,state.camera,cell,state.press_x,state.press_y,0) }
   } else { if equal(event.kind,"pointer_up") {
-    if equal(event.button,"left") { cell=u:ttt_pointer_cell(state,event)?; u:ttt_user_move(state,cell) } else { state }
+    camera=u:n3d_camera_reduce(state.camera,event); released=u:ttt_gesture_state(state,camera,-1,state.press_x,state.press_y,0);
+    if equal(event.button,"left")*(1-state.gesture_dragged) { cell=u:ttt_pointer_cell(released,event)?; u:ttt_user_move(released,cell) } else { released }
+  } else { if equal(event.kind,"wheel") {
+    camera=u:n3d_camera_reduce(state.camera,event); u:ttt_gesture_state(state,camera,state.hover_cell,state.press_x,state.press_y,state.gesture_dragged)
   } else { if equal(event.kind,"resize") {
     u:ttt_app_state(state.board,state.user_mark,state.ai_mark,state.user_first,state.turn,state.camera,u:n3d_clamp(event.width,1,8192),u:n3d_clamp(event.height,1,8192),-1,state.revision+1,state.close_requested)
-  } else { if equal(event.kind,"close") { u:ttt_app_state(state.board,state.user_mark,state.ai_mark,state.user_first,"done",state.camera,state.viewport_width,state.viewport_height,-1,state.revision+1,1) } else { state } } } } }
+  } else { if equal(event.kind,"close") { u:ttt_app_state(state.board,state.user_mark,state.ai_mark,state.user_first,"done",state.camera,state.viewport_width,state.viewport_height,-1,state.revision+1,1) } else { state } } } } } } }
 }

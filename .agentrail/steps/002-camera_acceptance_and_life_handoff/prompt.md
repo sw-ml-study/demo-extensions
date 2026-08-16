@@ -1,0 +1,1 @@
+Run final combined tic-tac-toe click/camera acceptance including stationary clicks, drag suppression, orbit, pan, zoom, terminal interaction, bounded events, teardown, macOS evidence, and Linux limitations. Reconcile docs/blockers, define and start the queued native3d Life-plane saga next, run the complete gate, commit, complete this saga, and push main.

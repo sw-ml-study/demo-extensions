@@ -35,4 +35,17 @@ def u:test_ttt_terminal_drag_release() {
   u:assert_eq(released.status,"draw","terminal result survives pointer activity")
 }
 
+@test {name:"tic tac toe arbitrates click orbit pan and zoom",tags:["native3d","tic-tac-toe","camera"]}
+def u:test_ttt_camera_gestures() {
+  initial=u:ttt_app_defaults(); down=u:ttt_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0}); clicked=u:ttt_reduce(down,{kind:"pointer_up",button:"left",x:400,y:300,shift:0});
+  u:assert_eq(reduce(:add,abs(clicked.board)),2,"stationary click places user and AI marks")?;
+  down=u:ttt_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0}); dragged=u:ttt_reduce(down,{kind:"pointer_move",x:430,y:280,left:1,shift:0}); released=u:ttt_reduce(dragged,{kind:"pointer_up",button:"left",x:430,y:280,shift:0});
+  u:assert_eq(released.board,initial.board,"camera drag suppresses mark placement")?;
+  u:assert_true(1-equal(released.camera.yaw,initial.camera.yaw),"left drag orbits")?;
+  pdown=u:ttt_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:1}); pdrag=u:ttt_reduce(pdown,{kind:"pointer_move",x:430,y:320,left:1,shift:1});
+  u:assert_true(1-equal(pdrag.camera.target,initial.camera.target),"shift-left drag pans")?;
+  zoom=u:ttt_reduce(initial,{kind:"wheel",dx:0,dy:40,x:400,y:300,shift:0});
+  u:assert_true(lt(zoom.camera.distance,initial.camera.distance),"wheel zooms")
+}
+
 u:run_registered_tests()

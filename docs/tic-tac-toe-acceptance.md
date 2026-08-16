@@ -10,6 +10,8 @@ Status date: 2026-08-16
 | Bounded live perfect play | Proven | MLPL win/block/center/corner/edge policy tests | Separate implementation for bounded worker stack |
 | Independent X/O and first/second choices | Proven live | MLPL tests and O-first worker/Port regression | Keyboard selection in the PoC |
 | Click-to-cell picking | Proven | center-ray MLPL test and live center click | Physical-pixel coordinates |
+| Click/drag arbitration | Proven | four-pixel threshold MLPL and worker/Port tests | Physical-pixel threshold |
+| Orbit, tilt, pan, zoom | Proven live | shared camera reducer plus real applet commands | Camera semantics remain MLPL-owned |
 | Legal empty-cell interaction | Proven | occupied/no-turn/terminal/off-board no-op tests | No animated transition |
 | Grid, X/O, hover, win feedback | Proven | deterministic bulk-shape mlplunit fixtures | Line graphics only |
 | Variable per-line native rendering | Proven | Rust headless style planning and live command parsing | Owned copies; no zero-copy claim |
@@ -26,6 +28,11 @@ X must open; mark and turn-order choices are now independent. Dragging after a
 tied game formerly indexed the board with the off-board `-1` sentinel because
 an eager condition evaluated before its bounds guard. Terminal and off-board
 pointer releases are now explicit no-ops.
+
+Stationary left release places a mark; left drag orbits/tilts, Shift-left or
+middle drag pans, and wheel input zooms. Once movement crosses four pixels, the
+release is never interpreted as a board click. This arbitration is deterministic
+and covered both in native mlplunit and through the real worker/Port applet.
 
 ## Ownership and next demo
 

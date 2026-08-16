@@ -1,0 +1,9 @@
+number = 1
+slug = "camera_gesture_arbitration"
+status = "in-progress"
+description = "Using native mlplunit and Rust worker/Port TDD, add MLPL-owned left-drag orbi..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T10:46:12"
+task_type = "native3d"
+commits = []

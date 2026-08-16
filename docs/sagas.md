@@ -98,6 +98,17 @@ Acceptance: the user chooses X or O, turn order follows that choice, only empty
 squares accept clicks, MLPL owns all rules and AI decisions, and Rust remains a
 generic input/render service.
 
+## Active: native3d-tic-tac-toe-camera
+
+Purpose: combine board clicks with the reusable 3D camera without ambiguous
+release behavior.
+
+1. Add MLPL-owned click/drag threshold arbitration, orbit/tilt, pan, and zoom.
+2. Publish combined interaction acceptance and hand off to the Life-plane saga.
+
+Acceptance: stationary clicks place marks, camera drags never place marks, all
+cube-equivalent mouse controls work, and Rust remains application-neutral.
+
 ## Queued: native3d-life-plane
 
 Purpose: demonstrate array programming, editing, animation, and reusable 3D
