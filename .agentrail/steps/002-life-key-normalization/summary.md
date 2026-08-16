@@ -1,0 +1,1 @@
+Fixed the actual desktop key path by forwarding every Life binding B/G/H/I/N/T/U through winit normalization, retaining C/R/Space, and accepting equal/minus speed spellings in MLPL. Added native-boundary and mlplunit regressions and documented why post-normalization worker tests missed the bug.
