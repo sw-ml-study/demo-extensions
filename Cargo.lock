@@ -1079,6 +1079,7 @@ dependencies = [
  "mlpl-eval-state",
  "mlpl-eval-types",
  "mlpl-extension-abi 0.20.0",
+ "mlpl-extension-loader 0.20.0",
  "mlpl-extension-registry",
  "mlpl-forge-kg",
  "mlpl-loader-helpers",
@@ -1252,6 +1253,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mlpl-extension-cabi"
+version = "0.20.0"
+dependencies = [
+ "mlpl-extension-abi 0.20.0",
+ "mlpl-extension-registry",
+]
+
+[[package]]
 name = "mlpl-extension-hello"
 version = "0.0.0"
 dependencies = [
@@ -1272,10 +1281,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "mlpl-extension-loader"
+version = "0.20.0"
+dependencies = [
+ "libloading",
+ "mlpl-extension-cabi",
+]
+
+[[package]]
 name = "mlpl-extension-native3d"
 version = "0.0.0"
 dependencies = [
- "mlpl-extension-loader",
+ "mlpl-extension-loader 0.0.0",
  "mlpl-extension-sdk",
 ]
 
