@@ -1,6 +1,6 @@
 number = 6
 slug = "model-atlas-contract"
-status = "pending"
+status = "in-progress"
 description = "Define and implement the bounded versioned Model Atlas interchange contract c..."
 role = "production"
 context_files = []

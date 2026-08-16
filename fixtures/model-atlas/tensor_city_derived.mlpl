@@ -1,0 +1,7 @@
+# Deterministic derivative of demo-ml-utils tensor-city golden fixture.
+def u:atlas_fixture_pad(text,width) { bytes=tokenize_bytes(text); concat(bytes,fill([width-tally(bytes)],0)) }
+def u:atlas_fixture_table(values,width) { flat=fill([0],0); index=0; while lt(index,list_len(values)) { flat=concat(flat,u:atlas_fixture_pad(list_get(values,index)?,width)); index=index+1 }; reshape(flat,[list_len(values),width]) }
+def u:atlas_tensor_city_fixture() {
+  names=["tensor_a","tensor_b","tensor_c","alpha","quant","ints","bytes"]; ids=["safe-city:tensor:tensor_a","safe-city:tensor:tensor_b","safe-city:tensor:tensor_c","gguf-city:tensor:alpha","gguf-city:tensor:quant","gguf-city:tensor:ints","gguf-city:tensor:bytes"];
+  {schema: "sw-ml-study.tensor-city",version: 1,provenance: {analyzer: "mlpl-bounded-tensor-city",sources: {safetensors: {artifact_id: "safe-city",format: "safetensors",source: "derived/valid-catalog.safetensors"},gguf: {artifact_id: "gguf-city",format: "gguf",source: "derived/valid-catalog.gguf"}}},tensor_columns: {count: 7,name_bytes: u:atlas_fixture_table(names,64),name_lengths: [8,8,8,5,5,4,5],name_depths: fill([7],1),id_bytes: u:atlas_fixture_table(ids,128),id_lengths: [25,25,25,22,22,21,22],format_codes: [0,0,0,1,1,1,1],group_ids: [0,0,0,1,1,1,1],x: [0,2,4,0,2,4,6],y: [1.5,1.5,0.5,2.5,16.5,2.5,2.5],z: [0,0,0,4,4,4,4],widths: fill([7],1),depths: fill([7],1),heights: [3,3,1,5,33,5,5],parameters: [2,2,0,4,32,4,4],byte_counts: [2,4,0,16,34,8,4]}}
+}

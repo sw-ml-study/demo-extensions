@@ -99,6 +99,12 @@ Measure bounded Model Atlas range scanning against growing sparse files:
 just model-atlas-memory-evidence
 ```
 
+Validate the derived Safetensors/GGUF tensor-city handoff:
+
+```sh
+just model-atlas-contract
+```
+
 Click toggles a cell and Control-left-drag paints live cells. Plain left-drag
 orbits/tilts, Shift-left-drag or middle-drag pans, and the wheel zooms. Space
 runs/pauses, N steps, C clears, plus/minus changes speed, and B/H/I/T/G/U/R
@@ -250,6 +256,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   line diffs, revision/resync behavior, bounds, ownership, and measured scope.
 - [Bounded Model Atlas scanning](docs/model-atlas-bounded-scan.md) — range-read
   passes, compact adapter columns, selected detail/cache bounds, and RSS data.
+- [Model Atlas interchange](docs/model-atlas-interchange.md) — versioned tagged
+  transport, derived cross-format fixture, provenance, layout, and ownership.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

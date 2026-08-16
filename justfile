@@ -43,6 +43,10 @@ life-torus:
 model-atlas-memory-evidence:
     ./scripts/run-model-atlas-memory-evidence
 
+# Validate and summarize the cross-repository Model Atlas interchange.
+model-atlas-contract:
+    ./scripts/run-model-atlas-contract
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

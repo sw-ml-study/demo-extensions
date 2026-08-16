@@ -170,7 +170,9 @@ tensor payload into memory.
    scanner and sparse-memory evidence are complete; format-derived interchange
    fixtures follow in the next step.
 2. Pin a versioned renderer-neutral interchange compatible with tensor-city
-   Safetensors/GGUF output and explicit provenance.
+   Safetensors/GGUF output and explicit provenance. The derived cross-format
+   golden, bounded tagged transport, and deterministic layout validation are
+   complete.
 3. Render interactive tensor buildings, districts, labels, selection,
    filtering, camera controls, and bounded level of detail.
 4. Add architecture metadata plus visibly labeled tensor-name inference for

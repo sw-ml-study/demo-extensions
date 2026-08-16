@@ -1,0 +1,33 @@
+include "fixtures/model-atlas/tensor_city_derived.mlpl";
+include "lib/model-atlas/interchange.mlpl";
+
+def u:atlas_contract_budgets() { {max_objects: 12,max_tensors: 7,max_label_bytes: 64,max_id_bytes: 128,max_hierarchy_depth: 4,max_coordinate: 40,max_parameters: 1000000,max_elements: 4096,max_iterations: 64,max_output_bytes: 32768,max_json_depth: 8,max_json_elements: 4096} }
+
+@test {name:"Model Atlas accepts deterministic demo-ml-utils tensor-city derivative",tags:["model-atlas","contract","tensor-city"]}
+def u:test_atlas_contract_golden() {
+  result=u:atlas_interchange(u:atlas_tensor_city_fixture(),u:atlas_contract_budgets())?;
+  u:assert_eq([result.version,result.tensor_count,result.logical_objects],[1,7,12],"versioned bounded contract")?;
+  u:assert_eq([result.scene_columns.x,result.scene_columns.z,result.scene_columns.heights],[[0,2,4,0,2,4,6],[0,0,0,4,4,4,4],[3,3,1,5,33,5,5]],"deterministic districts and heights")?;
+  u:assert_eq(result.provenance.sources.gguf.artifact_id,"gguf-city","provenance survives handoff")
+}
+
+@test {name:"Model Atlas tagged JSON transport is bounded and deterministic",tags:["model-atlas","contract","transport"]}
+def u:test_atlas_contract_transport() { city=u:atlas_tensor_city_fixture(); b=u:atlas_contract_budgets(); first=u:atlas_interchange_transport(city,b)?; second=u:atlas_interchange_transport(city,b)?; u:assert_eq(first.json,second.json,"repeat encoding is byte deterministic")?; u:assert_eq(first.decoded,city,"bounded tagged decode preserves arrays and records")?; u:assert_true(lt(first.utf8_bytes,b.max_output_bytes+1),"encoded transport obeys byte budget") }
+
+@test {name:"Model Atlas contract rejects schema and budget violations",tags:["model-atlas","contract","budgets"]}
+def u:test_atlas_contract_budgets() {
+  city=u:atlas_tensor_city_fixture(); b=u:atlas_contract_budgets();
+  u:assert_err(u:atlas_interchange({schema: "wrong",version: 1,provenance: city.provenance,tensor_columns: city.tensor_columns},b),"wrong schema")?;
+  tight={max_objects: 11,max_tensors: 7,max_label_bytes: 64,max_id_bytes: 128,max_hierarchy_depth: 4,max_coordinate: 40,max_parameters: 1000000,max_elements: 4096,max_iterations: 64,max_output_bytes: 32768,max_json_depth: 8,max_json_elements: 4096};
+  u:assert_err(u:atlas_interchange(city,tight),"logical object budget")
+}
+
+@test {name:"Model Atlas rejects malformed IDs columns and nondeterministic layout",tags:["model-atlas","contract","adversarial"]}
+def u:test_atlas_contract_malformed() {
+  city=u:atlas_tensor_city_fixture(); c=city.tensor_columns; b=u:atlas_contract_budgets(); bad_ids=scatter(flatten(c.id_bytes),0,88); malformed_ids={count: c.count,name_bytes: c.name_bytes,name_lengths: c.name_lengths,name_depths: c.name_depths,id_bytes: reshape(bad_ids,[7,128]),id_lengths: c.id_lengths,format_codes: c.format_codes,group_ids: c.group_ids,x: c.x,y: c.y,z: c.z,widths: c.widths,depths: c.depths,heights: c.heights,parameters: c.parameters,byte_counts: c.byte_counts};
+  u:assert_err(u:atlas_interchange({schema: city.schema,version: city.version,provenance: city.provenance,tensor_columns: malformed_ids},b),"stable ID mismatch")?;
+  bad_x=scatter(c.x,1,9); malformed_layout={count: c.count,name_bytes: c.name_bytes,name_lengths: c.name_lengths,name_depths: c.name_depths,id_bytes: c.id_bytes,id_lengths: c.id_lengths,format_codes: c.format_codes,group_ids: c.group_ids,x: bad_x,y: c.y,z: c.z,widths: c.widths,depths: c.depths,heights: c.heights,parameters: c.parameters,byte_counts: c.byte_counts};
+  u:assert_err(u:atlas_interchange({schema: city.schema,version: city.version,provenance: city.provenance,tensor_columns: malformed_layout},b),"nondeterministic street")
+}
+
+u:run_registered_tests()
