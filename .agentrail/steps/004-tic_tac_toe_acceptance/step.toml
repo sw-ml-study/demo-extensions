@@ -1,9 +1,10 @@
 number = 4
 slug = "tic_tac_toe_acceptance"
-status = "in-progress"
+status = "completed"
 description = "Run and document final tic-tac-toe acceptance for rules/minimax determinism, ..."
 role = "production"
 context_files = []
 created_at = "2026-08-16T09:19:14"
+completed_at = "2026-08-16T10:41:14"
 task_type = "native3d"
-commits = []
+commits = ["2168bf12b27e5016ff887b6dd34600a5623ec5fe"]
