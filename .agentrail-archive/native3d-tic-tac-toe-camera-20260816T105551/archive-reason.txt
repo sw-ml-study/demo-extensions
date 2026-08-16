@@ -1,0 +1,1 @@
+Completed tic-tac-toe camera acceptance; proceeding to the documented native3d Life-plane saga.

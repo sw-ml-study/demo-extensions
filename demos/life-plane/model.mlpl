@@ -1,0 +1,80 @@
+# Pure finite Conway's Life model. Outside coordinates are always dead.
+
+def u:life_dimensions_valid(rows,columns) { eq(rows,floor(rows))*eq(columns,floor(columns))*gt(rows,0)*gt(columns,0)*(1-gt(rows,256))*(1-gt(columns,256)) }
+
+def u:life_cells_valid(cells,index) { valid=1; count=tally(cells); while lt(index,count)*valid { value=take(cells,0,index); valid=eq(value,0)+eq(value,1); index=index+1 }; valid }
+
+def u:life_valid(grid) { u:life_dimensions_valid(grid.rows,grid.columns)*equal(shape(grid.cells),[grid.rows*grid.columns])*u:life_cells_valid(grid.cells,0) }
+
+def u:life_empty(rows,columns) {
+  if 1-u:life_dimensions_valid(rows,columns) { err({kind:"life_grid",message:"rows and columns must be integers from 1 through 256"}) } else { ok({rows: rows,columns: columns,cells: fill([rows*columns],0)}) }
+}
+
+def u:life_inside(grid,row,column) { (1-lt(row,0))*(1-lt(column,0))*lt(row,grid.rows)*lt(column,grid.columns)*eq(row,floor(row))*eq(column,floor(column)) }
+
+def u:life_cell(grid,row,column) { if u:life_inside(grid,row,column) { take(grid.cells,0,row*grid.columns+column) } else { 0 } }
+
+def u:life_set(grid,row,column,value) {
+  if (1-u:life_valid(grid))+(1-u:life_inside(grid,row,column))+(1-eq(value,0))*(1-eq(value,1)) { err({kind:"life_cell",message:"grid, coordinate, or binary cell value is invalid"}) } else { ok({rows: grid.rows,columns: grid.columns,cells: scatter(grid.cells,row*grid.columns+column,value)}) }
+}
+
+def u:life_neighbor_count(grid,row,column) {
+  u:life_cell(grid,row-1,column-1)+u:life_cell(grid,row-1,column)+u:life_cell(grid,row-1,column+1)+u:life_cell(grid,row,column-1)+u:life_cell(grid,row,column+1)+u:life_cell(grid,row+1,column-1)+u:life_cell(grid,row+1,column)+u:life_cell(grid,row+1,column+1)
+}
+
+def u:life_padded(grid) {
+  padded_columns=grid.columns+2; cells=fill([(grid.rows+2)*padded_columns],0); index=0;
+  while lt(index,grid.rows*grid.columns) { row=floor(index/grid.columns); column=index-row*grid.columns; cells=scatter(cells,(row+1)*padded_columns+column+1,take(grid.cells,0,index)); index=index+1 };
+  reshape(cells,[grid.rows+2,padded_columns])
+}
+
+def u:life_unpadded_cells(board,rows,columns) {
+  flat=flatten(board); padded_columns=columns+2; cells=fill([rows*columns],0); index=0;
+  while lt(index,rows*columns) { row=floor(index/columns); column=index-row*columns; cells=scatter(cells,index,take(flat,0,(row+1)*padded_columns+column+1)); index=index+1 };
+  cells
+}
+
+def u:life_step(grid) {
+  if 1-u:life_valid(grid) { err({kind:"life_grid",message:"cannot evolve an invalid grid"}) } else {
+    board=u:life_padded(grid); up=rotate(board,1,0); down=rotate(board,0-1,0); left=rotate(board,1,1); right=rotate(board,0-1,1);
+    neighbors=up+down+left+right+rotate(up,1,1)+rotate(up,0-1,1)+rotate(down,1,1)+rotate(down,0-1,1);
+    next=gt(eq(neighbors,3)+board*eq(neighbors,2),0);
+    ok({rows: grid.rows,columns: grid.columns,cells: u:life_unpadded_cells(next,grid.rows,grid.columns)})
+  }
+}
+
+def u:life_place_coordinates(grid,coordinates,index,row_offset,column_offset) {
+  count=take(shape(coordinates),0,0); flat=flatten(coordinates); result=grid;
+  while lt(index,count) { row=row_offset+take(flat,0,index*2); column=column_offset+take(flat,0,index*2+1); result=unwrap(u:life_set(result,row,column,1)); index=index+1 };
+  result
+}
+
+def u:life_centered_pattern(rows,columns,pattern_height,pattern_width,coordinates) {
+  if lt(rows,pattern_height)+lt(columns,pattern_width) { err({kind:"life_preset",message:"grid is too small for preset"}) } else { grid=unwrap(u:life_empty(rows,columns)); row_offset=floor((rows-pattern_height)/2); column_offset=floor((columns-pattern_width)/2); ok(u:life_place_coordinates(grid,coordinates,0,row_offset,column_offset)) }
+}
+
+def u:life_translate_cells(grid,row_delta,column_delta) {
+  cells=fill([grid.rows*grid.columns],0); row=0;
+  while lt(row,grid.rows) { column=0; while lt(column,grid.columns) { source_row=row-row_delta; source_column=column-column_delta; cells=scatter(cells,row*grid.columns+column,u:life_cell(grid,source_row,source_column)); column=column+1 }; row=row+1 };
+  cells
+}
+
+def u:life_preset(name,rows,columns,seed) {
+  if 1-u:life_dimensions_valid(rows,columns) { err({kind:"life_preset",message:"grid dimensions are invalid"}) } else {
+    if equal(name,"empty") { u:life_empty(rows,columns) } else {
+      if equal(name,"block") { u:life_centered_pattern(rows,columns,2,2,reshape([0,0,0,1,1,0,1,1],[4,2])) } else {
+        if equal(name,"beehive") { u:life_centered_pattern(rows,columns,3,4,reshape([0,1,0,2,1,0,1,3,2,1,2,2],[6,2])) } else {
+          if equal(name,"blinker") { u:life_centered_pattern(rows,columns,1,3,reshape([0,0,0,1,0,2],[3,2])) } else {
+            if equal(name,"toad") { u:life_centered_pattern(rows,columns,2,4,reshape([0,1,0,2,0,3,1,0,1,1,1,2],[6,2])) } else {
+              if equal(name,"glider") { u:life_centered_pattern(rows,columns,3,3,reshape([0,1,1,2,2,0,2,1,2,2],[5,2])) } else {
+                if equal(name,"glider-gun") { u:life_centered_pattern(rows,columns,9,36,reshape([4,0,4,1,5,0,5,1,4,10,5,10,6,10,3,11,7,11,2,12,8,12,2,13,8,13,5,14,3,15,7,15,4,16,5,16,6,16,5,17,2,20,3,20,4,20,2,21,3,21,4,21,1,22,5,22,0,24,1,24,5,24,6,24,2,34,2,35,3,34,3,35],[36,2])) } else {
+                  if equal(name,"random") { ok({rows: rows,columns: columns,cells: gt(random(seed,[rows*columns]),0.72)}) } else { err({kind:"life_preset",message:"unknown Life preset"}) }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

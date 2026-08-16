@@ -30,6 +30,7 @@ crates/mlpl-native3d-scene/      Generic line-scene parser and validation
 lib/native3d/                    Reusable MLPL camera, picking, geometry, app loop
 demos/wireframe-cube/            MLPL-owned bulk-array cube scene
 demos/tic-tac-toe/               MLPL rules, minimax, and generic line scene
+demos/life-plane/                 MLPL finite-grid Life model and presets
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
 extensions/boundary-probe/      Public-SDK array/handle/record host probe
 extensions/native3d/            Generic headless viewer and bulk line provider
@@ -103,6 +104,12 @@ just rust-tests
 just tests
 just list-tests
 ```
+
+The next native demo is an editable Conway's Life plane. Its pure MLPL model
+already provides dead finite boundaries, whole-array B3/S23 evolution, owned
+cell updates, and deterministic empty, still-life, oscillator, glider, Gosper
+glider-gun, and seeded-random replacement presets. Native editing, animation,
+camera controls, and a visible control legend follow in the next slices.
 
 Run the mandatory pre-commit gate:
 
@@ -204,6 +211,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   legal moves, outcomes, player setup, and deterministic minimax.
 - [Native tic-tac-toe acceptance](docs/tic-tac-toe-acceptance.md) — playable
   behavior, regressions, ownership, portability, and remaining limits.
+- [MLPL Life model](docs/life-model.md) — finite boundary policy, vectorized
+  evolution, owned grids, deterministic presets, and upstream comparison.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

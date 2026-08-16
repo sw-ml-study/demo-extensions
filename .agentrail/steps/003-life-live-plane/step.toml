@@ -1,0 +1,8 @@
+number = 3
+slug = "life-live-plane"
+status = "pending"
+description = "Using MLPL and Rust worker/Port TDD, connect the Life app to the native windo..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T10:55:51"
+commits = []

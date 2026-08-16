@@ -109,7 +109,7 @@ release behavior.
 Acceptance: stationary clicks place marks, camera drags never place marks, all
 cube-equivalent mouse controls work, and Rust remains application-neutral.
 
-## Next: native3d-life-plane
+## Active: native3d-life-plane
 
 Purpose: demonstrate array programming, editing, animation, and reusable 3D
 camera interaction on a cellular grid.

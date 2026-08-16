@@ -1,0 +1,8 @@
+number = 1
+slug = "life-model"
+status = "in-progress"
+description = "Using native mlplunit TDD, implement a pure MLPL Conway's Life model with an ..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T10:55:51"
+commits = []

@@ -1,0 +1,8 @@
+number = 4
+slug = "life-acceptance"
+status = "pending"
+description = "Run and document final headless and live acceptance for the interactive Life ..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T10:55:51"
+commits = []
