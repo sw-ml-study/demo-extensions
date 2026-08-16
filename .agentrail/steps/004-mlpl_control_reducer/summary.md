@@ -1,0 +1,1 @@
+Implemented and proved the MLPL-owned wireframe-cube reducer for all requested controls, normalized structured events, bounds, lifecycle intent, reverse speed, and deterministic provider-ready bulk arrays; reconciled the final live event-loop seam.
