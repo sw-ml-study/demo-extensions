@@ -1,8 +1,9 @@
 number = 3
 slug = "life-live-plane"
-status = "in-progress"
+status = "completed"
 description = "Using MLPL and Rust worker/Port TDD, connect the Life app to the native windo..."
 role = "production"
 context_files = []
 created_at = "2026-08-16T10:55:51"
-commits = []
+completed_at = "2026-08-16T11:08:31"
+commits = ["78855c1423a764bc3d8c2f4b962ae5f433e0034a"]

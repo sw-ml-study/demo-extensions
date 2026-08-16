@@ -1,0 +1,1 @@
+Connected the MLPL-owned Life model, controls, and generic bulk line scene to the native worker/Port host; added bounded frame delivery, hover/live-cell geometry, host selection, just life-3d, portable runner, focused MLPL/Rust acceptance, documentation, and full-gate evidence.
