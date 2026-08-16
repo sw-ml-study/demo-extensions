@@ -1,6 +1,6 @@
 number = 5
 slug = "pointer_camera_acceptance"
-status = "pending"
+status = "in-progress"
 description = "Run and document final pointer-camera acceptance: bounded event behavior, pic..."
 role = "production"
 context_files = []

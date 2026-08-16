@@ -65,7 +65,7 @@ semantics; headless evidence is authoritative; and the opt-in native window
 rotates and adjusts dimensions, speed, color, and thickness without web
 technology.
 
-## Active: native3d-pointer-camera
+## Completed: native3d-pointer-camera
 
 Purpose: add reusable pointer, wheel, bounded-frame, orbit-camera, and picking
 contracts before building more application demos.

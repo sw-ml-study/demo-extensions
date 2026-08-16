@@ -1,6 +1,6 @@
 # Extension Blockers and Host Requirements
 
-Status date: 2026-08-13
+Status date: 2026-08-16
 
 This document is the handoff contract between `demo-extensions` and
 `../sw-mlpl`. It distinguishes capabilities already proven from work that is
@@ -39,7 +39,7 @@ the blockers below by implication.
 | B3 | Dynamic host loading | sw-MLPL | Host adapter accepts process-resident static descriptors only | loader, manifest, trust, and lifecycle policy |
 | B4 | Dense arrays at host boundary | closed | Real provider round-trip proven through adjacent interpreter | `data_boundary.rs` |
 | B5 | Native handles at host boundary | closed | Persistent, closed, stale, foreign, and malformed cases proven through adjacent interpreter | `data_boundary.rs` |
-| B6 | Event loop and callbacks | sw-MLPL + extension | No host policy for native windows or event delivery | B5 plus main-thread/reentrancy policy |
+| B6 | Event loop and callbacks | closed locally | Parked-main host and bounded Port path proven by the native cube | B5 plus main-thread/reentrancy policy |
 | B7 | Package discovery and trust | sw-MLPL | Downstream manifests are not a host search/load contract | B3 and deployment policy |
 | B8 | C-provider help metadata | sw-MLPL | Adapter registers empty signature metadata | metadata parsing and catalog bridge |
 

@@ -77,7 +77,8 @@ set-lines, size/state records, explicit render state, and close through the
 actual interpreter in `native3d_provider.rs`. The live parked-main host now
 delivers normalized key, pointer, wheel, coalesced frame, resize, and close
 records and consumes validated MLPL-owned camera commands. Reusable MLPL camera
-reduction and demo mappings remain downstream saga work, not an upstream gate.
+reduction and cube mappings are now proven downstream by native mlplunit and
+the live worker/Port test; they require no upstream change.
 
 ### Interpreted and compiled parity
 

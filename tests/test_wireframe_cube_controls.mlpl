@@ -43,6 +43,7 @@ def u:test_cube_mouse_camera() {
   u:assert_eq([orbit.camera.yaw,orbit.camera.pitch],[0.3,0.2],"left drag orbits and tilts in MLPL")?;
   u:assert_true(lt(zoom.camera.distance,initial.camera.distance),"wheel zoom changes MLPL camera distance")?;
   u:assert_true(1-equal(pan.camera.target,initial.camera.target),"shift-left drag pans the MLPL camera")?;
+  u:assert_eq([pan.width,pan.height,pan.length],[initial.width,initial.height,initial.length],"mouse gestures never alter object dimensions")?;
   command=unwrap(u:wireframe_cube_bulk_update(pan));
   u:assert_eq(command.camera,u:n3d_camera_record(pan.camera),"bulk update carries MLPL-owned camera")
 }

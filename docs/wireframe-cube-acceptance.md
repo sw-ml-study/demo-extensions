@@ -14,7 +14,7 @@ Status date: 2026-08-16
 | Native macOS window | Proven | observed interactive `just cube-3d` run on 2026-08-15 | Manual opt-in smoke evidence |
 | Native Linux design/build path | Supported, unverified here | shared winit/wgpu source and WGSL | No Linux target or graphical host was available on this Mac |
 | MLPL-driven live controls | Proven | `live_applet.rs`, physical-key normalization test, plus manual window | Local interpreted mode |
-| MLPL-owned mouse camera | Proven headlessly | mlplunit orbit/zoom/pan transitions and `live_applet.rs` worker/Port test | Manual window smoke is opt-in |
+| MLPL-owned mouse camera | Proven headlessly | mlplunit orbit/zoom/pan transitions, object-dimension invariance, and `live_applet.rs` worker/Port test | Manual window smoke is opt-in |
 | In-view help and live feedback | Proven | bitmap overlay plus revision/state title | Compact PoC typography |
 | Compiled MLPL application | Blocked upstream | `docs/sw-mlpl-blockers.md` | Needs compiler provider parity |
 
@@ -25,3 +25,26 @@ behavior. Left drag orbits/tilts, wheel zooms, and Shift-left or middle drag
 pans; the visible legend reports those bindings. It does not
 claim Linux was visually tested, dynamic loading, compiled parity, true unload,
 or zero-copy transport.
+
+## Pointer-camera acceptance notes
+
+The bounded input tests prove that pointer motion and frame events coalesce,
+wheel deltas accumulate, and discrete button transitions retain order without
+unbounded growth. Camera and picking tests cover finite/bounded construction,
+center rays, forward plane hits, parallel rays, behind-camera rejection, and
+camera-driven rendering. Native mlplunit proves that the application reducer
+owns orbit, tilt, zoom, pan, and object-dimension invariance. The worker/Port
+test proves the same commands cross the actual interpreter boundary and that a
+close event terminates the applet cleanly.
+
+The real winit/wgpu window was launched on macOS on 2026-08-16. User-supplied
+visual evidence showed the camera responding with the visible mouse legend;
+its title also exposed independently edited `W 1.25 H 3.50 L 2.00` dimensions.
+That output is correctly a cuboid, not camera shear. R restores the 2×2×2 cube,
+and the reducer assertion pins that mouse gestures cannot change W/H/L.
+
+macOS and Linux share the same Rust, winit, wgpu, WGSL, and platform-neutral
+MLPL sources. Linux remains design/build supported but was not visually tested
+on this Mac. No conditional application logic is required; Cargo dependencies
+select their platform window/GPU backends. The next tic-tac-toe saga can use
+the shipped pick-ray/plane and grid helpers without a new sw-MLPL primitive.

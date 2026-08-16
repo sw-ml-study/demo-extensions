@@ -37,6 +37,10 @@ controls are application-owned mappings over generic native input:
 
 Pointer positions are physical pixels. Rust normalizes cursor, button,
 modifier, and wheel records but contains no orbit, zoom, or pan gesture logic.
+Mouse gestures update only the camera record; they never change width, height,
+or length. The title continuously reports `W`, `H`, and `L`. If those values
+differ, the object is intentionally a cuboid; press R to restore the 2×2×2
+cube before evaluating its perspective projection.
 
 Resize events have `{kind:"resize",width:number,height:number}` and clamp the
 drawable dimensions to `1..=16384`. Close events have `{kind:"close"}`. Key
