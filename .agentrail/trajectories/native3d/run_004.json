@@ -1,0 +1,11 @@
+{
+  "task_type": "native3d",
+  "state": {
+    "number": 4,
+    "step": "mouse_controlled_cube"
+  },
+  "action": "Started with a failing native mlplunit mouse-camera test, implemented shared-camera state and event reduction, added a worker/Port Rust integration test, updated visible help and acceptance/control docs, ran the real GUI smoke, inspected gitignore/tracking, and passed the full pre-commit gate.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-08-16T09:05:41"
+}
