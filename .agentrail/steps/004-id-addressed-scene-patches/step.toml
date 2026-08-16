@@ -1,4 +1,4 @@
-number = 3
+number = 4
 slug = "id-addressed-scene-patches"
 status = "in-progress"
 description = "Design and implement the generic retained-scene shadow-DOM slice: MLPL sends ..."

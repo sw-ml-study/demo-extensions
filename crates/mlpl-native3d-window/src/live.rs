@@ -18,6 +18,10 @@ const LIFE_MODEL: &str = include_str!("../../../demos/life-plane/model.mlpl");
 const LIFE_CONTROLS: &str = include_str!("../../../demos/life-plane/controls.mlpl");
 const LIFE_SCENE: &str = include_str!("../../../demos/life-plane/scene.mlpl");
 const LIFE_APPLET: &str = include_str!("../../../demos/life-plane/live-applet.mlpl");
+const LIFE_TORUS_MODEL: &str = include_str!("../../../demos/life-torus/model.mlpl");
+const LIFE_TORUS_CONTROLS: &str = include_str!("../../../demos/life-torus/controls.mlpl");
+const LIFE_TORUS_SCENE: &str = include_str!("../../../demos/life-torus/scene.mlpl");
+const LIFE_TORUS_APPLET: &str = include_str!("../../../demos/life-torus/live-applet.mlpl");
 
 #[must_use]
 pub fn applet_source() -> String {
@@ -47,6 +51,19 @@ pub fn life_applet_source() -> String {
         without_includes(LIFE_CONTROLS),
         without_includes(LIFE_SCENE),
         without_includes(LIFE_APPLET)
+    )
+}
+
+#[must_use]
+pub fn life_torus_applet_source() -> String {
+    format!(
+        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}\n{}\n{}",
+        without_includes(LIFE_MODEL),
+        without_includes(LIFE_TORUS_MODEL),
+        without_includes(LIFE_CONTROLS),
+        without_includes(LIFE_TORUS_CONTROLS),
+        without_includes(LIFE_TORUS_SCENE),
+        without_includes(LIFE_TORUS_APPLET)
     )
 }
 

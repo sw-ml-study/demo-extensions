@@ -35,6 +35,10 @@ tic-tac-toe:
 life-3d:
     ./scripts/run-life-3d
 
+# Open wrapped Life on an MLPL-owned native 3D torus.
+life-torus:
+    ./scripts/run-life-torus
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

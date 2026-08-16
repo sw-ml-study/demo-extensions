@@ -11,7 +11,8 @@ use mlpl_native3d_window::interaction::{
     BoundedInput, FrameGate, InputError, InputEvent, Modifiers, PointerButton, PointerButtons,
 };
 use mlpl_native3d_window::live::{
-    applet_source, close_event, input_event, key_event, resize_event, tic_tac_toe_applet_source,
+    applet_source, close_event, input_event, key_event, life_torus_applet_source, resize_event,
+    tic_tac_toe_applet_source,
 };
 use mlpl_native3d_window::{GpuVertex, line_vertices, text_vertices};
 use wgpu::util::DeviceExt;
@@ -54,8 +55,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let arguments: Vec<_> = std::env::args().collect();
     let tic_tac_toe = arguments.iter().any(|argument| argument == "--tic-tac-toe");
     let life = arguments.iter().any(|argument| argument == "--life");
+    let life_torus = arguments.iter().any(|argument| argument == "--life-torus");
     let source = if tic_tac_toe {
         tic_tac_toe_applet_source()
+    } else if life_torus {
+        life_torus_applet_source()
     } else if life {
         mlpl_native3d_window::live::life_applet_source()
     } else {

@@ -1,0 +1,9 @@
+number = 3
+slug = "life-torus-wraparound"
+status = "in-progress"
+description = "Using MLPL and Rust TDD, add a native 3D torus (donut) Life demo that reuses ..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T12:08:49"
+task_type = "native3d"
+commits = []

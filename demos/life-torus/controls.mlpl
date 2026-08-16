@@ -1,0 +1,41 @@
+include "./model.mlpl";
+include "../life-plane/controls.mlpl";
+
+def u:life_torus_help() { "TORUS: BOTH GRID AXES WRAP   NO DEAD BORDER\nCLICK TOGGLE   CTRL+LEFT DRAG PAINT\nLEFT DRAG ORBIT/TILT   SHIFT+LEFT OR MIDDLE DRAG PAN   WHEEL ZOOM\nSPACE RUN/PAUSE   N STEP   C CLEAR   +/- SPEED\nB BLOCK   H BEEHIVE   I BLINKER   T TOAD   G GLIDER   U GUN   R RANDOM   ESC CLOSE" }
+
+def u:life_torus_defaults() {
+  camera=u:n3d_camera_state([0,0,0],0,0.5,8,1.0471975511965976,0.1,0,"none",0,0);
+  u:life_app_state(unwrap(u:life_empty(20,40)),0,0,4,0,camera,800,600,-1,0,0,1,0,0,0,0)
+}
+
+def u:life_torus_point(row,column,rows,columns,offset) {
+  major=2.5; minor=1; theta=column*6.283185307179586/columns; phi=row*6.283185307179586/rows; radial=major+(minor+offset)*cos(phi); [radial*sin(theta),(minor+offset)*sin(phi),radial*cos(theta)]
+}
+
+def u:life_torus_pointer_cell(state,event) {
+  ray=u:n3d_pick_ray(state.camera,{viewport:{width: state.viewport_width,height: state.viewport_height},xy:[event.x,event.y]})?; sample=0; best=1000000; best_point=[0,0,0];
+  while lt(sample,240) { distance=sample*0.05; point=ray.origin+ray.direction*distance; x=take(point,0,0); y=take(point,0,1); z=take(point,0,2); radial=sqrt(x*x+z*z); implicit=abs((radial-2.5)*(radial-2.5)+y*y-1); if lt(implicit,best) { best=implicit; best_point=point }; sample=sample+1 };
+  if gt(best,0.08) { ok(-1) } else { cell=0; nearest=-1; nearest_distance=1000000; while lt(cell,state.grid.rows*state.grid.columns) { row=floor(cell/state.grid.columns); column=cell-row*state.grid.columns; center=u:life_torus_point(row+0.5,column+0.5,state.grid.rows,state.grid.columns,0); delta=center-best_point; distance=reduce(:add,delta*delta); if lt(distance,nearest_distance) { nearest=cell; nearest_distance=distance }; cell=cell+1 }; ok(nearest) }
+}
+
+def u:life_torus_frame_reduce(state,event) {
+  if (1-state.running)+state.close_requested { state } else { accumulated=state.accumulator_ms+event.delta_ms; interval=1000/state.speed; if lt(accumulated,interval) { u:life_restate(state,state.grid,state.running,state.generation,state.speed,accumulated,state.camera,state.hover_cell,state.close_requested,state.random_seed,state.press_x,state.press_y,state.gesture_dragged,state.painting) } else { u:life_restate(state,unwrap(u:life_step_torus(state.grid)),state.running,state.generation+1,state.speed,u:n3d_clamp(accumulated-interval,0,interval),state.camera,state.hover_cell,state.close_requested,state.random_seed,state.press_x,state.press_y,state.gesture_dragged,state.painting) } }
+}
+
+def u:life_torus_key_reduce(state,key) { if equal(key,"n") { u:life_restate(state,unwrap(u:life_step_torus(state.grid)),state.running,state.generation+1,state.speed,0,state.camera,state.hover_cell,state.close_requested,state.random_seed,state.press_x,state.press_y,state.gesture_dragged,state.painting) } else { u:life_key_reduce(state,key) } }
+
+def u:life_torus_reduce(state,event) {
+  if equal(event.kind,"key") { u:life_torus_key_reduce(state,event.key) } else { if equal(event.kind,"frame") { u:life_torus_frame_reduce(state,event) } else { if equal(event.kind,"pointer_down") {
+    if equal(event.button,"left")*event.control { cell=unwrap(u:life_torus_pointer_cell(state,event)); painted=u:life_set_index(state,cell,1); u:life_restate(painted,painted.grid,painted.running,painted.generation,painted.speed,painted.accumulator_ms,painted.camera,cell,painted.close_requested,painted.random_seed,event.x,event.y,0,1) } else {
+      camera=u:n3d_camera_reduce(state.camera,event); u:life_restate(state,state.grid,state.running,state.generation,state.speed,state.accumulator_ms,camera,-1,state.close_requested,state.random_seed,event.x,event.y,0,0)
+    }
+  } else { if equal(event.kind,"pointer_move") {
+    if state.painting*event.left*event.control { cell=unwrap(u:life_torus_pointer_cell(state,event)); u:life_set_index(state,cell,1) } else { if state.camera.dragging {
+      distance2=(event.x-state.press_x)*(event.x-state.press_x)+(event.y-state.press_y)*(event.y-state.press_y); dragged=state.gesture_dragged+gt(distance2,16); dragged=if dragged { 1 } else { 0 }; camera=if dragged { u:n3d_camera_reduce(state.camera,event) } else { state.camera }; u:life_restate(state,state.grid,state.running,state.generation,state.speed,state.accumulator_ms,camera,-1,state.close_requested,state.random_seed,state.press_x,state.press_y,dragged,0)
+    } else { state } }
+  } else { if equal(event.kind,"pointer_up") {
+    if state.painting { u:life_restate(state,state.grid,state.running,state.generation,state.speed,state.accumulator_ms,state.camera,state.hover_cell,state.close_requested,state.random_seed,state.press_x,state.press_y,0,0) } else {
+      camera=u:n3d_camera_reduce(state.camera,event); released=u:life_restate(state,state.grid,state.running,state.generation,state.speed,state.accumulator_ms,camera,-1,state.close_requested,state.random_seed,state.press_x,state.press_y,0,0); cell=unwrap(u:life_torus_pointer_cell(released,event)); if equal(event.button,"left")*(1-state.gesture_dragged) { u:life_toggle_index(released,cell) } else { released }
+    }
+  } else { u:life_reduce(state,event) } } } } }
+}

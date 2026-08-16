@@ -87,11 +87,20 @@ Open the editable native Life plane:
 just life-3d
 ```
 
+Open Life on a native 3D torus with wrap-around in both grid axes:
+
+```sh
+just life-torus
+```
+
 Click toggles a cell and Control-left-drag paints live cells. Plain left-drag
 orbits/tilts, Shift-left-drag or middle-drag pans, and the wheel zooms. Space
 runs/pauses, N steps, C clears, plus/minus changes speed, and B/H/I/T/G/U/R
 select block, beehive, blinker, toad, glider, Gosper gun, and seeded random.
 The same complete legend is visible inside the native window.
+The torus uses the same controls and presets; cells crossing either edge
+continue at the opposite edge, and clicking or painting follows the curved
+surface.
 
 Click an empty square to move. Left-drag orbits/tilts, the wheel zooms, and
 Shift-left-drag or middle-drag pans; crossing the four-pixel drag threshold
@@ -229,6 +238,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   presets, camera arbitration, visible bindings, and native ownership split.
 - [Native Life acceptance](docs/life-acceptance.md) — responsiveness fix,
   retained view diffs, bounds, platform evidence, and remaining patch work.
+- [Toroidal Life](docs/life-torus.md) — two-axis wrap topology, curved mapping,
+  surface picking, controls, ownership, and current performance bounds.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

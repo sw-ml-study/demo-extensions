@@ -147,21 +147,24 @@ than display refresh, then introduce generic shadow-scene patches.
 
 1. Add acknowledgement-driven single-flight frames so stale animation events
    cannot starve later key or pointer input.
-2. Add versioned ID-addressed atomic add/update/remove patches and use them for
+2. Add a toroidal Life demonstration with two-axis wrap-around, curved MLPL
+   geometry, surface picking, and the existing controls.
+3. Add versioned ID-addressed atomic add/update/remove patches and use them for
    changed Life cells instead of complete scene replacement.
 
 Acceptance: at most one frame is outstanding across the Port, discrete input
 stays ordered, malformed or stale patches fail closed, and retained Rust scene
 objects contain no Life rules.
 
-## Queued: native3d-life-surfaces
+## In progress: native3d-life-surfaces
 
 Purpose: reuse the Life application on closed 3D surfaces after the finite
 plane is accepted.
 
 1. Separate neighbor topology from surface geometry in the MLPL library.
 2. Add a toroidal grid with wrap-around in both axes and map cells onto a
-   native 3D torus (donut).
+   native 3D torus (donut). The first torus slice is delivered by
+   `just life-torus`.
 3. Add a spherical mapping with an explicit pole/seam adjacency policy rather
    than pretending a rectangular grid wraps uniformly at the poles.
 4. Reuse editing, animation, presets, picking, orbit/pan/zoom, and generic bulk

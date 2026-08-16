@@ -1,0 +1,22 @@
+include "./scene.mlpl";
+
+def u:life_torus_submit(state) {
+  scene=u:life_torus_scene(state)?;
+  port_send(port,{op:"set_scene",positions: scene.positions,edges: scene.edges,colors: scene.colors,thicknesses: scene.thicknesses,ids: scene.ids,rotation_y_speed:0,revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:life_torus_help()});
+  ok(state)
+}
+
+def u:life_torus_submit_view(state) {
+  port_send(port,{op:"set_view",revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:life_torus_help()});
+  ok(state)
+}
+
+def u:life_torus_on_event(event,state) {
+  next=u:life_torus_reduce(state,event); geometry_changed=(1-equal(next.grid,state.grid))+(1-eq(next.hover_cell,state.hover_cell)); view_changed=1-equal(next.camera,state.camera);
+  if geometry_changed { u:life_torus_submit(next)? } else { if view_changed { u:life_torus_submit_view(next)? } };
+  if equal(event.kind,"frame") { port_send(port,{op:"frame_ack",revision: next.revision}) };
+  next
+}
+
+state=u:life_torus_defaults(); u:life_torus_submit(state)?;
+on(port,"key",:u:life_torus_on_event); on(port,"frame",:u:life_torus_on_event); on(port,"pointer_move",:u:life_torus_on_event); on(port,"pointer_down",:u:life_torus_on_event); on(port,"pointer_up",:u:life_torus_on_event); on(port,"wheel",:u:life_torus_on_event); on(port,"resize",:u:life_torus_on_event); run(port,state)

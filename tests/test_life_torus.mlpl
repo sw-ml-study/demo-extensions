@@ -1,0 +1,37 @@
+include "demos/life-torus/scene.mlpl";
+
+@test {name:"Toroidal Life births and survives across both seams",tags:["native3d","life","torus","topology"]}
+def u:test_life_torus_seams() {
+  grid=unwrap(u:life_empty(7,7)); grid=unwrap(u:life_set(grid,3,6,1)); grid=unwrap(u:life_set(grid,3,0,1)); grid=unwrap(u:life_set(grid,3,1,1)); next=unwrap(u:life_step_torus(grid));
+  u:assert_eq([u:life_cell(next,2,0),u:life_cell(next,3,0),u:life_cell(next,4,0)],[1,1,1],"blinker crosses column seam")?;
+  u:assert_eq(reduce(:add,next.cells),3,"seam blinker preserves population")
+}
+
+@test {name:"Toroidal glider translation wraps instead of dying",tags:["native3d","life","torus","glider"]}
+def u:test_life_torus_glider_wrap() {
+  grid=unwrap(u:life_empty(8,8)); coords=reshape([0,1,1,2,2,0,2,1,2,2],[5,2]); grid=u:life_place_coordinates_torus(grid,coords,0,6,6); moved=grid; count=0; while lt(count,4) { moved=unwrap(u:life_step_torus(moved)); count=count+1 };
+  u:assert_eq(moved.cells,u:life_translate_torus_cells(grid,1,1),"glider wraps one diagonal cell after four steps")
+}
+
+@test {name:"Life torus scene closes both parametric seams",tags:["native3d","life","torus","scene"]}
+def u:test_life_torus_scene() {
+  state=u:life_torus_defaults(); scene=unwrap(u:life_torus_scene(state));
+  u:assert_eq(shape(scene.edges),[1600,2],"20x40 torus has two closed lattice edges per cell")?;
+  u:assert_eq(shape(scene.positions),[3200,3],"generic line endpoints carry the curved lattice")?;
+  u:assert_eq(scene.rotation_y_speed,0,"MLPL owns animation")
+}
+
+@test {name:"Torus picking maps a center ray to a wrapped cell",tags:["native3d","life","torus","picking"]}
+def u:test_life_torus_pick() {
+  state=u:life_torus_defaults(); cell=unwrap(u:life_torus_pointer_cell(state,{x:520,y:300}));
+  u:assert_true(gt(cell,-1),"center ray hits the torus")?;
+  u:assert_true(lt(cell,state.grid.rows*state.grid.columns),"picked ID is in wrapped grid")
+}
+
+@test {name:"Torus click editing uses curved-surface picking",tags:["native3d","life","torus","controls"]}
+def u:test_life_torus_click() {
+  state=u:life_torus_defaults(); down={kind:"pointer_down",button:"left",x:520,y:300,shift:0,control:0,alt:0,meta:0}; up={kind:"pointer_up",button:"left",x:520,y:300,shift:0,control:0,alt:0,meta:0}; state=u:life_torus_reduce(state,down); state=u:life_torus_reduce(state,up);
+  u:assert_eq(reduce(:add,state.grid.cells),1,"stationary click toggles the picked torus cell")
+}
+
+u:run_registered_tests()
