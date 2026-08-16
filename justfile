@@ -27,6 +27,10 @@ mlplunit-path:
 cube-3d:
     ./scripts/run-3d-cube
 
+# Open the playable MLPL-owned native tic-tac-toe window.
+tic-tac-toe:
+    ./scripts/run-tic-tac-toe
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

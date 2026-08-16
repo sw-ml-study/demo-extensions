@@ -90,3 +90,26 @@ fn raster_output_is_reproducible_and_reflects_geometry_and_controls() {
     assert_eq!(first.ppm_bytes(), second.ppm_bytes());
     assert_eq!(fnv1a(&first.ppm_bytes()), 78_031_761_721_831_318);
 }
+
+#[test]
+fn parallel_line_styles_survive_generic_planning() {
+    let scene = LineScene::from_parallel_arrays(
+        vec![-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        vec![0, 1, 1, 2],
+        0.0,
+        vec![[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 1.0]],
+        vec![2.0, 5.0],
+    )
+    .unwrap();
+    let lines = scene
+        .plan_lines(Camera::default(), Viewport::new(200, 200).unwrap(), 0.0)
+        .unwrap();
+    for (actual, expected) in lines[0].color().into_iter().zip([1.0, 0.0, 0.0, 1.0]) {
+        assert!((actual - expected).abs() < f32::EPSILON);
+    }
+    for (actual, expected) in lines[1].color().into_iter().zip([0.0, 1.0, 0.0, 1.0]) {
+        assert!((actual - expected).abs() < f32::EPSILON);
+    }
+    assert!((lines[0].thickness() - 2.0).abs() < f32::EPSILON);
+    assert!((lines[1].thickness() - 5.0).abs() < f32::EPSILON);
+}

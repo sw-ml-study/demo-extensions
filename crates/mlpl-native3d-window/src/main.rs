@@ -12,6 +12,7 @@ use mlpl_native3d_window::interaction::{
 };
 use mlpl_native3d_window::live::{
     applet_source, close_event, input_event, key_event, parse_scene_command, resize_event,
+    tic_tac_toe_applet_source,
 };
 use mlpl_native3d_window::{GpuVertex, line_vertices, text_vertices};
 use wgpu::util::DeviceExt;
@@ -51,11 +52,15 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let event_loop = EventLoop::new()?;
-    println!("MLPL Native 3D — live controls are evaluated by controls.mlpl");
-    println!("W/S width • arrows height • A/D length • +/- speed • Space pause");
-    println!("C color • [/] thickness • R reset • Escape closes");
+    let tic_tac_toe = std::env::args().any(|argument| argument == "--tic-tac-toe");
+    let source = if tic_tac_toe {
+        tic_tac_toe_applet_source()
+    } else {
+        applet_source()
+    };
+    println!("MLPL Native 3D — application behavior is evaluated by MLPL");
     let mut host_error = None;
-    let result = run_applet_with_host(&applet_source(), |commands, events| {
+    let result = run_applet_with_host(&source, |commands, events| {
         let mut application = Application::new(commands, events);
         if let Err(error) = event_loop.run_app(&mut application) {
             host_error = Some(error.to_string());
@@ -332,6 +337,10 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
             " " => Some("space"),
             "r" => Some("r"),
             "c" => Some("c"),
+            "x" => Some("x"),
+            "o" => Some("o"),
+            "1" => Some("1"),
+            "2" => Some("2"),
             "[" | "{" => Some("bracket_left"),
             "]" | "}" => Some("bracket_right"),
             _ => None,
@@ -341,13 +350,12 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
 }
 
 fn scene_title(command: &mlpl_native3d_window::live::SceneCommand) -> String {
-    let positions = command.scene.positions().values();
-    let width = positions[0].abs() * 2.0;
-    let height = positions[1].abs() * 2.0;
-    let length = positions[2].abs() * 2.0;
+    let summary = command.help.lines().next().unwrap_or("MLPL native3d");
     format!(
-        "MLPL live • rev {} • W {:.2} H {:.2} L {:.2} • speed {:.1} • Space/C/[/]/R",
-        command.revision, width, height, length, command.rotation_speed
+        "MLPL native3d • rev {} • {} lines • {}",
+        command.revision,
+        command.scene.edges().len(),
+        summary
     )
 }
 

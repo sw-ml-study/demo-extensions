@@ -74,6 +74,18 @@ Open the interactive native cube:
 just cube-3d
 ```
 
+Open the playable native tic-tac-toe game:
+
+```sh
+just tic-tac-toe
+```
+
+Click an empty square to move. X/O chooses the human mark, 1/2 chooses first
+or second, R restarts with those choices, and Escape closes. The board rules,
+perfect-play strategy, picking, choices, turns, hover, and scene arrays are
+MLPL-owned; the shared Rust host only normalizes input and renders generic
+lines.
+
 The window keeps winit/wgpu on the main thread and runs sw-MLPL on a worker.
 `controls.mlpl` receives generic key/resize events and sends complete owned
 scene commands back to the renderer. Use W/S for width, arrows for height, A/D

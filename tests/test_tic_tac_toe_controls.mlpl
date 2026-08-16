@@ -1,0 +1,28 @@
+include "demos/tic-tac-toe/controls.mlpl";
+
+@test {name:"tic tac toe center pointer maps to center cell",tags:["native3d","tic-tac-toe","picking"]}
+def u:test_ttt_pointer_cell() { state=u:ttt_app_defaults(); u:assert_eq(u:ttt_pointer_cell(state,{x:400,y:300})?,4,"center ray hits center board cell") }
+
+@test {name:"tic tac toe user move and AI response are MLPL owned",tags:["native3d","tic-tac-toe","interaction"]}
+def u:test_ttt_user_and_ai_move() {
+  state=u:ttt_app_defaults(); state=u:ttt_user_move(state,4);
+  u:assert_eq(take(state.board,0,4),1,"user places X")?;
+  u:assert_eq(reduce(:add,eq(state.board,-1)),1,"AI places exactly one O")?;
+  u:assert_eq(state.turn,"user","turn returns to user")?;
+  u:assert_eq(u:ttt_user_move(state,4),state,"occupied click is ignored")
+}
+
+@test {name:"tic tac toe choices and restart are explicit",tags:["native3d","tic-tac-toe","choices"]}
+def u:test_ttt_choices() {
+  state=u:ttt_reduce(u:ttt_app_defaults(),{kind:"key",key:"o"});
+  u:assert_eq([state.user_mark,state.ai_mark],[-1,1],"O choice swaps marks")?;
+  moved=u:ttt_user_move(state,4);
+  u:assert_eq(take(moved.board,0,4),-1,"O can make the selected first move")?;
+  state=u:ttt_reduce(state,{kind:"key",key:"2"});
+  u:assert_eq(state.user_first,0,"second-player choice is retained")?;
+  u:assert_eq(reduce(:add,eq(state.board,1)),1,"AI opens as X")?;
+  reset=u:ttt_reduce(state,{kind:"key",key:"r"});
+  u:assert_eq([reset.user_mark,reset.user_first],[-1,0],"restart retains choices")
+}
+
+u:run_registered_tests()

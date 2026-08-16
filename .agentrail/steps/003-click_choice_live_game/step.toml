@@ -1,6 +1,6 @@
 number = 3
 slug = "click_choice_live_game"
-status = "pending"
+status = "in-progress"
 description = "Using native mlplunit and Rust integration TDD, connect pick-ray/plane clicks..."
 role = "production"
 context_files = []

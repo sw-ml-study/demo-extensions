@@ -19,6 +19,8 @@ pub struct LineScene {
     positions: NumericArray,
     edges: IndexArray,
     controls: SceneControls,
+    #[serde(skip)]
+    line_styles: Option<Vec<([f32; 4], f32)>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -87,9 +89,47 @@ impl LineScene {
                 line_color,
                 line_thickness,
             },
+            line_styles: None,
         };
         scene.validate()?;
         Ok(scene)
+    }
+
+    /// Builds a line scene with one validated color and thickness per edge.
+    ///
+    /// # Errors
+    ///
+    /// Rejects mismatched parallel lengths, malformed geometry, out-of-range
+    /// indices, non-finite values, colors outside RGBA bounds, and unsupported
+    /// thickness or rotation values.
+    pub fn from_parallel_arrays(
+        positions: Vec<f32>,
+        edges: Vec<usize>,
+        rotation_speed: f32,
+        colors: Vec<[f32; 4]>,
+        thicknesses: Vec<f32>,
+    ) -> Result<Self, SceneError> {
+        let edge_count = edges.len() / 2;
+        if colors.len() != edge_count || thicknesses.len() != edge_count || edge_count == 0 {
+            return Err(SceneError::Malformed);
+        }
+        let mut scene =
+            Self::from_arrays(positions, edges, rotation_speed, colors[0], thicknesses[0])?;
+        for color in &colors {
+            validate_color(*color)?;
+        }
+        for thickness in &thicknesses {
+            validate_thickness(*thickness)?;
+        }
+        scene.line_styles = Some(colors.into_iter().zip(thicknesses).collect());
+        Ok(scene)
+    }
+
+    pub(crate) fn style(&self, edge: usize) -> ([f32; 4], f32) {
+        self.line_styles.as_ref().map_or(
+            (self.controls.line_color, self.controls.line_thickness),
+            |styles| styles[edge],
+        )
     }
 
     /// Parses and validates one deterministic renderer-neutral line scene.
@@ -212,17 +252,28 @@ impl SceneControls {
         if !self.rotation_speed.is_finite() || !(-10.0..=10.0).contains(&self.rotation_speed) {
             return Err(SceneError::RotationSpeed);
         }
-        if !self
-            .line_color
-            .iter()
-            .all(|channel| channel.is_finite() && (0.0..=1.0).contains(channel))
-        {
-            return Err(SceneError::LineColor);
-        }
-        if !self.line_thickness.is_finite() || !(0.5..=20.0).contains(&self.line_thickness) {
-            return Err(SceneError::LineThickness);
-        }
+        validate_color(self.line_color)?;
+        validate_thickness(self.line_thickness)?;
         Ok(())
+    }
+}
+
+fn validate_color(color: [f32; 4]) -> Result<(), SceneError> {
+    if color
+        .iter()
+        .all(|channel| channel.is_finite() && (0.0..=1.0).contains(channel))
+    {
+        Ok(())
+    } else {
+        Err(SceneError::LineColor)
+    }
+}
+
+fn validate_thickness(thickness: f32) -> Result<(), SceneError> {
+    if thickness.is_finite() && (0.5..=20.0).contains(&thickness) {
+        Ok(())
+    } else {
+        Err(SceneError::LineThickness)
     }
 }
 

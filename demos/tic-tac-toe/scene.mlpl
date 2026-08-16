@@ -26,22 +26,13 @@ def u:ttt_add_x(state,cell) {
   u:ttt_add_segment(state,[x-0.3,0.02,z+0.3],[x+0.3,0.02,z-0.3],color,4)
 }
 
-def u:ttt_add_o_from(state,x,z,segment) {
-  if eq(segment,8) { state } else {
-    a=segment*0.7853981633974483; b=(segment+1)*0.7853981633974483; color=[1,0.45,0.2,1];
-    next=u:ttt_add_segment(state,[x+cos(a)*0.34,0.02,z+sin(a)*0.34],[x+cos(b)*0.34,0.02,z+sin(b)*0.34],color,4);
-    u:ttt_add_o_from(next,x,z,segment+1)
-  }
+def u:ttt_add_o(state,cell) {
+  center=u:ttt_cell_center(cell,0.02); x=take(center,0,0); z=take(center,0,2); segment=0;
+  while lt(segment,8) { a=segment*0.7853981633974483; b=(segment+1)*0.7853981633974483; state=u:ttt_add_segment(state,[x+cos(a)*0.34,0.02,z+sin(a)*0.34],[x+cos(b)*0.34,0.02,z+sin(b)*0.34],[1,0.45,0.2,1],4); segment=segment+1 };
+  state
 }
 
-def u:ttt_add_o(state,cell) { center=u:ttt_cell_center(cell,0.02); u:ttt_add_o_from(state,take(center,0,0),take(center,0,2),0) }
-
-def u:ttt_add_marks(state,board,cell) {
-  if eq(cell,9) { state } else {
-    mark=take(board,0,cell); next=if eq(mark,1) { u:ttt_add_x(state,cell) } else { if eq(mark,-1) { u:ttt_add_o(state,cell) } else { state } };
-    u:ttt_add_marks(next,board,cell+1)
-  }
-}
+def u:ttt_add_marks(state,board,cell) { while lt(cell,9) { mark=take(board,0,cell); state=if eq(mark,1) { u:ttt_add_x(state,cell) } else { if eq(mark,-1) { u:ttt_add_o(state,cell) } else { state } }; cell=cell+1 }; state }
 
 def u:ttt_add_hover(state,board,cell) {
   outcome=u:ttt_outcome(board);
@@ -54,12 +45,7 @@ def u:ttt_add_hover(state,board,cell) {
   } }
 }
 
-def u:ttt_winning_line(board,line) {
-  if eq(line,8) { -1 } else {
-    a=take([0,3,6,0,1,2,0,2],0,line); b=take([1,4,7,3,4,5,4,4],0,line); c=take([2,5,8,6,7,8,8,6],0,line);
-    if u:ttt_line_winner(board,a,b,c) { line } else { u:ttt_winning_line(board,line+1) }
-  }
-}
+def u:ttt_winning_line(board,line) { found=-1; while lt(line,8)*(1-eq(found,-1)) { line=line+1 }; while lt(line,8)*eq(found,-1) { a=take([0,3,6,0,1,2,0,2],0,line); b=take([1,4,7,3,4,5,4,4],0,line); c=take([2,5,8,6,7,8,8,6],0,line); found=if u:ttt_line_winner(board,a,b,c) { line } else { -1 }; line=line+1 }; found }
 
 def u:ttt_add_result(state,board) {
   outcome=u:ttt_outcome(board);

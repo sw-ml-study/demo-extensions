@@ -249,7 +249,7 @@ pub(crate) fn plan_lines(
         .collect();
 
     let mut output = Vec::with_capacity(scene.edges.shape[0]);
-    for edge in scene.edges.values.chunks_exact(2) {
+    for (edge_index, edge) in scene.edges.values.chunks_exact(2).enumerate() {
         let Some((start, end)) = clip_near(transformed[edge[0]], transformed[edge[1]], camera.near)
         else {
             continue;
@@ -262,11 +262,12 @@ pub(crate) fn plan_lines(
         if (start[0] - end[0]).abs() < f32::EPSILON && (start[1] - end[1]).abs() < f32::EPSILON {
             continue;
         }
+        let (color, thickness) = scene.style(edge_index);
         output.push(PlannedLine {
             start,
             end,
-            color: scene.controls.line_color,
-            thickness: scene.controls.line_thickness,
+            color,
+            thickness,
         });
     }
     Ok(output)

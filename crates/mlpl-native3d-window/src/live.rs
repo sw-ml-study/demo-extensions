@@ -7,8 +7,13 @@ use mlpl_native3d_scene::{Camera, LineScene};
 
 const SCENE_SOURCE: &str = include_str!("../../../demos/wireframe-cube/scene.mlpl");
 const CAMERA_SOURCE: &str = include_str!("../../../lib/native3d/camera.mlpl");
+const GEOMETRY_SOURCE: &str = include_str!("../../../lib/native3d/geometry.mlpl");
 const CONTROLS_SOURCE: &str = include_str!("../../../demos/wireframe-cube/controls.mlpl");
 const APPLET_BODY: &str = include_str!("../../../demos/wireframe-cube/live-applet.mlpl");
+const TTT_MODEL: &str = include_str!("../../../demos/tic-tac-toe/model.mlpl");
+const TTT_SCENE: &str = include_str!("../../../demos/tic-tac-toe/scene.mlpl");
+const TTT_CONTROLS: &str = include_str!("../../../demos/tic-tac-toe/controls.mlpl");
+const TTT_APPLET: &str = include_str!("../../../demos/tic-tac-toe/live-applet.mlpl");
 
 #[must_use]
 pub fn applet_source() -> String {
@@ -16,6 +21,17 @@ pub fn applet_source() -> String {
         "{SCENE_SOURCE}\n{CAMERA_SOURCE}\n{}\n{}",
         without_includes(CONTROLS_SOURCE),
         without_includes(APPLET_BODY)
+    )
+}
+
+#[must_use]
+pub fn tic_tac_toe_applet_source() -> String {
+    format!(
+        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}",
+        without_includes(TTT_MODEL),
+        without_includes(TTT_SCENE),
+        without_includes(TTT_CONTROLS),
+        without_includes(TTT_APPLET)
     )
 }
 
@@ -166,11 +182,12 @@ pub fn parse_scene_command(value: Value) -> Result<SceneCommand, String> {
     if string_field(&fields, "op")? != "set_scene" {
         return Err("unsupported live command".into());
     }
-    let positions = array_field(&fields, "positions", &[8, 3])?;
-    let raw_edges = array_field(&fields, "edges", &[12, 2])?;
-    let colors = array_field(&fields, "colors", &[12, 4])?;
-    let thicknesses = array_field(&fields, "thicknesses", &[12])?;
-    let ids = array_field(&fields, "ids", &[12])?;
+    let (positions, _position_shape) = matrix_field(&fields, "positions", 3)?;
+    let (raw_edges, edge_shape) = matrix_field(&fields, "edges", 2)?;
+    let edge_count = edge_shape[0];
+    let colors = array_field(&fields, "colors", &[edge_count, 4])?;
+    let thicknesses = array_field(&fields, "thicknesses", &[edge_count])?;
+    let ids = array_field(&fields, "ids", &[edge_count])?;
     validate_parallel_styles(&colors, &thicknesses, &ids)?;
     let edges = raw_edges
         .iter()
@@ -191,21 +208,30 @@ pub fn parse_scene_command(value: Value) -> Result<SceneCommand, String> {
         Some(Value::Record { fields }) => parse_camera(fields)?,
         Some(_) => return Err("camera must be a record".into()),
     };
-    let line_color = [
-        to_f32(colors[0], "color")?,
-        to_f32(colors[1], "color")?,
-        to_f32(colors[2], "color")?,
-        to_f32(colors[3], "color")?,
-    ];
-    let scene = LineScene::from_arrays(
+    let colors = colors
+        .chunks_exact(4)
+        .map(|color| {
+            Ok([
+                to_f32(color[0], "color")?,
+                to_f32(color[1], "color")?,
+                to_f32(color[2], "color")?,
+                to_f32(color[3], "color")?,
+            ])
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let thicknesses = thicknesses
+        .into_iter()
+        .map(|value| to_f32(value, "thickness"))
+        .collect::<Result<Vec<_>, _>>()?;
+    let scene = LineScene::from_parallel_arrays(
         positions
             .into_iter()
             .map(|value| to_f32(value, "position"))
             .collect::<Result<Vec<_>, _>>()?,
         edges,
         rotation_speed,
-        line_color,
-        to_f32(thicknesses[0], "thickness")?,
+        colors,
+        thicknesses,
     )
     .map_err(|error| format!("invalid live scene: {error:?}"))?;
     Ok(SceneCommand {
@@ -234,26 +260,31 @@ fn parse_camera(fields: &BTreeMap<String, Value>) -> Result<Camera, String> {
 }
 
 fn validate_parallel_styles(
-    colors: &[f64],
-    thicknesses: &[f64],
+    _colors: &[f64],
+    _thicknesses: &[f64],
     ids: &[f64],
 ) -> Result<(), String> {
-    let first_color = &colors[..4];
-    if !colors.chunks_exact(4).all(|color| color == first_color) {
-        return Err("current line renderer requires one uniform color".into());
-    }
-    if !thicknesses
-        .iter()
-        .all(|value| value.to_bits() == thicknesses[0].to_bits())
-    {
-        return Err("current line renderer requires one uniform thickness".into());
-    }
     for (index, id) in ids.iter().copied().enumerate() {
         if numeric_index(id, "id")? != index {
             return Err("line ids must be stable and contiguous".into());
         }
     }
     Ok(())
+}
+
+fn matrix_field(
+    fields: &BTreeMap<String, Value>,
+    name: &str,
+    columns: usize,
+) -> Result<(Vec<f64>, [usize; 2]), String> {
+    let Value::Array(array) = fields.get(name).ok_or_else(|| format!("missing {name}"))? else {
+        return Err(format!("{name} must be an array"));
+    };
+    let dims = array.shape().dims();
+    if dims.len() != 2 || dims[0] == 0 || dims[1] != columns {
+        return Err(format!("{name} has the wrong shape"));
+    }
+    Ok((array.data().to_vec(), [dims[0], dims[1]]))
 }
 
 fn array_field(
