@@ -1,0 +1,9 @@
+number = 3
+slug = "document_compiled_3d_library_split"
+status = "in-progress"
+description = "Write docs/compile-3d-app-blocked.md explaining the exact sw-MLPL capabilitie..."
+role = "production"
+context_files = []
+created_at = "2026-08-15T20:47:37"
+task_type = "native3d"
+commits = []

@@ -182,6 +182,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,
   viewer-call, and compiler requirements for MLPL-owned interaction.
+- [Compiled 3D app blocker and library split](docs/compile-3d-app-blocked.md) —
+  concise MLPL wrapper design and exact upstream compile/package requirements.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and
