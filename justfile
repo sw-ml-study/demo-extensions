@@ -39,6 +39,10 @@ life-3d:
 life-torus:
     ./scripts/run-life-torus
 
+# Measure bounded Model Atlas scanning against growing sparse model files.
+model-atlas-memory-evidence:
+    ./scripts/run-model-atlas-memory-evidence
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

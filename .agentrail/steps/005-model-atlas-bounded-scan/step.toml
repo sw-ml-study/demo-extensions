@@ -1,6 +1,6 @@
 number = 5
 slug = "model-atlas-bounded-scan"
-status = "pending"
+status = "in-progress"
 description = "Specify and implement the bounded model-file scan contract for Model Atlas wi..."
 role = "production"
 context_files = []

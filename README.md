@@ -93,6 +93,12 @@ Open Life on a native 3D torus with wrap-around in both grid axes:
 just life-torus
 ```
 
+Measure bounded Model Atlas range scanning against growing sparse files:
+
+```sh
+just model-atlas-memory-evidence
+```
+
 Click toggles a cell and Control-left-drag paints live cells. Plain left-drag
 orbits/tilts, Shift-left-drag or middle-drag pans, and the wheel zooms. Space
 runs/pauses, N steps, C clears, plus/minus changes speed, and B/H/I/T/G/U/R
@@ -242,6 +248,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   surface picking, controls, ownership, and current performance bounds.
 - [Retained scene patches](docs/retained-scene-patches.md) — stable-ID atomic
   line diffs, revision/resync behavior, bounds, ownership, and measured scope.
+- [Bounded Model Atlas scanning](docs/model-atlas-bounded-scan.md) — range-read
+  passes, compact adapter columns, selected detail/cache bounds, and RSS data.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

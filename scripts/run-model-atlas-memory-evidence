@@ -1,0 +1,54 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+mlpl=$($repo_root/scripts/select-mlpl)
+mkdir -p "$repo_root/tmp"
+work_dir=$(mktemp -d "$repo_root/tmp/model-atlas-sparse.XXXXXX")
+trap 'rm -rf "$work_dir"' EXIT HUP INT TERM
+
+small_bytes=1048576
+large_bytes=67108864
+max_rss_bytes=50331648
+max_growth_bytes=8388608
+small="$work_dir/small.bin"
+large="$work_dir/large.bin"
+truncate -s "$small_bytes" "$small"
+truncate -s "$large_bytes" "$large"
+
+measure() {
+  label=$1
+  artifact=$2
+  stdout_file="$work_dir/$label.out"
+  metrics_file="$work_dir/$label.time"
+  case $(uname -s) in
+    Darwin)
+      /usr/bin/time -l "$mlpl" --source-dir "$repo_root" "$repo_root/demos/model-atlas/sparse-scan.mlpl" -- "$artifact" >"$stdout_file" 2>"$metrics_file" || { cat "$stdout_file"; cat "$metrics_file" >&2; exit 1; }
+      rss=$(awk '/maximum resident set size/ { print $1; exit }' "$metrics_file")
+      ;;
+    Linux)
+      /usr/bin/time -v "$mlpl" --source-dir "$repo_root" "$repo_root/demos/model-atlas/sparse-scan.mlpl" -- "$artifact" >"$stdout_file" 2>"$metrics_file" || { cat "$stdout_file"; cat "$metrics_file" >&2; exit 1; }
+      rss_kib=$(awk -F: '/Maximum resident set size/ { gsub(/^[ \t]+/, "", $2); print $2; exit }' "$metrics_file")
+      rss=$((rss_kib * 1024))
+      ;;
+    *)
+      echo "SKIP Model Atlas memory evidence: supported on Darwin and Linux" >&2
+      exit 77
+      ;;
+  esac
+  grep -Fqx 'PASS bounded Model Atlas sparse scan' "$stdout_file"
+  [ -n "$rss" ] || { cat "$metrics_file" >&2; exit 1; }
+  [ "$rss" -le "$max_rss_bytes" ] || { echo "peak RSS $rss exceeds $max_rss_bytes" >&2; exit 1; }
+  echo "$rss" >"$work_dir/$label.rss"
+  echo "MEASURE $label file_bytes=$(wc -c <"$artifact" | tr -d ' ') peak_rss_bytes=$rss"
+}
+
+measure small "$small"
+measure large "$large"
+small_rss=$(cat "$work_dir/small.rss")
+large_rss=$(cat "$work_dir/large.rss")
+growth=$((large_rss - small_rss))
+[ "$growth" -ge 0 ] || growth=0
+[ "$growth" -le "$max_growth_bytes" ] || { echo "RSS growth $growth exceeds $max_growth_bytes" >&2; exit 1; }
+[ "$large_bytes" -gt "$max_rss_bytes" ] || { echo "large artifact must exceed RSS ceiling" >&2; exit 1; }
+echo "ACCEPT Model Atlas bounded scan growth_bytes=$growth ceiling_bytes=$max_rss_bytes growth_ceiling_bytes=$max_growth_bytes"

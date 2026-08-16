@@ -166,7 +166,9 @@ repository's generic native renderer without loading a whole model file or
 tensor payload into memory.
 
 1. Define a range-read, optionally multi-pass scanner that retains only capped
-   catalog/summary IR and fetches selected details on demand.
+   catalog/summary IR and fetches selected details on demand. The generic
+   scanner and sparse-memory evidence are complete; format-derived interchange
+   fixtures follow in the next step.
 2. Pin a versioned renderer-neutral interchange compatible with tensor-city
    Safetensors/GGUF output and explicit provenance.
 3. Render interactive tensor buildings, districts, labels, selection,
