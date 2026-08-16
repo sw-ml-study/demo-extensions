@@ -216,6 +216,7 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
         Key::Named(NamedKey::ArrowUp) => Some("arrow_up"),
         Key::Named(NamedKey::ArrowDown) => Some("arrow_down"),
         Key::Named(NamedKey::Escape) => Some("escape"),
+        Key::Named(NamedKey::Space) => Some("space"),
         Key::Character(value) => match value.to_lowercase().as_str() {
             "w" => Some("w"),
             "s" => Some("s"),
@@ -396,5 +397,16 @@ impl Graphics {
         self.queue.submit(Some(encoder.finish()));
         frame.present();
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_key;
+    use winit::keyboard::{Key, NamedKey};
+
+    #[test]
+    fn normalizes_named_space_for_the_live_event_path() {
+        assert_eq!(normalize_key(&Key::Named(NamedKey::Space)), Some("space"));
     }
 }

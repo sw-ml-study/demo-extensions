@@ -8,9 +8,11 @@ def u:test_cube_control_core() {
   changed=u:wireframe_cube_reduce(changed,{kind:"key",key:"length_up"});
   changed=u:wireframe_cube_reduce(changed,{kind:"key",key:"speed_down"});
   paused=u:wireframe_cube_reduce(changed,{kind:"key",key:"pause"});
+  resumed=u:wireframe_cube_reduce(paused,{kind:"key",key:"space"});
   reverse=initial; i=0; while lt(i,7) { reverse=u:wireframe_cube_reduce(reverse,{kind:"key",key:"speed_down"}); i=i+1 };
   u:assert_eq([changed.width,changed.height,changed.length,changed.rotation_speed],[2.25,1.75,2.25,0.5],"dimension and signed-speed controls");
   u:assert_eq(paused.paused,1,"pause toggles in MLPL");
+  u:assert_eq([resumed.paused,resumed.rotation_speed],[0,changed.rotation_speed],"second physical Space resumes with the prior speed");
   u:assert_eq(lt(reverse.rotation_speed,0),1,"signed speed supports reverse rotation");
   reset=u:wireframe_cube_reduce(paused,{kind:"key",key:"reset"});
   u:assert_eq([reset.width,reset.height,reset.length,reset.rotation_speed,reset.paused],[2,2,2,0.6,0],"reset restores application defaults")

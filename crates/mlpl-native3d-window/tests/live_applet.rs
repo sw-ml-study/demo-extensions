@@ -16,6 +16,10 @@ fn mlpl_worker_drives_scene_commands_from_normalized_events() {
         commands.push(parse_scene_command(receiver.recv().unwrap()).unwrap());
         sender.send(key_event("s")).unwrap();
         commands.push(parse_scene_command(receiver.recv().unwrap()).unwrap());
+        sender.send(key_event("space")).unwrap();
+        commands.push(parse_scene_command(receiver.recv().unwrap()).unwrap());
+        sender.send(key_event("space")).unwrap();
+        commands.push(parse_scene_command(receiver.recv().unwrap()).unwrap());
         sender.send(key_event("c")).unwrap();
         commands.push(parse_scene_command(receiver.recv().unwrap()).unwrap());
         sender.send(resize_event(1024, 768)).unwrap();
@@ -27,12 +31,14 @@ fn mlpl_worker_drives_scene_commands_from_normalized_events() {
         ));
     });
     assert!(result.is_ok(), "applet failed: {result:?}");
-    assert_eq!(commands.len(), 5);
+    assert_eq!(commands.len(), 7);
     assert_eq!(commands[0].revision, 0);
     assert_eq!(commands[1].revision, 1);
     assert_eq!(commands[2].revision, 2);
     assert_eq!(commands[3].revision, 3);
     assert_eq!(commands[4].revision, 4);
+    assert_eq!(commands[5].revision, 5);
+    assert_eq!(commands[6].revision, 6);
     assert!(
         (commands[0].scene.positions().values()[0] - commands[1].scene.positions().values()[0])
             .abs()
@@ -44,8 +50,16 @@ fn mlpl_worker_drives_scene_commands_from_normalized_events() {
             < f32::EPSILON
     );
     assert!(
-        (commands[2].scene.controls().line_color()[0]
-            - commands[3].scene.controls().line_color()[0])
+        commands[3].rotation_speed.abs() < f32::EPSILON,
+        "first Space must pause rotation"
+    );
+    assert!(
+        (commands[4].rotation_speed - commands[0].rotation_speed).abs() < f32::EPSILON,
+        "second Space must restore the prior signed speed"
+    );
+    assert!(
+        (commands[4].scene.controls().line_color()[0]
+            - commands[5].scene.controls().line_color()[0])
             .abs()
             > f32::EPSILON
     );

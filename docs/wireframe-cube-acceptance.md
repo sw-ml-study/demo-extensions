@@ -13,7 +13,7 @@ Status date: 2026-08-15
 | GPU thick-line expansion | Proven | `line_vertices.rs` | Basic PoC lines; no antialiasing promise |
 | Native macOS window | Proven | observed interactive `just cube-3d` run on 2026-08-15 | Manual opt-in smoke evidence |
 | Native Linux design/build path | Supported, unverified here | shared winit/wgpu source and WGSL | No Linux target or graphical host was available on this Mac |
-| MLPL-driven live controls | Proven | `live_applet.rs` plus manual window | Local interpreted mode |
+| MLPL-driven live controls | Proven | `live_applet.rs`, physical-key normalization test, plus manual window | Local interpreted mode |
 | In-view help and live feedback | Proven | bitmap overlay plus revision/state title | Compact PoC typography |
 | Compiled MLPL application | Blocked upstream | `docs/sw-mlpl-blockers.md` | Needs compiler provider parity |
 

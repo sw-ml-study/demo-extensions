@@ -32,6 +32,10 @@ no-ops. This is the normalized record contract expected from future bounded
 `poll_events`; platform-specific key codes must be normalized by the generic
 window service before crossing into MLPL.
 
+The winit adapter accepts Space as `NamedKey::Space` (and retains the character
+fallback) and normalizes both forms to `"space"`. MLPL then toggles pause; a
+second Space resumes using the unchanged signed speed.
+
 ## Bulk update
 
 `u:wireframe_cube_bulk_update(state)` returns actual dense arrays ready for the
@@ -46,7 +50,7 @@ headless provider:
 
 The same state yields an identical complete update. Native mlplunit covers all
 controls, bounds, unknown events, resizing, close intent, reset, reverse
-rotation, array shapes, stable IDs, pause behavior, and determinism.
+rotation, array shapes, stable IDs, pause/resume behavior, and determinism.
 
 ## Live event-loop connection
 
