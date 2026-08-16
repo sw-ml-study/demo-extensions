@@ -34,7 +34,7 @@ def u:test_life_keyboard_and_frames() {
 
 @test {name:"Life camera pan zoom resize and close remain generic",tags:["native3d","life","controls","camera"]}
 def u:test_life_camera_lifecycle() {
-  initial=u:life_app_defaults(); pan=u:life_reduce(initial,{kind:"pointer_down",button:"middle",x:100,y:100,shift:0,control:0}); pan=u:life_reduce(pan,{kind:"pointer_move",x:120,y:130,left:0,shift:0,control:0});
+  initial=u:life_app_defaults(); idle=u:life_reduce(initial,{kind:"pointer_move",x:400,y:300,left:0,shift:0,control:0}); u:assert_eq(idle,initial,"idle motion is a nonvisual no-op")?; pan=u:life_reduce(initial,{kind:"pointer_down",button:"middle",x:100,y:100,shift:0,control:0}); pan=u:life_reduce(pan,{kind:"pointer_move",x:120,y:130,left:0,shift:0,control:0});
   u:assert_true(1-equal(pan.camera.target,initial.camera.target),"middle drag pans")?;
   zoom=u:life_reduce(initial,{kind:"wheel",dx:0,dy:40,x:400,y:300,shift:0,control:0}); u:assert_true(lt(zoom.camera.distance,initial.camera.distance),"wheel zooms")?;
   resized=u:life_reduce(initial,{kind:"resize",width:1024,height:768}); u:assert_eq([resized.viewport_width,resized.viewport_height],[1024,768],"resize updates picking viewport")?;

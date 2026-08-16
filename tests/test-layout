@@ -72,6 +72,7 @@ tests/test_life_scene.mlpl
 docs/tic-tac-toe-acceptance.md
 docs/life-model.md
 docs/life-controls.md
+docs/life-acceptance.md
 tests/test_tic_tac_toe_scene.mlpl
 tests/test_wireframe_cube_scene.mlpl
 tests/test_wireframe_cube_controls.mlpl

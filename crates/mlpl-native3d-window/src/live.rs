@@ -59,6 +59,19 @@ pub struct SceneCommand {
     pub help: String,
 }
 
+#[derive(Debug)]
+pub struct ViewCommand {
+    pub camera: Camera,
+    pub revision: u64,
+    pub help: String,
+}
+
+#[derive(Debug)]
+pub enum LiveCommand {
+    Scene(SceneCommand),
+    View(ViewCommand),
+}
+
 #[must_use]
 pub fn key_event(key: &str) -> Value {
     record([
@@ -197,32 +210,53 @@ pub fn parse_scene_command(value: Value) -> Result<SceneCommand, String> {
     if string_field(&fields, "op")? != "set_scene" {
         return Err("unsupported live command".into());
     }
-    let (positions, _position_shape) = matrix_field(&fields, "positions", 3)?;
-    let (raw_edges, edge_shape) = matrix_field(&fields, "edges", 2)?;
+    parse_scene_fields(&fields)
+}
+
+/// Decodes a camera/help-only update that retains the current geometry.
+///
+/// # Errors
+///
+/// Rejects malformed records, unsupported operations, revisions, or cameras.
+pub fn parse_view_command(value: Value) -> Result<ViewCommand, String> {
+    let fields = record_fields(value, "command")?;
+    if string_field(&fields, "op")? != "set_view" {
+        return Err("unsupported live command".into());
+    }
+    parse_view_fields(&fields)
+}
+
+/// Decodes either a complete scene replacement or a retained-scene view diff.
+///
+/// # Errors
+///
+/// Rejects malformed or unsupported live commands.
+pub fn parse_live_command(value: Value) -> Result<LiveCommand, String> {
+    let fields = record_fields(value, "command")?;
+    match string_field(&fields, "op")? {
+        "set_scene" => parse_scene_fields(&fields).map(LiveCommand::Scene),
+        "set_view" => parse_view_fields(&fields).map(LiveCommand::View),
+        _ => Err("unsupported live command".into()),
+    }
+}
+
+fn parse_scene_fields(fields: &BTreeMap<String, Value>) -> Result<SceneCommand, String> {
+    let (positions, _position_shape) = matrix_field(fields, "positions", 3)?;
+    let (raw_edges, edge_shape) = matrix_field(fields, "edges", 2)?;
     let edge_count = edge_shape[0];
-    let colors = array_field(&fields, "colors", &[edge_count, 4])?;
-    let thicknesses = array_field(&fields, "thicknesses", &[edge_count])?;
-    let ids = array_field(&fields, "ids", &[edge_count])?;
+    let colors = array_field(fields, "colors", &[edge_count, 4])?;
+    let thicknesses = array_field(fields, "thicknesses", &[edge_count])?;
+    let ids = array_field(fields, "ids", &[edge_count])?;
     validate_parallel_styles(&colors, &thicknesses, &ids)?;
     let edges = raw_edges
         .iter()
         .map(|value| numeric_index(*value, "edge"))
         .collect::<Result<Vec<_>, _>>()?;
     let rotation_speed = to_f32(
-        scalar_field(&fields, "rotation_y_speed")?,
+        scalar_field(fields, "rotation_y_speed")?,
         "rotation_y_speed",
     )?;
-    let revision = u64::try_from(numeric_index(
-        scalar_field(&fields, "revision")?,
-        "revision",
-    )?)
-    .map_err(|_| "revision is out of range".to_owned())?;
-    let help = string_field(&fields, "help")?.to_owned();
-    let camera = match fields.get("camera") {
-        None => Camera::default(),
-        Some(Value::Record { fields }) => parse_camera(fields)?,
-        Some(_) => return Err("camera must be a record".into()),
-    };
+    let view = parse_view_fields(fields)?;
     let colors = colors
         .chunks_exact(4)
         .map(|color| {
@@ -251,8 +285,27 @@ pub fn parse_scene_command(value: Value) -> Result<SceneCommand, String> {
     .map_err(|error| format!("invalid live scene: {error:?}"))?;
     Ok(SceneCommand {
         scene,
-        camera,
+        camera: view.camera,
         rotation_speed,
+        revision: view.revision,
+        help: view.help,
+    })
+}
+
+fn parse_view_fields(fields: &BTreeMap<String, Value>) -> Result<ViewCommand, String> {
+    let revision = u64::try_from(numeric_index(
+        scalar_field(fields, "revision")?,
+        "revision",
+    )?)
+    .map_err(|_| "revision is out of range".to_owned())?;
+    let help = string_field(fields, "help")?.to_owned();
+    let camera = match fields.get("camera") {
+        None => Camera::default(),
+        Some(Value::Record { fields }) => parse_camera(fields)?,
+        Some(_) => return Err("camera must be a record".into()),
+    };
+    Ok(ViewCommand {
+        camera,
         revision,
         help,
     })

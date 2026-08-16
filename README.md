@@ -227,6 +227,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   evolution, owned grids, deterministic presets, and upstream comparison.
 - [MLPL Life controls](docs/life-controls.md) — editing gestures, animation,
   presets, camera arbitration, visible bindings, and native ownership split.
+- [Native Life acceptance](docs/life-acceptance.md) — responsiveness fix,
+  retained view diffs, bounds, platform evidence, and remaining patch work.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

@@ -82,7 +82,7 @@ def u:life_reduce(state,event) {
   } else { if equal(event.kind,"pointer_move") {
     if state.painting*event.left*event.control { cell=unwrap(u:life_pointer_cell(state,event)); u:life_set_index(state,cell,1) } else { if state.camera.dragging {
       distance2=(event.x-state.press_x)*(event.x-state.press_x)+(event.y-state.press_y)*(event.y-state.press_y); dragged=state.gesture_dragged+gt(distance2,16); dragged=if dragged { 1 } else { 0 }; camera=if dragged { u:n3d_camera_reduce(state.camera,event) } else { state.camera }; u:life_restate(state,state.grid,state.running,state.generation,state.speed,state.accumulator_ms,camera,-1,state.close_requested,state.random_seed,state.press_x,state.press_y,dragged,0)
-    } else { cell=unwrap(u:life_pointer_cell(state,event)); u:life_restate(state,state.grid,state.running,state.generation,state.speed,state.accumulator_ms,state.camera,cell,state.close_requested,state.random_seed,state.press_x,state.press_y,0,0) } }
+    } else { state } }
   } else { if equal(event.kind,"pointer_up") {
     if state.painting { u:life_restate(state,state.grid,state.running,state.generation,state.speed,state.accumulator_ms,state.camera,state.hover_cell,state.close_requested,state.random_seed,state.press_x,state.press_y,0,0) } else {
       camera=u:n3d_camera_reduce(state.camera,event); released=u:life_restate(state,state.grid,state.running,state.generation,state.speed,state.accumulator_ms,camera,-1,state.close_requested,state.random_seed,state.press_x,state.press_y,0,0); cell=unwrap(u:life_pointer_cell(released,event)); if equal(event.button,"left")*(1-state.gesture_dragged) { u:life_toggle_index(released,cell) } else { released }

@@ -43,9 +43,10 @@ established bulk-line API; no Life-specific or filled-cell primitive was added
 without profiling evidence.
 
 The worker/Port test sends preset, run, frame, wheel, and close events through
-the actual applet. It proves one complete owned scene command per reduced input,
-stable-block evolution, camera changes, visible help, and teardown without a
-display. The native smoke run remains the visual evidence.
+the actual applet. Geometry changes send complete owned scenes, camera changes
+send retained-scene `set_view` diffs, and nonvisual transitions send nothing.
+This prevents paused frames and idle mouse motion from queueing full 1,600-cell
+rebuilds. The native smoke run remains the visual evidence.
 
 ## Ownership and future topology
 

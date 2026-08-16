@@ -55,7 +55,13 @@ event is accepted. None of these generic events has cube meaning in Rust.
 An optional scene-command camera record contains target `[3]`, yaw, pitch,
 distance, vertical field of view, and near plane. Missing camera state uses the
 old default, so the keyboard cube remains compatible. The MLPL camera library
-and cube mouse mappings are intentionally the next two saga steps.
+and application mouse mappings own every camera transition.
+
+The generic live protocol also accepts `set_view` with only `camera`,
+`revision`, and `help`. It retains the last validated geometry and is used for
+high-rate camera motion without retransmitting scene arrays. This is
+application-neutral retained-scene behavior; malformed view commands fail
+closed like full scene replacements.
 
 The target public extension API remains generic:
 

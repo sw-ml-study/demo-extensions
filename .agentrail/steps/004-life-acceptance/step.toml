@@ -1,6 +1,6 @@
 number = 4
 slug = "life-acceptance"
-status = "pending"
+status = "in-progress"
 description = "Run and document final headless and live acceptance for the interactive Life ..."
 role = "production"
 context_files = []

@@ -11,8 +11,7 @@ use mlpl_native3d_window::interaction::{
     BoundedInput, InputError, InputEvent, Modifiers, PointerButton, PointerButtons,
 };
 use mlpl_native3d_window::live::{
-    applet_source, close_event, input_event, key_event, parse_scene_command, resize_event,
-    tic_tac_toe_applet_source,
+    applet_source, close_event, input_event, key_event, resize_event, tic_tac_toe_applet_source,
 };
 use mlpl_native3d_window::{GpuVertex, line_vertices, text_vertices};
 use wgpu::util::DeviceExt;
@@ -116,14 +115,18 @@ impl Application {
 
     fn drain_commands(&mut self, event_loop: &ActiveEventLoop) {
         while let Ok(value) = self.commands.try_recv() {
-            match parse_scene_command(value) {
-                Ok(command) => {
+            match mlpl_native3d_window::live::parse_live_command(value) {
+                Ok(mlpl_native3d_window::live::LiveCommand::Scene(command)) => {
                     if let Some(graphics) = &self.graphics {
                         graphics.window.set_title(&scene_title(&command));
                     }
                     self.scene = Some(command.scene);
                     self.camera = command.camera;
                     self.rotation_speed = command.rotation_speed;
+                    self.help = command.help;
+                }
+                Ok(mlpl_native3d_window::live::LiveCommand::View(command)) => {
+                    self.camera = command.camera;
                     self.help = command.help;
                 }
                 Err(error) => {
