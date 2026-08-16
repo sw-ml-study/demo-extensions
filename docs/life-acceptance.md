@@ -30,6 +30,13 @@ the native host:
   revision, and help; and
 - grid changes emit a complete `set_scene` replacement.
 
+The follow-up correction adds a generic `frame_ack` command. The host admits
+no new frame while one is outstanding; MLPL acknowledges every consumed frame
+after its transition and any resulting scene update. Discrete key and pointer
+events can therefore have at most one frame ahead of them, so G/U cannot
+starve behind stale animation frames. Clearing only a local queue would not
+remove frames already delivered through the Port.
+
 The worker/Port regression proves that a run toggle produces no command, a
 glider generation produces one scene replacement, and wheel input produces one
 view update. This is the first retained-scene, or “shadow DOM,” slice. A future
@@ -41,8 +48,9 @@ not.
 ## Memory and work bounds
 
 The MLPL grid is capped at 256×256 and this demo uses 40×40. Input buffering is
-fixed at 64 normalized events with coalescing for pointer, wheel, and frame
-traffic. Each reducer frame advances at most one generation. A scene
+fixed at 64 normalized events with coalescing for pointer and wheel traffic.
+Frame delivery is single-flight across the Port, and each reducer frame
+advances at most one generation. A scene
 replacement contains 82 grid lines plus four lines per live cell; view updates
 contain no arrays. All values crossing the Port are owned.
 

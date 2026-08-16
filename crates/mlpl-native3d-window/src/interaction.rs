@@ -84,6 +84,32 @@ pub struct BoundedInput {
     events: Vec<InputEvent>,
 }
 
+#[derive(Debug, Default)]
+pub struct FrameGate {
+    outstanding: bool,
+}
+
+impl FrameGate {
+    #[must_use]
+    pub const fn new() -> Self {
+        Self { outstanding: false }
+    }
+
+    /// Admits a frame only when no previously admitted frame awaits an ack.
+    pub const fn begin(&mut self) -> bool {
+        if self.outstanding {
+            false
+        } else {
+            self.outstanding = true;
+            true
+        }
+    }
+
+    pub const fn acknowledge(&mut self) {
+        self.outstanding = false;
+    }
+}
+
 impl InputEvent {
     #[must_use]
     pub const fn pointer_move(

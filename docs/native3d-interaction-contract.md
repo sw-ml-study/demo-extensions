@@ -48,10 +48,13 @@ orientation, plane hits, parallel rays, and behind-camera rejection.
 wheel accumulation, frame replacement, discrete-click preservation, and owned
 MLPL record encoding.
 
-The winit host now queues cursor, button, wheel, and frame events, flushes before
-capacity overflow, and sends owned records through the existing Port. Every
-redraw contributes a coalescible frame record. Close/disconnect still exits the
-event loop, and resize changes both the GPU surface and MLPL viewport record.
+The winit host queues cursor, button, and wheel events, flushes before capacity
+overflow, and sends owned records through the existing Port. Frame delivery is
+single-flight: after one frame is sent, redraws cannot send another until MLPL
+returns `{op:"frame_ack",revision}` after consuming it. This bounds remote
+frame backlog at one while discrete input remains ordered. Close/disconnect
+still exits the event loop, and resize changes both the GPU surface and MLPL
+viewport record.
 
 Scene commands may include `camera:{target:[3],yaw,pitch,distance,fov,near}`.
 The parser rejects malformed shapes, non-finite values, pole-singular pitch,
@@ -62,5 +65,5 @@ headless planning and wgpu line planning.
 The reusable ordinary MLPL layer now implements camera reduction, pick rays,
 plane hits, generic grids, and the Port application lifecycle. Its contract and
 test evidence are documented in [Native3D MLPL library](native3d-mlpl-library.md).
-The current cube remains keyboard-only until the next saga step migrates it to
-that library and registers the pointer mappings in the visible demo.
+The cube, tic-tac-toe, and Life demos reuse this library without native
+application-specific input maps.

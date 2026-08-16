@@ -70,6 +70,7 @@ pub struct ViewCommand {
 pub enum LiveCommand {
     Scene(SceneCommand),
     View(ViewCommand),
+    FrameAck(u64),
 }
 
 #[must_use]
@@ -226,6 +227,19 @@ pub fn parse_view_command(value: Value) -> Result<ViewCommand, String> {
     parse_view_fields(&fields)
 }
 
+/// Decodes an MLPL acknowledgement for one consumed frame event.
+///
+/// # Errors
+///
+/// Rejects malformed records, unsupported operations, or revisions.
+pub fn parse_frame_ack(value: Value) -> Result<u64, String> {
+    let fields = record_fields(value, "command")?;
+    if string_field(&fields, "op")? != "frame_ack" {
+        return Err("unsupported live command".into());
+    }
+    parse_revision(&fields)
+}
+
 /// Decodes either a complete scene replacement or a retained-scene view diff.
 ///
 /// # Errors
@@ -236,6 +250,7 @@ pub fn parse_live_command(value: Value) -> Result<LiveCommand, String> {
     match string_field(&fields, "op")? {
         "set_scene" => parse_scene_fields(&fields).map(LiveCommand::Scene),
         "set_view" => parse_view_fields(&fields).map(LiveCommand::View),
+        "frame_ack" => parse_revision(&fields).map(LiveCommand::FrameAck),
         _ => Err("unsupported live command".into()),
     }
 }
@@ -293,11 +308,7 @@ fn parse_scene_fields(fields: &BTreeMap<String, Value>) -> Result<SceneCommand, 
 }
 
 fn parse_view_fields(fields: &BTreeMap<String, Value>) -> Result<ViewCommand, String> {
-    let revision = u64::try_from(numeric_index(
-        scalar_field(fields, "revision")?,
-        "revision",
-    )?)
-    .map_err(|_| "revision is out of range".to_owned())?;
+    let revision = parse_revision(fields)?;
     let help = string_field(fields, "help")?.to_owned();
     let camera = match fields.get("camera") {
         None => Camera::default(),
@@ -309,6 +320,14 @@ fn parse_view_fields(fields: &BTreeMap<String, Value>) -> Result<ViewCommand, St
         revision,
         help,
     })
+}
+
+fn parse_revision(fields: &BTreeMap<String, Value>) -> Result<u64, String> {
+    u64::try_from(numeric_index(
+        scalar_field(fields, "revision")?,
+        "revision",
+    )?)
+    .map_err(|_| "revision is out of range".to_owned())
 }
 
 fn parse_camera(fields: &BTreeMap<String, Value>) -> Result<Camera, String> {

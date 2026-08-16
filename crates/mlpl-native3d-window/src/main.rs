@@ -8,7 +8,7 @@ use std::time::Instant;
 use mlpl_eval::{Value, run_applet_with_host};
 use mlpl_native3d_scene::{Camera, LineScene, Viewport};
 use mlpl_native3d_window::interaction::{
-    BoundedInput, InputError, InputEvent, Modifiers, PointerButton, PointerButtons,
+    BoundedInput, FrameGate, InputError, InputEvent, Modifiers, PointerButton, PointerButtons,
 };
 use mlpl_native3d_window::live::{
     applet_source, close_event, input_event, key_event, resize_event, tic_tac_toe_applet_source,
@@ -89,6 +89,7 @@ struct Application {
     pointer_buttons: PointerButtons,
     modifiers: Modifiers,
     pending_input: BoundedInput,
+    frame_gate: FrameGate,
     started: Instant,
     last_frame: Instant,
 }
@@ -108,6 +109,7 @@ impl Application {
             pointer_buttons: PointerButtons::NONE,
             modifiers: Modifiers::NONE,
             pending_input: BoundedInput::new(64).expect("nonzero input capacity"),
+            frame_gate: FrameGate::new(),
             started: Instant::now(),
             last_frame: Instant::now(),
         }
@@ -128,6 +130,9 @@ impl Application {
                 Ok(mlpl_native3d_window::live::LiveCommand::View(command)) => {
                     self.camera = command.camera;
                     self.help = command.help;
+                }
+                Ok(mlpl_native3d_window::live::LiveCommand::FrameAck(_revision)) => {
+                    self.frame_gate.acknowledge();
                 }
                 Err(error) => {
                     eprintln!("MLPL scene command rejected: {error}");
@@ -168,11 +173,16 @@ impl Application {
         let now = Instant::now();
         let elapsed = now.duration_since(self.started);
         let delta = now.duration_since(self.last_frame);
-        self.queue_input(
-            InputEvent::frame(delta.as_secs_f64() * 1000.0, elapsed.as_secs_f64() * 1000.0),
-            event_loop,
-        );
         self.flush_input(event_loop);
+        if self.frame_gate.begin() {
+            self.send(
+                input_event(InputEvent::frame(
+                    delta.as_secs_f64() * 1000.0,
+                    elapsed.as_secs_f64() * 1000.0,
+                )),
+                event_loop,
+            );
+        }
         self.angle += delta.as_secs_f32() * self.rotation_speed;
         self.last_frame = now;
         let Some(graphics) = self.graphics.as_mut() else {

@@ -1,6 +1,6 @@
 use mlpl_eval::Value;
 use mlpl_native3d_window::interaction::{
-    BoundedInput, InputEvent, Modifiers, PointerButton, PointerButtons,
+    BoundedInput, FrameGate, InputEvent, Modifiers, PointerButton, PointerButtons,
 };
 use mlpl_native3d_window::live::input_event;
 
@@ -92,4 +92,21 @@ fn input_events_cross_as_owned_normalized_mlpl_records() {
     assert_eq!(fields.get("kind"), Some(&Value::Str("wheel".into())));
     assert!(matches!(fields.get("dy"), Some(Value::Array(value)) if value.data() == [-2.0]));
     assert!(matches!(fields.get("shift"), Some(Value::Array(value)) if value.data() == [1.0]));
+}
+
+#[test]
+fn frame_gate_allows_only_one_outstanding_frame_until_acknowledged() {
+    let mut gate = FrameGate::new();
+    assert!(gate.begin(), "first frame is admitted");
+    for _ in 0..100 {
+        assert!(
+            !gate.begin(),
+            "redraws cannot queue behind an outstanding frame"
+        );
+    }
+    gate.acknowledge();
+    assert!(
+        gate.begin(),
+        "acknowledgement admits exactly one later frame"
+    );
 }

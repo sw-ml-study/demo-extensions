@@ -109,7 +109,7 @@ release behavior.
 Acceptance: stationary clicks place marks, camera drags never place marks, all
 cube-equivalent mouse controls work, and Rust remains application-neutral.
 
-## Active: native3d-life-plane
+## Completed: native3d-life-plane
 
 Purpose: demonstrate array programming, editing, animation, and reusable 3D
 camera interaction on a cellular grid.
@@ -139,6 +139,20 @@ semantics rather than silently merging with an existing grid.
 The first implementation slice deliberately starts with the pure MLPL model.
 That gives cell editing and frame animation one tested transition function and
 keeps renderer performance choices out of the game rules.
+
+## Active: native3d-retained-scene
+
+Purpose: keep native interaction responsive when MLPL geometry work is slower
+than display refresh, then introduce generic shadow-scene patches.
+
+1. Add acknowledgement-driven single-flight frames so stale animation events
+   cannot starve later key or pointer input.
+2. Add versioned ID-addressed atomic add/update/remove patches and use them for
+   changed Life cells instead of complete scene replacement.
+
+Acceptance: at most one frame is outstanding across the Port, discrete input
+stays ordered, malformed or stale patches fail closed, and retained Rust scene
+objects contain no Life rules.
 
 ## Queued: native3d-life-surfaces
 

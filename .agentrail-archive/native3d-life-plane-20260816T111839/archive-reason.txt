@@ -1,0 +1,1 @@
+Completed native Life plane; interactive use exposed queued-frame starvation requiring a focused retained-scene performance saga.
