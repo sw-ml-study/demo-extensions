@@ -1,8 +1,9 @@
 number = 8
 slug = "model-atlas-architecture"
-status = "in-progress"
+status = "completed"
 description = "Add honest architecture-aware MLPL classification and schematics for GGUF gen..."
 role = "production"
 context_files = []
 created_at = "2026-08-16T12:57:43"
-commits = []
+completed_at = "2026-08-16T13:48:14"
+commits = ["11352674674004a68e65bc5085c27fc8d1181cdd"]
