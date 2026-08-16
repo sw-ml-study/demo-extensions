@@ -1,0 +1,1 @@
+Implemented the pure MLPL finite-grid Life model with owned replacement values, zero-padded whole-array rotate evolution, explicit dead boundaries, deterministic named still-life/oscillator/glider/Gosper-gun/random presets, validation, documentation, and native mlplunit evidence. Archived the completed camera saga and initialized the four-step Life-plane saga.
