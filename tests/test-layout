@@ -34,6 +34,7 @@ demos/tic-tac-toe/scene.mlpl
 demos/tic-tac-toe/controls.mlpl
 demos/tic-tac-toe/live-applet.mlpl
 demos/life-plane/model.mlpl
+demos/life-plane/controls.mlpl
 extensions/hello/Cargo.toml
 extensions/hello/extension.toml
 extensions/hello/module.mlpl
@@ -62,8 +63,10 @@ tests/test_native3d_library.mlpl
 tests/test_tic_tac_toe_model.mlpl
 tests/test_tic_tac_toe_controls.mlpl
 tests/test_life_model.mlpl
+tests/test_life_controls.mlpl
 docs/tic-tac-toe-acceptance.md
 docs/life-model.md
+docs/life-controls.md
 tests/test_tic_tac_toe_scene.mlpl
 tests/test_wireframe_cube_scene.mlpl
 tests/test_wireframe_cube_controls.mlpl

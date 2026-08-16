@@ -1,6 +1,6 @@
 number = 2
 slug = "life-edit-and-controls"
-status = "pending"
+status = "in-progress"
 description = "Using native mlplunit TDD, add an initially empty Life app state, ray/plane c..."
 role = "production"
 context_files = []

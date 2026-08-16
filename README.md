@@ -105,11 +105,11 @@ just tests
 just list-tests
 ```
 
-The next native demo is an editable Conway's Life plane. Its pure MLPL model
-already provides dead finite boundaries, whole-array B3/S23 evolution, owned
-cell updates, and deterministic empty, still-life, oscillator, glider, Gosper
-glider-gun, and seeded-random replacement presets. Native editing, animation,
-camera controls, and a visible control legend follow in the next slices.
+The next native demo is an editable Conway's Life plane. Its MLPL layer now
+provides dead finite boundaries, whole-array B3/S23 evolution, owned cell
+updates, deterministic replacement presets, mouse cell editing, animation and
+speed controls, shared orbit/pan/zoom, and the complete visible control legend.
+The next slice connects that tested reducer to generic native bulk rendering.
 
 Run the mandatory pre-commit gate:
 
@@ -213,6 +213,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   behavior, regressions, ownership, portability, and remaining limits.
 - [MLPL Life model](docs/life-model.md) — finite boundary policy, vectorized
   evolution, owned grids, deterministic presets, and upstream comparison.
+- [MLPL Life controls](docs/life-controls.md) — editing gestures, animation,
+  presets, camera arbitration, visible bindings, and native ownership split.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

@@ -140,6 +140,24 @@ The first implementation slice deliberately starts with the pure MLPL model.
 That gives cell editing and frame animation one tested transition function and
 keeps renderer performance choices out of the game rules.
 
+## Queued: native3d-life-surfaces
+
+Purpose: reuse the Life application on closed 3D surfaces after the finite
+plane is accepted.
+
+1. Separate neighbor topology from surface geometry in the MLPL library.
+2. Add a toroidal grid with wrap-around in both axes and map cells onto a
+   native 3D torus (donut).
+3. Add a spherical mapping with an explicit pole/seam adjacency policy rather
+   than pretending a rectangular grid wraps uniformly at the poles.
+4. Reuse editing, animation, presets, picking, orbit/pan/zoom, and generic bulk
+   rendering; publish topology fixtures and macOS/Linux evidence.
+
+Acceptance: the same MLPL Life rule runs against documented plane, torus, and
+sphere neighbor policies; seams and poles have golden tests; Rust contains no
+Life rule or preset; and surface selection changes topology and projection
+explicitly rather than accidentally inheriting plane boundaries.
+
 ## Queued: native3d-point-cloud
 
 Purpose: prove a native macOS/Linux visualization using the public extension
