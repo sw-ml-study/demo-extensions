@@ -187,8 +187,10 @@ of open/update/poll/close through the public extension API.
 
 Downstream progress: `_native3d` now proves the generic headless create,
 bulk-update, state/size, render-state, close, stale-handle, and deactivation
-slice through the real interpreter. Only window/event-loop delivery remains
-blocked for interpreted interaction.
+slice through the real interpreter. The MLPL reducer now proves every cube
+control over normalized synthetic event records and emits deterministic bulk
+arrays. Only window/event-loop delivery remains blocked for interpreted
+interaction.
 
 ## B7: package discovery, deployment, and trust
 

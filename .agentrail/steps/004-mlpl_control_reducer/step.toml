@@ -1,6 +1,6 @@
 number = 4
 slug = "mlpl_control_reducer"
-status = "pending"
+status = "in-progress"
 description = "Implement the MLPL-owned cube control reducer and application-state transitio..."
 role = "production"
 context_files = []

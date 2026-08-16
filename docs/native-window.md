@@ -50,8 +50,10 @@ The target public extension API remains generic:
 - `render`/`present` accepts MLPL-owned time or transform state;
 - `drawable_size`, monotonic time, and `close` complete the lifecycle.
 
-MLPL will own the loop that maps input events to cube state and submits scene
-updates. sw-MLPL does not yet expose persistent native handles, event polling,
-bulk extension arrays, host event-loop integration, or compiled-provider
-parity, so that end-to-end interactive loop is an upstream blocker. The PoC
-window does not disguise a Rust control loop as completion of that contract.
+MLPL now owns and tests the reducer that maps normalized event records to cube
+state and deterministic bulk scene updates. Persistent handles, bulk extension
+arrays, and structured records are proven through the actual interpreter.
+Native event polling and host event-loop integration remain upstream work, as
+does compiled-provider parity, so the end-to-end interactive loop is still
+blocked. The PoC window does not disguise a Rust control loop as completion of
+that contract.

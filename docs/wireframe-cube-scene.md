@@ -32,19 +32,21 @@ empty or inconsistent shapes, non-finite positions, out-of-range indices, and
 unsafe controls. It limits scenes to one million vertices and two million
 edges. Parsing owns a copy of the JSON data; no zero-copy claim is made.
 
-Until sw-MLPL exposes dense arrays to third-party providers, deterministic JSON
-is the honest downstream bridge between the MLPL scene producer and the native
-viewer executable. This is a temporary transport, not an application semantic
-API. The renderer remains reusable for any MLPL-generated line scene.
+Dense arrays now cross the real third-party provider boundary, and the MLPL
+control reducer emits complete parallel arrays for `_native3d:set_lines`.
+Deterministic JSON remains only the bridge used by the independently runnable
+window smoke command until native event-loop delivery connects the two paths.
+It is temporary transport, not an application semantic API.
 
 ## Interaction boundary
 
 The native layer will report generic keyboard, resize, and close events. MLPL
-will map those events to width, height, length, rotation speed, color, and
-thickness, regenerate/update scene arrays, and drive the application loop. Rust
-will not contain cube-specific key bindings or control policy. Direct MLPL bulk
-updates require the upstream event, array, and handle contracts recorded in
-[`upstream-contract.md`](upstream-contract.md).
+already maps matching synthetic records to width, height, length, signed speed,
+pause/reset, color, thickness, resize, and close state, then regenerates bulk
+arrays. Rust contains no cube-specific key bindings or control policy. Only
+live bounded event delivery remains before those tested pieces can form the
+interpreted application loop; see
+[`sw-mlpl-blockers.md`](sw-mlpl-blockers.md).
 
 Headless parsing, geometry, projection, and draw-planning tests are required
 acceptance evidence. Opening the wgpu/winit window is an opt-in smoke check and

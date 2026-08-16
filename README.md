@@ -133,6 +133,8 @@ The completed foundation proves:
   thick-line raster pipeline with portable PPM evidence.
 - a real headless `_native3d` provider with typed viewer lifecycle, bulk line
   arrays, state/size records, and explicit MLPL-supplied render state.
+- an MLPL-owned control reducer for dimensions, signed speed, pause/reset,
+  palette, thickness, resize/close events, and deterministic bulk updates.
 
 The opt-in wgpu/winit smoke window and the headless provider are both working,
 but they are not connected by a live MLPL event loop yet. Dynamic loading by
@@ -168,6 +170,8 @@ opaque numeric capabilities.
   requirements, dependencies, workarounds, and acceptance gates.
 - [Wireframe cube scene](docs/wireframe-cube-scene.md) — array-generated cube,
   generic line-scene schema, controls, validation, and current bridge.
+- [MLPL wireframe-cube controls](docs/wireframe-cube-controls.md) — normalized
+  event records, reducer behavior, bulk updates, and final event-loop seam.
 - [Headless wireframe renderer](docs/headless-wireframe-renderer.md) — pure
   transform/projection/clipping pipeline, deterministic evidence, and the
   MLPL-owned interactive boundary.

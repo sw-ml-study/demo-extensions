@@ -19,6 +19,7 @@ crates/mlpl-native3d-window/src/lib.rs
 crates/mlpl-native3d-window/src/main.rs
 demos/wireframe-cube/default-scene.mlpl
 demos/wireframe-cube/scene.mlpl
+demos/wireframe-cube/controls.mlpl
 extensions/hello/Cargo.toml
 extensions/hello/extension.toml
 extensions/hello/module.mlpl
@@ -40,6 +41,7 @@ scripts/select-mlpl
 scripts/select-mlplunit
 tests/test_hello_module.mlpl
 tests/test_wireframe_cube_scene.mlpl
+tests/test_wireframe_cube_controls.mlpl
 tests/upstream-host/tests/data_boundary.rs
 tests/upstream-host/tests/native3d_provider.rs'
 

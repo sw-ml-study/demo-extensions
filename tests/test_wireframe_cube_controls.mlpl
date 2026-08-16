@@ -1,0 +1,57 @@
+include "demos/wireframe-cube/controls.mlpl";
+
+@test {name: "cube reducer owns dimensions speed pause and reset", tags: ["native3d", "controls", "reducer"]}
+def u:test_cube_control_core() {
+  initial=u:wireframe_cube_control_defaults();
+  changed=u:wireframe_cube_reduce(initial,{kind:"key",key:"width_up"});
+  changed=u:wireframe_cube_reduce(changed,{kind:"key",key:"height_down"});
+  changed=u:wireframe_cube_reduce(changed,{kind:"key",key:"length_up"});
+  changed=u:wireframe_cube_reduce(changed,{kind:"key",key:"speed_down"});
+  paused=u:wireframe_cube_reduce(changed,{kind:"key",key:"pause"});
+  reverse=initial; i=0; while lt(i,7) { reverse=u:wireframe_cube_reduce(reverse,{kind:"key",key:"speed_down"}); i=i+1 };
+  u:assert_eq([changed.width,changed.height,changed.length,changed.rotation_speed],[2.25,1.75,2.25,0.5],"dimension and signed-speed controls");
+  u:assert_eq(paused.paused,1,"pause toggles in MLPL");
+  u:assert_eq(lt(reverse.rotation_speed,0),1,"signed speed supports reverse rotation");
+  reset=u:wireframe_cube_reduce(paused,{kind:"key",key:"reset"});
+  u:assert_eq([reset.width,reset.height,reset.length,reset.rotation_speed,reset.paused],[2,2,2,0.6,0],"reset restores application defaults")
+}
+
+@test {name: "cube reducer cycles style resize and lifecycle", tags: ["native3d", "controls", "events"]}
+def u:test_cube_control_style_and_lifecycle() {
+  state=u:wireframe_cube_control_defaults();
+  state=u:wireframe_cube_reduce(state,{kind:"key",key:"color_cycle"});
+  state=u:wireframe_cube_reduce(state,{kind:"key",key:"thickness_up"});
+  state=u:wireframe_cube_reduce(state,{kind:"resize",width:1024,height:768});
+  state=u:wireframe_cube_reduce(state,{kind:"close"});
+  u:assert_eq(state.line_color,[1,0.4,0.2,1],"color palette is MLPL-owned");
+  u:assert_eq(state.line_thickness,2.5,"thickness changes in MLPL");
+  u:assert_eq([state.viewport_width,state.viewport_height],[1024,768],"resize record updates drawable size");
+  u:assert_eq(state.close_requested,1,"close event updates lifecycle state")
+}
+
+@test {name: "cube reducer clamps bounds and ignores unknown events", tags: ["native3d", "controls", "bounds"]}
+def u:test_cube_control_bounds() {
+  state=u:wireframe_cube_control_defaults();
+  i=0; while lt(i,500) { state=u:wireframe_cube_reduce(state,{kind:"key",key:"width_down"}); state=u:wireframe_cube_reduce(state,{kind:"key",key:"speed_up"}); state=u:wireframe_cube_reduce(state,{kind:"key",key:"thickness_down"}); i=i+1 };
+  u:assert_eq([state.width,state.rotation_speed,state.line_thickness],[0.25,10,0.5],"controls clamp at documented bounds");
+  unchanged=u:wireframe_cube_reduce(state,{kind:"pointer",x:12,y:13});
+  u:assert_eq(unchanged,state,"unknown structured events are no-ops");
+  resized=u:wireframe_cube_reduce(state,{kind:"resize",width:0,height:99999});
+  u:assert_eq([resized.viewport_width,resized.viewport_height],[1,16384],"resize bounds are deterministic")
+}
+
+@test {name: "cube reducer emits deterministic native bulk scene", tags: ["native3d", "controls", "arrays"]}
+def u:test_cube_bulk_scene_update() {
+  state=u:wireframe_cube_reduce(u:wireframe_cube_control_defaults(),{kind:"key",key:"pause"});
+  update=unwrap(u:wireframe_cube_bulk_update(state));
+  again=unwrap(u:wireframe_cube_bulk_update(state));
+  u:assert_eq(shape(update.positions),[8,3],"bulk xyz matrix");
+  u:assert_eq(shape(update.edges),[12,2],"bulk edge matrix");
+  u:assert_eq(shape(update.colors),[12,4],"parallel RGBA matrix");
+  u:assert_eq(shape(update.thicknesses),[12],"parallel thickness vector");
+  u:assert_eq(update.ids,range(12),"stable line ids");
+  u:assert_eq(update.rotation_y_speed,0,"pause stops render rotation without Rust key semantics");
+  u:assert_eq(update,again,"same state produces the same complete bulk update")
+}
+
+u:run_registered_tests()

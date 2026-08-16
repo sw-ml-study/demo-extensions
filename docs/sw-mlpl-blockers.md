@@ -99,11 +99,11 @@ extension API or the MLPL-owned interactive loop.
 
 ## Upstream handoff order
 
-1. Implement the MLPL control reducer over deterministic structured events.
-2. Define main-thread event-loop ownership and add bounded polling upstream.
-3. Connect real native events to the already-tested MLPL reducer.
-4. Add provider startup, linkage/package, and call parity to compiled output.
+1. Define main-thread event-loop ownership and add bounded polling upstream.
+2. Connect real native events to the tested MLPL reducer and headless provider.
+3. Add provider startup, linkage/package, and call parity to compiled output.
 
-Each upstream delivery should be followed by the named downstream acceptance
-test here. Until then, the PoC remains visually runnable but partially blocked
-for end-to-end interactive MLPL ownership.
+The MLPL reducer and deterministic bulk updates are now proven with native
+mlplunit. Each upstream delivery should be followed by the named downstream
+acceptance test here. Until then, the PoC remains visually runnable but
+partially blocked for end-to-end interactive MLPL ownership.
