@@ -1,0 +1,9 @@
+number = 3
+slug = "click_choice_live_game"
+status = "pending"
+description = "Using native mlplunit and Rust integration TDD, connect pick-ray/plane clicks..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T09:19:14"
+task_type = "native3d"
+commits = []

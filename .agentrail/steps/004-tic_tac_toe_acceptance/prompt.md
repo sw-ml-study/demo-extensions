@@ -1,0 +1,1 @@
+Run and document final tic-tac-toe acceptance for rules/minimax determinism, legal click behavior, X/O and turn-order choice, rendering, bounded events, teardown, macOS evidence, Linux design limitations, and MLPL-versus-Rust ownership. Reconcile blockers and the next Life-plane saga, run the complete gate, commit, complete the saga, and push main.

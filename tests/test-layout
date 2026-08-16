@@ -28,6 +28,7 @@ demos/wireframe-cube/default-scene.mlpl
 demos/wireframe-cube/scene.mlpl
 demos/wireframe-cube/controls.mlpl
 demos/wireframe-cube/live-applet.mlpl
+demos/tic-tac-toe/model.mlpl
 extensions/hello/Cargo.toml
 extensions/hello/extension.toml
 extensions/hello/module.mlpl
@@ -52,6 +53,7 @@ scripts/select-mlpl
 scripts/select-mlplunit
 tests/test_hello_module.mlpl
 tests/test_native3d_library.mlpl
+tests/test_tic_tac_toe_model.mlpl
 tests/test_wireframe_cube_scene.mlpl
 tests/test_wireframe_cube_controls.mlpl
 tests/upstream-host/tests/data_boundary.rs

@@ -1,0 +1,9 @@
+number = 2
+slug = "line_scene_rendering"
+status = "pending"
+description = "Using native mlplunit and focused Rust TDD where needed, map MLPL tic-tac-toe..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T09:19:14"
+task_type = "native3d"
+commits = []

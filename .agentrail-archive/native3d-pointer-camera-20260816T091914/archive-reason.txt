@@ -1,0 +1,1 @@
+Completed and published pointer-camera acceptance; advancing to queued tic-tac-toe demo

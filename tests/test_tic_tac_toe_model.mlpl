@@ -1,0 +1,44 @@
+include "demos/tic-tac-toe/model.mlpl";
+
+@test {name: "tic tac toe validates boards and legal moves", tags: ["native3d", "tic-tac-toe", "model"]}
+def u:test_ttt_validation_and_moves() {
+  empty=u:ttt_empty_board();
+  u:assert_true(u:ttt_valid_board(empty),"empty board is valid")?;
+  u:assert_eq(u:ttt_legal_moves(empty),range(9),"all empty squares are legal")?;
+  moved=unwrap(u:ttt_place(empty,4,1));
+  u:assert_eq(take(moved,0,4),1,"placement writes the requested mark")?;
+  u:assert_true(is_err(u:ttt_place(moved,4,-1)),"occupied square is rejected")?;
+  u:assert_true(1-u:ttt_valid_board([1,1,1,1,0,0,0,0,0]),"unreachable mark counts are invalid")
+}
+
+@test {name: "tic tac toe detects wins draws and in progress", tags: ["native3d", "tic-tac-toe", "terminal"]}
+def u:test_ttt_outcomes() {
+  u:assert_eq(u:ttt_outcome([1,1,1,0,-1,0,-1,0,0]),{status:"won",winner:1},"row win")?;
+  u:assert_eq(u:ttt_outcome([1,-1,1,1,-1,0,0,-1,0]),{status:"won",winner: -1},"column win")?;
+  u:assert_eq(u:ttt_outcome([1,-1,1,1,-1,-1,-1,1,1]),{status:"draw",winner:0},"full board draw")?;
+  u:assert_eq(u:ttt_outcome([1,0,0,0,-1,0,0,0,0]),{status:"playing",winner:0},"nonterminal board")
+}
+
+@test {name: "tic tac toe setup owns mark and turn choices", tags: ["native3d", "tic-tac-toe", "setup"]}
+def u:test_ttt_setup() {
+  first=unwrap(u:ttt_new_game("X",1)); second=unwrap(u:ttt_new_game("O",0));
+  u:assert_eq([first.user_mark,first.ai_mark],[1,-1],"X user mark choice")?;
+  u:assert_eq(first.turn,"user","X user can play first")?;
+  u:assert_eq([second.user_mark,second.ai_mark],[-1,1],"O user mark choice")?;
+  u:assert_eq(second.turn,"ai","O user can choose second")?;
+  u:assert_true(is_err(u:ttt_new_game("Q",1)),"invalid mark is rejected")
+}
+
+@test {name: "tic tac toe minimax wins blocks and is deterministic", tags: ["native3d", "tic-tac-toe", "minimax"]}
+def u:test_ttt_minimax() {
+  win=u:ttt_best_move([1,1,0,-1,-1,0,0,0,0],1)?;
+  block=u:ttt_best_move([1,1,0,0,-1,0,0,0,0],-1)?;
+  first=u:ttt_best_move(u:ttt_empty_board(),1)?;
+  again=u:ttt_best_move(u:ttt_empty_board(),1)?;
+  u:assert_eq(win,2,"AI takes immediate win")?;
+  u:assert_eq(block,2,"AI blocks immediate loss")?;
+  u:assert_eq(first,again,"equal inputs choose the same move")?;
+  u:assert_eq(first,0,"ties select the lowest legal cell")
+}
+
+u:run_registered_tests()

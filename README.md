@@ -29,6 +29,7 @@ crates/mlpl-extension-sdk/      Safe author-facing SDK scaffold
 crates/mlpl-native3d-scene/      Generic line-scene parser and validation
 lib/native3d/                    Reusable MLPL camera, picking, geometry, app loop
 demos/wireframe-cube/            MLPL-owned bulk-array cube scene
+demos/tic-tac-toe/               Pure MLPL board rules and deterministic minimax
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
 extensions/boundary-probe/      Public-SDK array/handle/record host probe
 extensions/native3d/            Generic headless viewer and bulk line provider
@@ -185,6 +186,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   bounded pointer/frame events, orbit-camera coordinates, and pick rays.
 - [Native3D MLPL library](docs/native3d-mlpl-library.md) — reusable camera,
   picking, grid/line, callback, and application-lifecycle helpers.
+- [MLPL tic-tac-toe model](docs/tic-tac-toe-model.md) — validated board,
+  legal moves, outcomes, player setup, and deterministic minimax.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

@@ -1,0 +1,1 @@
+Using native mlplunit and focused Rust TDD where needed, map MLPL tic-tac-toe state to generic bulk native3d line arrays for the grid, polygonal X/O marks, hover and result feedback. Reuse the public MLPL library and generic renderer without game-specific Rust primitives. Update docs, run all gates, commit, complete, and push main.

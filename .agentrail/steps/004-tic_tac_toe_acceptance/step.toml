@@ -1,0 +1,9 @@
+number = 4
+slug = "tic_tac_toe_acceptance"
+status = "pending"
+description = "Run and document final tic-tac-toe acceptance for rules/minimax determinism, ..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T09:19:14"
+task_type = "native3d"
+commits = []

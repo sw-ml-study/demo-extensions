@@ -1,0 +1,9 @@
+number = 1
+slug = "mlpl_game_rules"
+status = "in-progress"
+description = "Using native mlplunit TDD, implement a pure reusable MLPL tic-tac-toe model w..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T09:19:14"
+task_type = "native3d"
+commits = []

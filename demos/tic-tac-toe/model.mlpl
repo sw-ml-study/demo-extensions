@@ -1,0 +1,97 @@
+# Pure tic-tac-toe model. Cells are row-major: 0 empty, 1 X, -1 O.
+
+def u:ttt_empty_board() { fill([9],0) }
+
+def u:ttt_values_valid(board,index) {
+  if eq(index,9) { 1 } else {
+    value=take(board,0,index);
+    (eq(value,-1)+eq(value,0)+eq(value,1))*u:ttt_values_valid(board,index+1)
+  }
+}
+
+def u:ttt_line_winner(board,a,b,c) {
+  total=take(board,0,a)+take(board,0,b)+take(board,0,c);
+  if eq(total,3) { 1 } else { if eq(total,-3) { -1 } else { 0 } }
+}
+
+def u:ttt_winner_from(board,line) {
+  if eq(line,8) { 0 } else {
+    a=take([0,3,6,0,1,2,0,2],0,line);
+    b=take([1,4,7,3,4,5,4,4],0,line);
+    c=take([2,5,8,6,7,8,8,6],0,line);
+    winner=u:ttt_line_winner(board,a,b,c);
+    if winner { winner } else { u:ttt_winner_from(board,line+1) }
+  }
+}
+
+def u:ttt_winner(board) { u:ttt_winner_from(board,0) }
+
+def u:ttt_valid_board(board) {
+  if (1-equal(shape(board),[9])) { 0 } else {
+    if 1-u:ttt_values_valid(board,0) { 0 } else {
+      xs=reduce(:add,eq(board,1)); os=reduce(:add,eq(board,-1)); winner=u:ttt_winner(board);
+      counts=eq(xs,os)+eq(xs,os+1);
+      winner_counts=if eq(winner,1) { eq(xs,os+1) } else { if eq(winner,-1) { eq(xs,os) } else { 1 } };
+      counts*winner_counts
+    }
+  }
+}
+
+def u:ttt_outcome(board) {
+  winner=u:ttt_winner(board);
+  if winner { {status:"won",winner: winner} } else {
+    if eq(reduce(:add,eq(board,0)),0) { {status:"draw",winner:0} } else { {status:"playing",winner:0} }
+  }
+}
+
+def u:ttt_legal_moves_from(board,index,moves) {
+  if eq(index,9) { moves } else {
+    next=if eq(take(board,0,index),0) { concat(moves,index) } else { moves };
+    u:ttt_legal_moves_from(board,index+1,next)
+  }
+}
+
+def u:ttt_legal_moves(board) { u:ttt_legal_moves_from(board,0,fill([0],0)) }
+
+def u:ttt_place(board,index,mark) {
+  if (1-u:ttt_valid_board(board))+(1-eq(index,floor(index)))+lt(index,0)+gt(index,8)+(1-eq(abs(mark),1)) { err({kind:"tic_tac_toe_move",message:"invalid board, cell, or mark"}) } else {
+    xs=reduce(:add,eq(board,1)); os=reduce(:add,eq(board,-1)); expected=if eq(xs,os) { 1 } else { -1 };
+    if (1-eq(mark,expected))+(1-eq(take(board,0,index),0))+(1-equal(u:ttt_outcome(board).status,"playing")) { err({kind:"tic_tac_toe_move",message:"cell is occupied, game is over, or mark is out of turn"}) } else { ok(scatter(board,index,mark)) }
+  }
+}
+
+def u:ttt_other(mark) { 0-mark }
+
+def u:ttt_minimax_score(board,turn,ai_mark,depth,alpha,beta) {
+  outcome=u:ttt_outcome(board);
+  if equal(outcome.status,"won") { if eq(outcome.winner,ai_mark) { 10-depth } else { depth-10 } } else {
+    if equal(outcome.status,"draw") { 0 } else { u:ttt_minimax_scan(board,turn,ai_mark,0,0,-1,0,depth,alpha,beta).score }
+  }
+}
+
+def u:ttt_minimax_scan(board,turn,ai_mark,index,best_score,best_move,found,depth,alpha,beta) {
+  if eq(index,9)+gt(alpha,beta)+eq(alpha,beta) { {score: best_score,move: best_move} } else {
+    if 1-eq(take(board,0,index),0) { u:ttt_minimax_scan(board,turn,ai_mark,index+1,best_score,best_move,found,depth,alpha,beta) } else {
+      next=scatter(board,index,turn); score=u:ttt_minimax_score(next,u:ttt_other(turn),ai_mark,depth+1,alpha,beta);
+      better=if 1-found { 1 } else { if eq(turn,ai_mark) { gt(score,best_score) } else { lt(score,best_score) } };
+      chosen_score=if better { score } else { best_score }; chosen_move=if better { index } else { best_move };
+      next_alpha=if eq(turn,ai_mark)*gt(chosen_score,alpha) { chosen_score } else { alpha };
+      next_beta=if (1-eq(turn,ai_mark))*lt(chosen_score,beta) { chosen_score } else { beta };
+      u:ttt_minimax_scan(board,turn,ai_mark,index+1,chosen_score,chosen_move,1,depth,next_alpha,next_beta)
+    }
+  }
+}
+
+def u:ttt_best_move(board,ai_mark) {
+  if (1-u:ttt_valid_board(board))+(1-eq(abs(ai_mark),1))+(1-equal(u:ttt_outcome(board).status,"playing")) { err({kind:"tic_tac_toe_minimax",message:"invalid or terminal board"}) } else {
+    xs=reduce(:add,eq(board,1)); os=reduce(:add,eq(board,-1)); turn=if eq(xs,os) { 1 } else { -1 };
+    if 1-eq(turn,ai_mark) { err({kind:"tic_tac_toe_minimax",message:"AI mark is not the current turn"}) } else { ok(u:ttt_minimax_scan(board,ai_mark,ai_mark,0,0,-1,0,0,-100,100).move) }
+  }
+}
+
+def u:ttt_new_game(user_symbol,user_first) {
+  if (1-equal(user_symbol,"X"))*(1-equal(user_symbol,"O"))+(1-eq(user_first,0))*(1-eq(user_first,1)) { err({kind:"tic_tac_toe_setup",message:"choose X or O and first or second"}) } else {
+    user_mark=if equal(user_symbol,"X") { 1 } else { -1 }; ai_mark=0-user_mark; turn=if user_first { "user" } else { "ai" };
+    ok({board: u:ttt_empty_board(),user_mark: user_mark,ai_mark: ai_mark,turn: turn,status:"playing",winner:0})
+  }
+}

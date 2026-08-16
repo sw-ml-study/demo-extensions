@@ -1,0 +1,1 @@
+Using native mlplunit and Rust integration TDD, connect pick-ray/plane clicks to empty cells and add visible X/O choice, first/second choice, restart, hover, result feedback, and clean close in the real native window. MLPL owns all mappings, rules, and AI decisions. Launch the macOS game for smoke evidence, update docs, run all gates, commit, complete, and push main.
