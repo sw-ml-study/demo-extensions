@@ -204,6 +204,21 @@ impl<'a> ArrayView<'a> {
         }
     }
 
+    /// Returns the flat row-major f64 elements.
+    ///
+    /// # Errors
+    ///
+    /// Rejects storage with a dtype other than f64.
+    pub fn as_f64(self) -> Result<&'a [f64], ArrayError> {
+        match &self.array.storage {
+            Storage::F64(values) => Ok(values),
+            other => Err(ArrayError::WrongDType {
+                expected: DType::F64,
+                actual: storage_dtype(other),
+            }),
+        }
+    }
+
     /// Returns one row of a rank-two f32 array.
     ///
     /// # Errors

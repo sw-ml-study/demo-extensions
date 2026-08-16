@@ -1,0 +1,18 @@
+[package]
+name = "mlpl-extension-native3d"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mlpl-extension-sdk = { path = "../../crates/mlpl-extension-sdk" }
+
+[dev-dependencies]
+mlpl-extension-loader = { path = "../../crates/mlpl-extension-loader" }
+
+[lints]
+workspace = true

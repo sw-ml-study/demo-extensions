@@ -130,6 +130,24 @@ impl HandleRegistry {
         entry.value.downcast_ref().ok_or(HandleError::WrongType)
     }
 
+    /// Mutably borrows a resource after validating its full capability identity.
+    ///
+    /// # Errors
+    ///
+    /// Rejects inactive, foreign, wrong-type, and stale handles.
+    pub fn get_mut<T: 'static>(
+        &mut self,
+        handle: NativeHandle,
+        type_id: u64,
+    ) -> Result<&mut T, HandleError> {
+        self.validate(handle, type_id)?;
+        self.slots[handle.slot as usize]
+            .entry
+            .as_mut()
+            .and_then(|entry| entry.value.downcast_mut())
+            .ok_or(HandleError::WrongType)
+    }
+
     /// Removes and returns a resource, invalidating its generation first.
     ///
     /// # Errors

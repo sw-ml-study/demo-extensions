@@ -30,6 +30,7 @@ crates/mlpl-native3d-scene/      Generic line-scene parser and validation
 demos/wireframe-cube/            MLPL-owned bulk-array cube scene
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
 extensions/boundary-probe/      Public-SDK array/handle/record host probe
+extensions/native3d/            Generic headless viewer and bulk line provider
 tests/                          Native mlplunit and structural tests
 docs/                           Architecture, contracts, plans, and evidence
 ```
@@ -130,14 +131,15 @@ The completed foundation proves:
   positions and `[M,2]` edges before later GPU work.
 - a deterministic headless transform, perspective projection, clipping, and
   thick-line raster pipeline with portable PPM evidence.
+- a real headless `_native3d` provider with typed viewer lifecycle, bulk line
+  arrays, state/size records, and explicit MLPL-supplied render state.
 
-General argument marshalling, real unload/hot reload, the wgpu/winit window,
-and complete sw-MLPL language integration are future work. Dynamic/static provider parity shares one tested registration
-path, safe SDK scalar/result copying replaces the loader's original one-off
-decoder, signature metadata is checked against every descriptor, and dense
-arrays cross the provider boundary as validated host-owned values, and native
-resources cross only as opaque numeric capabilities. SDK macro migration and
-acceptance are next.
+The opt-in wgpu/winit smoke window and the headless provider are both working,
+but they are not connected by a live MLPL event loop yet. Dynamic loading by
+sw-MLPL, real unload/hot reload, facades, and compiled-provider startup remain
+future work. Dynamic/static provider parity shares one tested registration
+path; rich values are defensively copied, and native resources cross only as
+opaque numeric capabilities.
 
 ## Documentation
 
@@ -169,6 +171,8 @@ acceptance are next.
 - [Headless wireframe renderer](docs/headless-wireframe-renderer.md) — pure
   transform/projection/clipping pipeline, deterministic evidence, and the
   MLPL-owned interactive boundary.
+- [Headless native3d provider](docs/headless-native3d-provider.md) — public
+  primitives, bulk-array contract, lifecycle evidence, and deliberate scope.
 - [Native window](docs/native-window.md) — opt-in cube command, wgpu/winit
   architecture, macOS/Linux handling, and live-interaction blocker.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence

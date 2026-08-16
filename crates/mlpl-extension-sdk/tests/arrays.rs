@@ -16,6 +16,21 @@ fn owned_n_by_three_array_has_a_call_lifetime_view() {
 }
 
 #[test]
+fn owned_f64_arrays_have_a_typed_flat_view() {
+    let values = [1.0_f64, 2.0, 3.0, 4.0];
+    let array = DenseArray::from_f64(vec![2, 2], values.to_vec()).unwrap();
+    assert_eq!(array.view().dtype(), DType::F64);
+    assert_eq!(array.view().as_f64().unwrap(), values);
+    assert!(matches!(
+        array.view().as_f32(),
+        Err(ArrayError::WrongDType {
+            expected: DType::F32,
+            actual: DType::F64
+        })
+    ));
+}
+
+#[test]
 fn shape_overflow_and_storage_mismatch_fail_closed() {
     assert_eq!(
         DenseArray::from_f32(vec![usize::MAX, 2], Vec::new()),

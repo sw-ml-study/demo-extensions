@@ -18,6 +18,14 @@ fn handles_roundtrip_without_raw_pointers() {
 }
 
 #[test]
+fn valid_handles_support_checked_mutation() {
+    let mut registry = HandleRegistry::with_limits(12, 1, u32::MAX);
+    let handle = registry.insert(4, 10_u64).unwrap();
+    *registry.get_mut::<u64>(handle, 4).unwrap() = 11;
+    assert_eq!(registry.get::<u64>(handle, 4), Ok(&11));
+}
+
+#[test]
 fn registry_rejects_stale_wrong_type_and_cross_extension_handles() {
     let mut registry = HandleRegistry::with_limits(7, 2, u32::MAX);
     let first = registry.insert(11, String::from("viewer")).unwrap();

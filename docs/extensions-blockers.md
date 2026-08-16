@@ -185,6 +185,11 @@ standalone smoke harness advances rotation from the MLPL-provided speed, but it
 cannot return a handle or events to MLPL. It is visual evidence only, not proof
 of open/update/poll/close through the public extension API.
 
+Downstream progress: `_native3d` now proves the generic headless create,
+bulk-update, state/size, render-state, close, stale-handle, and deactivation
+slice through the real interpreter. Only window/event-loop delivery remains
+blocked for interpreted interaction.
+
 ## B7: package discovery, deployment, and trust
 
 Requirement:

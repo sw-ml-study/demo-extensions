@@ -48,7 +48,7 @@ Downstream acceptance: one MLPL call updates a complete line scene in bulk.
 Tests cover wrong dtype/rank/shape, invalid indices, overflow, non-contiguous
 storage, expired storage, and explicit copy-versus-borrow evidence.
 
-### Generic viewer calls exposed to MLPL — downstream work now unblocked
+### Generic viewer calls exposed to MLPL — headless slice proven
 
 The public extension surface must be able to register and invoke these generic
 operations:
@@ -67,6 +67,11 @@ as completion.
 
 Downstream acceptance: native mlplunit exercises the public functions through
 the real host adapter, not only the downstream Rust registry.
+
+Current evidence: the headless `_native3d` provider implements create,
+bulk set-lines, size/state records, explicit render state, and close through
+the actual interpreter in `native3d_provider.rs`. Window creation, present,
+and event polling remain gated on the event-loop contract below.
 
 ### Interpreted and compiled parity
 
@@ -94,7 +99,7 @@ extension API or the MLPL-owned interactive loop.
 
 ## Upstream handoff order
 
-1. Implement the generic headless viewer calls and MLPL control reducer here.
+1. Implement the MLPL control reducer over deterministic structured events.
 2. Define main-thread event-loop ownership and add bounded polling upstream.
 3. Connect real native events to the already-tested MLPL reducer.
 4. Add provider startup, linkage/package, and call parity to compiled output.

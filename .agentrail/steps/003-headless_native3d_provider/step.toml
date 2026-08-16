@@ -1,6 +1,6 @@
 number = 3
 slug = "headless_native3d_provider"
-status = "pending"
+status = "in-progress"
 description = "Build a generic headless native3d provider through the public ABI/SDK using T..."
 role = "production"
 context_files = []

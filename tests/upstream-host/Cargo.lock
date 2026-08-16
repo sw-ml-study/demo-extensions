@@ -41,6 +41,7 @@ dependencies = [
  "mlpl-extension-boundary-probe",
  "mlpl-extension-cabi",
  "mlpl-extension-hello",
+ "mlpl-extension-native3d",
  "mlpl-parser",
 ]
 
@@ -534,6 +535,13 @@ name = "mlpl-extension-hello"
 version = "0.0.0"
 dependencies = [
  "mlpl-extension-abi 0.0.0",
+ "mlpl-extension-sdk",
+]
+
+[[package]]
+name = "mlpl-extension-native3d"
+version = "0.0.0"
+dependencies = [
  "mlpl-extension-sdk",
 ]
 
