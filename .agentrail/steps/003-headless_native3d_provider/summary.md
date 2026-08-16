@@ -1,0 +1,1 @@
+Delivered a generic headless _native3d provider through the public ABI/SDK with typed viewer handles, validated bulk line arrays, size/state records, explicit render state, close/stale rejection, deactivation coverage, and actual adjacent-interpreter dispatch.

@@ -1,8 +1,9 @@
 number = 3
 slug = "headless_native3d_provider"
-status = "in-progress"
+status = "completed"
 description = "Build a generic headless native3d provider through the public ABI/SDK using T..."
 role = "production"
 context_files = []
 created_at = "2026-08-15T13:28:25"
-commits = []
+completed_at = "2026-08-15T17:09:31"
+commits = ["14e16e0e1fd9df7506d4634f6d7b0176bb919922"]
