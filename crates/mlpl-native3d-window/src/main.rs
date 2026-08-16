@@ -11,8 +11,8 @@ use mlpl_native3d_window::interaction::{
     BoundedInput, FrameGate, InputError, InputEvent, Modifiers, PointerButton, PointerButtons,
 };
 use mlpl_native3d_window::live::{
-    applet_source, close_event, input_event, key_event, life_torus_applet_source, resize_event,
-    tic_tac_toe_applet_source,
+    applet_source, close_event, input_event, key_event, life_torus_applet_source,
+    model_atlas_applet_source, resize_event, tic_tac_toe_applet_source,
 };
 use mlpl_native3d_window::{GpuVertex, line_vertices, text_vertices};
 use wgpu::util::DeviceExt;
@@ -56,8 +56,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let tic_tac_toe = arguments.iter().any(|argument| argument == "--tic-tac-toe");
     let life = arguments.iter().any(|argument| argument == "--life");
     let life_torus = arguments.iter().any(|argument| argument == "--life-torus");
+    let model_atlas = arguments.iter().any(|argument| argument == "--model-atlas");
     let source = if tic_tac_toe {
         tic_tac_toe_applet_source()
+    } else if model_atlas {
+        model_atlas_applet_source()
     } else if life_torus {
         life_torus_applet_source()
     } else if life {
@@ -392,6 +395,7 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
             "g" => Some("g"),
             "h" => Some("h"),
             "i" => Some("i"),
+            "l" => Some("l"),
             "n" => Some("n"),
             "t" => Some("t"),
             "u" => Some("u"),
@@ -583,7 +587,7 @@ mod tests {
     #[test]
     fn normalizes_named_space_for_the_live_event_path() {
         assert_eq!(normalize_key(&Key::Named(NamedKey::Space)), Some("space"));
-        for key in ["b", "g", "h", "i", "n", "t", "u"] {
+        for key in ["a", "b", "g", "h", "i", "l", "n", "s", "t", "u"] {
             assert_eq!(normalize_key(&Key::Character(key.into())), Some(key));
         }
     }

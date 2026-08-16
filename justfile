@@ -47,6 +47,10 @@ model-atlas-memory-evidence:
 model-atlas-contract:
     ./scripts/run-model-atlas-contract
 
+# Open the interactive native 3D tensor city.
+model-atlas:
+    ./scripts/run-model-atlas
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

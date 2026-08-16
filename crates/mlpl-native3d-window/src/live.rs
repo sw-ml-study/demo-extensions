@@ -22,6 +22,13 @@ const LIFE_TORUS_MODEL: &str = include_str!("../../../demos/life-torus/model.mlp
 const LIFE_TORUS_CONTROLS: &str = include_str!("../../../demos/life-torus/controls.mlpl");
 const LIFE_TORUS_SCENE: &str = include_str!("../../../demos/life-torus/scene.mlpl");
 const LIFE_TORUS_APPLET: &str = include_str!("../../../demos/life-torus/live-applet.mlpl");
+const ATLAS_SCAN: &str = include_str!("../../../lib/model-atlas/bounded_scan.mlpl");
+const ATLAS_INTERCHANGE: &str = include_str!("../../../lib/model-atlas/interchange.mlpl");
+const ATLAS_FIXTURE: &str = include_str!("../../../fixtures/model-atlas/tensor_city_derived.mlpl");
+const ATLAS_MODEL: &str = include_str!("../../../demos/model-atlas/model.mlpl");
+const ATLAS_SCENE: &str = include_str!("../../../demos/model-atlas/scene.mlpl");
+const ATLAS_CONTROLS: &str = include_str!("../../../demos/model-atlas/controls.mlpl");
+const ATLAS_APPLET: &str = include_str!("../../../demos/model-atlas/live-applet.mlpl");
 
 #[must_use]
 pub fn applet_source() -> String {
@@ -64,6 +71,20 @@ pub fn life_torus_applet_source() -> String {
         without_includes(LIFE_TORUS_CONTROLS),
         without_includes(LIFE_TORUS_SCENE),
         without_includes(LIFE_TORUS_APPLET)
+    )
+}
+
+#[must_use]
+pub fn model_atlas_applet_source() -> String {
+    format!(
+        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+        without_includes(ATLAS_SCAN),
+        without_includes(ATLAS_INTERCHANGE),
+        without_includes(ATLAS_FIXTURE),
+        without_includes(ATLAS_MODEL),
+        without_includes(ATLAS_SCENE),
+        without_includes(ATLAS_CONTROLS),
+        without_includes(ATLAS_APPLET)
     )
 }
 

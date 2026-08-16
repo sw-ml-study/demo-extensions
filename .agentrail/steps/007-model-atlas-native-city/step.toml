@@ -1,6 +1,6 @@
 number = 7
 slug = "model-atlas-native-city"
-status = "pending"
+status = "in-progress"
 description = "Build an interactive native 3D Model Atlas demo over the generic extension re..."
 role = "production"
 context_files = []

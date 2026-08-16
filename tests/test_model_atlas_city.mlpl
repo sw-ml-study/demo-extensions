@@ -1,0 +1,12 @@
+include "demos/model-atlas/scene.mlpl";
+
+@test {name:"Model Atlas renders bounded cross-format tensor buildings",tags:["model-atlas","native3d","scene"]}
+def u:test_atlas_city_scene() { state=u:atlas_city_defaults(); scene=u:atlas_city_scene(state)?; u:assert_eq(shape(scene.edges),[92,2],"eight district edges plus seven twelve-edge buildings")?; u:assert_eq(shape(scene.ids),[92],"every retained line has a stable ID")?; u:assert_eq(u:atlas_city_help(state),"MODEL ATLAS  7 tensors  ALL  LOD BUILDINGS\nCLICK SELECT  LEFT DRAG ORBIT  SHIFT+LEFT/MIDDLE PAN  WHEEL ZOOM\nA ALL  S SAFETENSORS  G GGUF  L LOD  R RESET  ESC CLOSE\nSELECTED: none","visible controls and selection label") }
+
+@test {name:"Model Atlas filtering and LOD stay MLPL-owned",tags:["model-atlas","native3d","filter"]}
+def u:test_atlas_city_filter_lod() { state=u:atlas_city_defaults(); safe=u:atlas_city_key(state,"s"); scene=u:atlas_city_scene(safe)?; u:assert_eq(shape(scene.edges),[44,2],"Safetensors filter retains three buildings")?; low=u:atlas_city_key(safe,"l"); u:assert_eq(low.lod,0,"LOD key selects footprints")?; low_scene=u:atlas_city_scene(low)?; u:assert_eq(shape(low_scene.edges),[44,2],"LOD changes extents without changing stable IDs") }
+
+@test {name:"Model Atlas selection emits a bounded retained-scene patch",tags:["model-atlas","native3d","patch"]}
+def u:test_atlas_city_selection_patch() { before=u:atlas_city_defaults(); after=u:atlas_city_select(before,4); patch=u:atlas_city_scene_patch(before,after)?; u:assert_eq(shape(patch.ids),[12],"one selected building updates twelve lines")?; u:assert_eq(shape(patch.remove_ids),[0],"selection removes no lines")?; u:assert_eq(u:atlas_city_selected_name(after),"quant","selected tensor name appears in help") }
+
+u:run_registered_tests()

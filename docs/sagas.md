@@ -174,7 +174,9 @@ tensor payload into memory.
    golden, bounded tagged transport, and deterministic layout validation are
    complete.
 3. Render interactive tensor buildings, districts, labels, selection,
-   filtering, camera controls, and bounded level of detail.
+   filtering, camera controls, and bounded level of detail. **Complete:** the
+   derived cross-format fixture now runs through `just model-atlas` with
+   MLPL-owned scene semantics and retained stable-ID patches.
 4. Add architecture metadata plus visibly labeled tensor-name inference for
    embeddings, attention, MLP, normalization, MoE, Mamba/SSM, and output heads.
 5. Add on-demand bounded statistics, histogram/surface, and quantization-error

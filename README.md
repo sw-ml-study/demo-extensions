@@ -105,6 +105,21 @@ Validate the derived Safetensors/GGUF tensor-city handoff:
 just model-atlas-contract
 ```
 
+Open the interactive native Model Atlas tensor city:
+
+```sh
+just model-atlas
+```
+
+The bundled, derived fixture renders tensor metadata as stable-ID wireframe
+buildings grouped into Safetensors and GGUF districts. Click a building to
+inspect its name and metadata, drag to orbit, Shift-drag or middle-drag to pan,
+and use the wheel to zoom. A/S/G filter all, Safetensors, or GGUF tensors; L
+switches between footprint and height-based detail; R resets the view. The
+visible legend documents the same controls. See the
+[Model Atlas native city](docs/model-atlas-native-city.md) for the data,
+ownership, bounded-detail, and platform contracts.
+
 Click toggles a cell and Control-left-drag paints live cells. Plain left-drag
 orbits/tilts, Shift-left-drag or middle-drag pans, and the wheel zooms. Space
 runs/pauses, N steps, C clears, plus/minus changes speed, and B/H/I/T/G/U/R
@@ -257,6 +272,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
 - [Bounded Model Atlas scanning](docs/model-atlas-bounded-scan.md) — range-read
   passes, compact adapter columns, selected detail/cache bounds, and RSS data.
 - [Model Atlas interchange](docs/model-atlas-interchange.md) — versioned tagged
+- [Model Atlas native city](docs/model-atlas-native-city.md) — interactive
+  tensor buildings, filtering, selection, camera controls, and bounded LOD
   transport, derived cross-format fixture, provenance, layout, and ownership.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.

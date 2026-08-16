@@ -1,0 +1,6 @@
+include "./controls.mlpl";
+def u:atlas_city_submit(state) { scene=u:atlas_city_scene(state)?; port_send(port,{op:"set_scene",positions: scene.positions,edges: scene.edges,colors: scene.colors,thicknesses: scene.thicknesses,ids: scene.ids,rotation_y_speed:0,revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:atlas_city_help(state)}); ok(state) }
+def u:atlas_city_submit_view(state) { port_send(port,{op:"set_view",revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:atlas_city_help(state)}); ok(state) }
+def u:atlas_city_event(event,state) { next=u:atlas_city_reduce(state,event); geometry=(1-eq(next.selected,state.selected))+(1-eq(next.filter,state.filter))+(1-eq(next.lod,state.lod)); view=1-equal(next.camera,state.camera); if geometry { port_send(port,u:atlas_city_scene_patch(state,next)?) } else { if view { u:atlas_city_submit_view(next)? } }; next }
+def u:atlas_city_resync(event,state) { u:atlas_city_submit(state)?; state }
+state=u:atlas_city_defaults(); u:atlas_city_submit(state)?; on(port,"key",:u:atlas_city_event); on(port,"pointer_move",:u:atlas_city_event); on(port,"pointer_down",:u:atlas_city_event); on(port,"pointer_up",:u:atlas_city_event); on(port,"wheel",:u:atlas_city_event); on(port,"resize",:u:atlas_city_event); on(port,"resync",:u:atlas_city_resync); run(port,state)
