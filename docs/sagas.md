@@ -179,6 +179,8 @@ tensor payload into memory.
    MLPL-owned scene semantics and retained stable-ID patches.
 4. Add architecture metadata plus visibly labeled tensor-name inference for
    embeddings, attention, MLP, normalization, MoE, Mamba/SSM, and output heads.
+   **Complete:** the UI distinguishes GGUF `[METADATA]` from selected tensor
+   `[HEURISTIC]` roles and fails ambiguous/adversarial names to `UNKNOWN`.
 5. Add on-demand bounded statistics, histogram/surface, and quantization-error
    detail views using stable-ID scene patches.
 

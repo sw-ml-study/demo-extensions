@@ -1,6 +1,6 @@
 number = 8
 slug = "model-atlas-architecture"
-status = "pending"
+status = "in-progress"
 description = "Add honest architecture-aware MLPL classification and schematics for GGUF gen..."
 role = "production"
 context_files = []

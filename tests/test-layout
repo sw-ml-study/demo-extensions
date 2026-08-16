@@ -46,6 +46,7 @@ demos/life-torus/scene.mlpl
 demos/life-torus/live-applet.mlpl
 demos/model-atlas/sparse-scan.mlpl
 demos/model-atlas/contract.mlpl
+demos/model-atlas/architecture.mlpl
 demos/model-atlas/model.mlpl
 demos/model-atlas/scene.mlpl
 demos/model-atlas/controls.mlpl
@@ -100,6 +101,7 @@ docs/retained-scene-patches.md
 docs/model-atlas-bounded-scan.md
 docs/model-atlas-interchange.md
 docs/model-atlas-native-city.md
+docs/model-atlas-architecture.md
 fixtures/model-atlas/sample.bin
 fixtures/model-atlas/tensor_city_derived.mlpl
 tests/test_tic_tac_toe_scene.mlpl

@@ -112,11 +112,14 @@ just model-atlas
 ```
 
 The bundled, derived fixture renders tensor metadata as stable-ID wireframe
-buildings grouped into Safetensors and GGUF districts. Click a building to
-inspect its name and metadata, drag to orbit, Shift-drag or middle-drag to pan,
-and use the wheel to zoom. A/S/G filter all, Safetensors, or GGUF tensors; L
-switches between footprint and height-based detail; R resets the view. The
-visible legend documents the same controls. See the
+buildings grouped into Safetensors and GGUF districts. Building height uses a
+visible logarithmic stored-byte scale, so one large tensor cannot flatten the
+rest of the view. Click a building to inspect its name and heuristic role,
+drag to orbit, Shift-drag or middle-drag to pan, and use the wheel to zoom.
+A selects all tensors; S and G toggle their Safetensors or GGUF filter; L
+switches independently between footprint and height detail; R resets the view.
+The visible source panel and legend document provenance, architecture metadata,
+colors, scales, current filter/LOD state, and controls. See the
 [Model Atlas native city](docs/model-atlas-native-city.md) for the data,
 ownership, bounded-detail, and platform contracts.
 
@@ -274,6 +277,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
 - [Model Atlas interchange](docs/model-atlas-interchange.md) — versioned tagged
 - [Model Atlas native city](docs/model-atlas-native-city.md) — interactive
   tensor buildings, filtering, selection, camera controls, and bounded LOD
+- [Model Atlas architecture](docs/model-atlas-architecture.md) — authoritative
+  GGUF metadata versus explicitly qualified tensor-name role inference
   transport, derived cross-format fixture, provenance, layout, and ownership.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.

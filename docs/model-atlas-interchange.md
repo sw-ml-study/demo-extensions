@@ -13,6 +13,8 @@ checked-in cross-format derivative.
 tensors. It preserves source artifact IDs, format labels, analyzer identity,
 stable tensor IDs, names, parameter and encoded-byte counts, hierarchy depths,
 districts, and deterministic geometry. It contains no tensor payload bytes.
+The GGUF derivative also preserves `general.architecture=mamba` as source
+metadata. Consumers label that separately from heuristic tensor-name roles.
 
 This is a derived compatibility fixture, not an independent Safetensors or
 GGUF parser and not a claim that the neighboring repository is locked to this
