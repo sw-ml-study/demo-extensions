@@ -1,0 +1,1 @@
+Documented a concise native3d MLPL wrapper/application split and the exact sw-MLPL compiler/runtime, Port, provider registration, module packaging, platform linkage, and teardown contracts required to compile the interactive 3D app. Added an illustrative concise cube API, acceptance gates, downstream sequence, non-goals, and README link. Full just check gate passed.
