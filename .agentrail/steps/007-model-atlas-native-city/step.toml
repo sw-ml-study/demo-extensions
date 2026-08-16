@@ -1,8 +1,9 @@
 number = 7
 slug = "model-atlas-native-city"
-status = "in-progress"
+status = "completed"
 description = "Build an interactive native 3D Model Atlas demo over the generic extension re..."
 role = "production"
 context_files = []
 created_at = "2026-08-16T12:57:43"
-commits = []
+completed_at = "2026-08-16T13:34:49"
+commits = ["94abf283adc5b30fe2d331619bfa542fa2ec029d"]
