@@ -1,6 +1,6 @@
 # MLPL Wireframe-Cube Controls
 
-Date: 2026-08-15
+Date: 2026-08-16
 
 The wireframe cube's application state and input behavior live entirely in
 `demos/wireframe-cube/controls.mlpl`. Rust supplies generic handles, bulk line
@@ -25,6 +25,19 @@ monotonic revision. Normalized key names are:
 | ], [ | Adjust pixels within `0.5..=20` |
 | Escape | Request close |
 
+The same MLPL state contains the reusable `u:n3d_camera_state` record. Pointer
+controls are application-owned mappings over generic native input:
+
+| Gesture | MLPL behavior |
+|---|---|
+| Left drag | Orbit yaw and tilt pitch around the target |
+| Wheel | Zoom by changing camera-to-target distance |
+| Shift + left drag | Pan the camera target |
+| Middle drag | Pan the camera target |
+
+Pointer positions are physical pixels. Rust normalizes cursor, button,
+modifier, and wheel records but contains no orbit, zoom, or pan gesture logic.
+
 Resize events have `{kind:"resize",width:number,height:number}` and clamp the
 drawable dimensions to `1..=16384`. Close events have `{kind:"close"}`. Key
 events have `{kind:"key",key:string}`. Other event kinds are deterministic
@@ -47,6 +60,7 @@ headless provider:
 - thicknesses `[12]`;
 - stable IDs `[12]`;
 - effective signed rotation speed (zero while paused).
+- the complete MLPL-owned orbit camera record.
 
 The same state yields an identical complete update. Native mlplunit covers all
 controls, bounds, unknown events, resizing, close intent, reset, reverse
@@ -61,5 +75,7 @@ the help text rendered at the top of the native view; the title displays the
 MLPL revision and live dimensions/speed for explicit feedback.
 
 The headless `live_applet.rs` host proves this same path without a display,
-including physical W/S events. Compiled-provider startup and dynamic loading
-remain separate future work.
+including physical W/S events and a left-button drag followed by wheel zoom.
+The in-window legend lists every mouse gesture as well as the retained keyboard
+controls. Compiled-provider startup and dynamic loading remain separate future
+work.

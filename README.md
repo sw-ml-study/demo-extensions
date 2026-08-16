@@ -77,7 +77,9 @@ The window keeps winit/wgpu on the main thread and runs sw-MLPL on a worker.
 `controls.mlpl` receives generic key/resize events and sends complete owned
 scene commands back to the renderer. Use W/S for width, arrows for height, A/D
 for length, +/- for signed speed, Space for pause, C for color, brackets for
-thickness, R for reset, and Escape to close.
+thickness, R for reset, and Escape to close. Left-drag orbits and tilts, the
+wheel zooms, and Shift-left-drag or middle-drag pans; these mappings and camera
+state are implemented in MLPL and shown in the window legend.
 
 Run focused Rust or MLPL tests:
 

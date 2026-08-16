@@ -1,6 +1,6 @@
 number = 4
 slug = "mouse_controlled_cube"
-status = "pending"
+status = "in-progress"
 description = "Using Rust and native mlplunit TDD, migrate the cube to the shared library an..."
 role = "production"
 context_files = []

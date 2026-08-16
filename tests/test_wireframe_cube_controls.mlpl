@@ -31,6 +31,22 @@ def u:test_cube_control_style_and_lifecycle() {
   u:assert_eq(state.close_requested,1,"close event updates lifecycle state")
 }
 
+@test {name: "cube reducer owns mouse orbit zoom and pan", tags: ["native3d", "controls", "pointer"]}
+def u:test_cube_mouse_camera() {
+  initial=u:wireframe_cube_control_defaults();
+  orbit=u:wireframe_cube_reduce(initial,{kind:"pointer_down",button:"left",x:100,y:100,shift:0});
+  orbit=u:wireframe_cube_reduce(orbit,{kind:"pointer_move",x:130,y:80,left:1,shift:0});
+  zoom=u:wireframe_cube_reduce(orbit,{kind:"wheel",dx:0,dy:40,x:130,y:80,shift:0});
+  orbit=u:wireframe_cube_reduce(zoom,{kind:"pointer_up",button:"left",x:130,y:80,shift:0});
+  pan=u:wireframe_cube_reduce(orbit,{kind:"pointer_down",button:"left",x:50,y:50,shift:1});
+  pan=u:wireframe_cube_reduce(pan,{kind:"pointer_move",x:70,y:70,left:1,shift:1});
+  u:assert_eq([orbit.camera.yaw,orbit.camera.pitch],[0.3,0.2],"left drag orbits and tilts in MLPL")?;
+  u:assert_true(lt(zoom.camera.distance,initial.camera.distance),"wheel zoom changes MLPL camera distance")?;
+  u:assert_true(1-equal(pan.camera.target,initial.camera.target),"shift-left drag pans the MLPL camera")?;
+  command=unwrap(u:wireframe_cube_bulk_update(pan));
+  u:assert_eq(command.camera,u:n3d_camera_record(pan.camera),"bulk update carries MLPL-owned camera")
+}
+
 @test {name: "cube reducer clamps bounds and ignores unknown events", tags: ["native3d", "controls", "bounds"]}
 def u:test_cube_control_bounds() {
   state=u:wireframe_cube_control_defaults();

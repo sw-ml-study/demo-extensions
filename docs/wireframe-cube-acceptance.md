@@ -1,6 +1,6 @@
 # Wireframe Cube PoC Acceptance
 
-Status date: 2026-08-15
+Status date: 2026-08-16
 
 | Capability | Status | Evidence | Limitation |
 |---|---|---|---|
@@ -14,11 +14,14 @@ Status date: 2026-08-15
 | Native macOS window | Proven | observed interactive `just cube-3d` run on 2026-08-15 | Manual opt-in smoke evidence |
 | Native Linux design/build path | Supported, unverified here | shared winit/wgpu source and WGSL | No Linux target or graphical host was available on this Mac |
 | MLPL-driven live controls | Proven | `live_applet.rs`, physical-key normalization test, plus manual window | Local interpreted mode |
+| MLPL-owned mouse camera | Proven headlessly | mlplunit orbit/zoom/pan transitions and `live_applet.rs` worker/Port test | Manual window smoke is opt-in |
 | In-view help and live feedback | Proven | bitmap overlay plus revision/state title | Compact PoC typography |
 | Compiled MLPL application | Blocked upstream | `docs/sw-mlpl-blockers.md` | Needs compiler provider parity |
 
 The PoC acceptance claim is intentionally narrow: a third-party-oriented Rust
 renderer can consume MLPL-generated bulk scenes and display a live interactive
-wireframe cube while the MLPL worker owns application behavior. It does not
+wireframe cube while the MLPL worker owns keyboard and mouse application
+behavior. Left drag orbits/tilts, wheel zooms, and Shift-left or middle drag
+pans; the visible legend reports those bindings. It does not
 claim Linux was visually tested, dynamic loading, compiled parity, true unload,
 or zero-copy transport.

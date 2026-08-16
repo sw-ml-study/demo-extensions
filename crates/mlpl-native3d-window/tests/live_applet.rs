@@ -2,8 +2,9 @@ use std::sync::mpsc::RecvTimeoutError;
 use std::time::Duration;
 
 use mlpl_eval::run_applet_with_host;
+use mlpl_native3d_window::interaction::{InputEvent, Modifiers, PointerButton, PointerButtons};
 use mlpl_native3d_window::live::{
-    applet_source, close_event, key_event, parse_scene_command, resize_event,
+    applet_source, close_event, input_event, key_event, parse_scene_command, resize_event,
 };
 
 #[test]
@@ -63,4 +64,46 @@ fn mlpl_worker_drives_scene_commands_from_normalized_events() {
             .abs()
             > f32::EPSILON
     );
+}
+
+#[test]
+fn mlpl_worker_owns_live_pointer_camera_changes() {
+    let mut commands = Vec::new();
+    let result = run_applet_with_host(&applet_source(), |receiver, sender| {
+        commands.push(parse_scene_command(receiver.recv().unwrap()).unwrap());
+        sender
+            .send(input_event(InputEvent::pointer_button(
+                PointerButton::Left,
+                true,
+                [100.0, 100.0],
+                Modifiers::NONE,
+            )))
+            .unwrap();
+        commands.push(parse_scene_command(receiver.recv().unwrap()).unwrap());
+        sender
+            .send(input_event(InputEvent::pointer_move(
+                [130.0, 80.0],
+                PointerButtons::LEFT,
+                Modifiers::NONE,
+            )))
+            .unwrap();
+        commands.push(parse_scene_command(receiver.recv().unwrap()).unwrap());
+        sender
+            .send(input_event(InputEvent::wheel(
+                [0.0, 40.0],
+                [130.0, 80.0],
+                Modifiers::NONE,
+            )))
+            .unwrap();
+        commands.push(parse_scene_command(receiver.recv().unwrap()).unwrap());
+        sender.send(close_event()).unwrap();
+    });
+    assert!(result.is_ok(), "applet failed: {result:?}");
+    assert_eq!(commands.len(), 4);
+    assert!((commands[2].camera.yaw() - 0.3).abs() < f32::EPSILON);
+    assert!((commands[2].camera.pitch() - 0.2).abs() < f32::EPSILON);
+    assert!(commands[3].camera.distance() < commands[0].camera.distance());
+    assert!(commands[0].help.contains("LEFT DRAG ORBIT/TILT"));
+    assert!(commands[0].help.contains("WHEEL ZOOM"));
+    assert!(commands[0].help.contains("MIDDLE DRAG PAN"));
 }

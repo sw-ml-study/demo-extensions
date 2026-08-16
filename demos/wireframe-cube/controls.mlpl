@@ -1,18 +1,23 @@
 # MLPL owns application controls. Native code supplies only generic events and rendering primitives.
 include "scene.mlpl";
+include "../../lib/native3d/camera.mlpl";
 
 def u:wireframe_cube_clamp(value,low,high) { if lt(value,low) { low } else { if gt(value,high) { high } else { value } } }
 
 def u:wireframe_cube_palette(index) { if eq(index,0) { [0.2,0.8,1,1] } else { if eq(index,1) { [1,0.4,0.2,1] } else { if eq(index,2) { [0.5,1,0.3,1] } else { [0.9,0.4,1,1] } } } }
 
 def u:wireframe_cube_control_state(width,height,length,speed,paused,color_index,thickness,viewport_width,viewport_height,close_requested,revision) {
-  {width: width,height: height,length: length,rotation_speed: speed,paused: paused,color_index: color_index,line_color: u:wireframe_cube_palette(color_index),line_thickness: thickness,viewport_width: viewport_width,viewport_height: viewport_height,close_requested: close_requested,revision: revision}
+  u:wireframe_cube_control_state_camera(width,height,length,speed,paused,color_index,thickness,viewport_width,viewport_height,close_requested,revision,u:n3d_camera_defaults())
+}
+
+def u:wireframe_cube_control_state_camera(width,height,length,speed,paused,color_index,thickness,viewport_width,viewport_height,close_requested,revision,camera) {
+  {width: width,height: height,length: length,rotation_speed: speed,paused: paused,color_index: color_index,line_color: u:wireframe_cube_palette(color_index),line_thickness: thickness,viewport_width: viewport_width,viewport_height: viewport_height,close_requested: close_requested,revision: revision,camera: camera}
 }
 
 def u:wireframe_cube_control_defaults() { u:wireframe_cube_control_state(2,2,2,0.6,0,0,2,800,600,0,0) }
 
 def u:wireframe_cube_control_change(state,width,height,length,speed,paused,color_index,thickness,close_requested) {
-  u:wireframe_cube_control_state(width,height,length,speed,paused,color_index,thickness,state.viewport_width,state.viewport_height,close_requested,state.revision+1)
+  u:wireframe_cube_control_state_camera(width,height,length,speed,paused,color_index,thickness,state.viewport_width,state.viewport_height,close_requested,state.revision+1,state.camera)
 }
 
 def u:wireframe_cube_reduce_key(state,key) {
@@ -34,15 +39,19 @@ def u:wireframe_cube_reduce_key(state,key) {
 }
 
 def u:wireframe_cube_reduce(state,event) {
-  if equal(event.kind,"key") { u:wireframe_cube_reduce_key(state,event.key) } else {
-    if equal(event.kind,"resize") { u:wireframe_cube_control_state(state.width,state.height,state.length,state.rotation_speed,state.paused,state.color_index,state.line_thickness,u:wireframe_cube_clamp(event.width,1,16384),u:wireframe_cube_clamp(event.height,1,16384),state.close_requested,state.revision+1) } else {
+  pointer=equal(event.kind,"pointer_down")+equal(event.kind,"pointer_up")+equal(event.kind,"pointer_move")+equal(event.kind,"wheel");
+  if pointer {
+    camera=u:n3d_camera_reduce(state.camera,event);
+    u:wireframe_cube_control_state_camera(state.width,state.height,state.length,state.rotation_speed,state.paused,state.color_index,state.line_thickness,state.viewport_width,state.viewport_height,state.close_requested,state.revision+1,camera)
+  } else { if equal(event.kind,"key") { u:wireframe_cube_reduce_key(state,event.key) } else {
+    if equal(event.kind,"resize") { u:wireframe_cube_control_state_camera(state.width,state.height,state.length,state.rotation_speed,state.paused,state.color_index,state.line_thickness,u:wireframe_cube_clamp(event.width,1,16384),u:wireframe_cube_clamp(event.height,1,16384),state.close_requested,state.revision+1,state.camera) } else {
       if equal(event.kind,"close") { u:wireframe_cube_control_change(state,state.width,state.height,state.length,state.rotation_speed,state.paused,state.color_index,state.line_thickness,1) } else { state }
     }
-  }
+  } }
 }
 
 def u:wireframe_cube_bulk_update(state) {
   active_speed=if state.paused { 0 } else { state.rotation_speed };
   scene=u:wireframe_cube_scene({width: state.width,height: state.height,length: state.length,rotation_speed: active_speed,line_color: state.line_color,line_thickness: state.line_thickness})?;
-  ok({positions: reshape(scene.positions.values,scene.positions.shape),edges: reshape(scene.edges.values,scene.edges.shape),colors: matmul(ones([12,1]),reshape(state.line_color,[1,4])),thicknesses: fill([12],state.line_thickness),ids: range(12),rotation_y_speed: active_speed,revision: state.revision})
+  ok({positions: reshape(scene.positions.values,scene.positions.shape),edges: reshape(scene.edges.values,scene.edges.shape),colors: matmul(ones([12,1]),reshape(state.line_color,[1,4])),thicknesses: fill([12],state.line_thickness),ids: range(12),rotation_y_speed: active_speed,revision: state.revision,camera: u:n3d_camera_record(state.camera)})
 }

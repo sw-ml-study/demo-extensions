@@ -6,13 +6,14 @@ use mlpl_eval::Value;
 use mlpl_native3d_scene::{Camera, LineScene};
 
 const SCENE_SOURCE: &str = include_str!("../../../demos/wireframe-cube/scene.mlpl");
+const CAMERA_SOURCE: &str = include_str!("../../../lib/native3d/camera.mlpl");
 const CONTROLS_SOURCE: &str = include_str!("../../../demos/wireframe-cube/controls.mlpl");
 const APPLET_BODY: &str = include_str!("../../../demos/wireframe-cube/live-applet.mlpl");
 
 #[must_use]
 pub fn applet_source() -> String {
     format!(
-        "{SCENE_SOURCE}\n{}\n{}",
+        "{SCENE_SOURCE}\n{CAMERA_SOURCE}\n{}\n{}",
         without_includes(CONTROLS_SOURCE),
         without_includes(APPLET_BODY)
     )
