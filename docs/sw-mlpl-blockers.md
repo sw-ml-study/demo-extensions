@@ -5,9 +5,8 @@ Status date: 2026-08-15
 The native wgpu/winit renderer and MLPL-generated cube scene work today.
 sw-MLPL commits `5c695fe1`, `03c7559b`, `797d910f`, and `f8585846` have now
 shipped dense arrays in both directions, opaque native handles, and nested
-structured record returns, and this repository now proves that boundary with a
-real provider. Live native event delivery and event-loop ownership remain the
-sole upstream blocker for interpreted interaction.
+structured record returns, parked-main UI launch, handler dispatch, and bounded
+Port delivery. This repository now proves the complete local interpreted loop.
 This repository does not modify `../sw-mlpl`.
 
 ## Required host primitives
@@ -23,7 +22,7 @@ Downstream acceptance: an MLPL test creates, queries, closes, and then fails to
 reuse a viewer; negative tests cover every invalid-handle class and repeated
 close.
 
-### Bounded event polling and host event-loop ownership
+### Bounded event polling and host event-loop ownership — closed locally
 
 The extension needs a non-callback primitive such as
 `native3d:poll_events(viewer, limit)` that returns ordered key, pointer, resize,
@@ -83,27 +82,16 @@ provider linkage without changing MLPL source.
 Downstream acceptance: the same cube source runs interpreted and compiled,
 with equivalent events, scene updates, diagnostics, and close behavior.
 
-## What works while blocked
+## Current interpreted result
 
-`just cube-3d` already proves the visual portion on macOS: sw-MLPL generates
-the deterministic generic scene, a temporary JSON file crosses the current
-boundary, and the standalone Rust smoke viewer displays the rotating cube in a
-native window. Headless Rust tests prove transforms, clipping, projection,
-line expansion, style, bounds, and a stable image fingerprint. Native
-mlplunit tests prove the MLPL cube arrays and controls.
-
-The JSON bridge copies the complete scene and cannot return live events. The
-standalone smoke harness advances rotation from the MLPL-provided speed and
-supports only Escape/native-close lifecycle behavior. It does not prove the
-extension API or the MLPL-owned interactive loop.
+`just cube-3d` runs winit/wgpu on the main thread and sw-MLPL on a worker.
+Generic owned events flow to `controls.mlpl`; complete owned scene commands
+flow back. Headless protocol tests and native mlplunit prove the same logic.
 
 ## Upstream handoff order
 
-1. Define main-thread event-loop ownership and add bounded polling upstream.
-2. Connect real native events to the tested MLPL reducer and headless provider.
-3. Add provider startup, linkage/package, and call parity to compiled output.
+1. Add provider startup, linkage/package, and call parity to compiled output.
+2. Add dynamic package loading and a demonstrated quiescent unload protocol.
 
-The MLPL reducer and deterministic bulk updates are now proven with native
-mlplunit. Each upstream delivery should be followed by the named downstream
-acceptance test here. Until then, the PoC remains visually runnable but
-partially blocked for end-to-end interactive MLPL ownership.
+There is no remaining sw-MLPL blocker for the local interpreted interactive
+PoC. Compiler and deployment parity remain explicit later capabilities.

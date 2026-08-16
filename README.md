@@ -18,7 +18,7 @@ scalar registry plus a byte-compatible C-descriptor adapter: both its built-in
 `hello:answer()` and this repository's `_hello:answer()` provider are proven
 through the interpreter. Arrays, persistent handles, and nested records are now
 also proven through the real downstream descriptor. `use hello`, compilation,
-dynamic loading, and live native event delivery remain tracked contracts.
+dynamic loading and compiled-provider startup remain tracked contracts.
 
 ## What is here
 
@@ -66,16 +66,17 @@ cargo build --workspace
 cargo build -p mlpl-extension-hello
 ```
 
-Open the opt-in native rotating-cube smoke window:
+Open the interactive native cube:
 
 ```sh
 just cube-3d
 ```
 
-The MLPL script generates the scene before the shared wgpu/winit application
-opens. Escape or the native close control exits. Cube-specific interactive
-controls remain MLPL-owned and require the upstream live extension contracts;
-the current window is an honest visual PoC, not the completed live API.
+The window keeps winit/wgpu on the main thread and runs sw-MLPL on a worker.
+`controls.mlpl` receives generic key/resize events and sends complete owned
+scene commands back to the renderer. Use W/S for width, arrows for height, A/D
+for length, +/- for signed speed, Space for pause, C for color, brackets for
+thickness, R for reset, and Escape to close.
 
 Run focused Rust or MLPL tests:
 
@@ -136,12 +137,10 @@ The completed foundation proves:
 - an MLPL-owned control reducer for dimensions, signed speed, pause/reset,
   palette, thickness, resize/close events, and deterministic bulk updates.
 
-The opt-in wgpu/winit smoke window and the headless provider are both working,
-but they are not connected by a live MLPL event loop yet. Dynamic loading by
-sw-MLPL, real unload/hot reload, facades, and compiled-provider startup remain
-future work. Dynamic/static provider parity shares one tested registration
-path; rich values are defensively copied, and native resources cross only as
-opaque numeric capabilities.
+The opt-in wgpu/winit window is connected to the MLPL reducer through sw-MLPL's
+parked-main Port contract. Only owned event and scene values cross between the
+main-thread UI and worker interpreter. Dynamic loading by sw-MLPL, real
+unload/hot reload, facades, and compiled-provider startup remain future work.
 
 ## Documentation
 

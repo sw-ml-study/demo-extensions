@@ -1,9 +1,16 @@
 //! Opt-in native wgpu/winit smoke viewer for a generic line-scene JSON file.
 
-use std::{error::Error, fs, sync::Arc, time::Instant};
+use std::error::Error;
+use std::sync::Arc;
+use std::sync::mpsc::{Receiver, Sender};
+use std::time::Instant;
 
+use mlpl_eval::{Value, run_applet_with_host};
 use mlpl_native3d_scene::{Camera, LineScene, Viewport};
-use mlpl_native3d_window::{GpuVertex, line_vertices};
+use mlpl_native3d_window::live::{
+    applet_source, close_event, key_event, parse_scene_command, resize_event,
+};
+use mlpl_native3d_window::{GpuVertex, line_vertices, text_vertices};
 use wgpu::util::DeviceExt;
 use winit::{
     application::ApplicationHandler,
@@ -40,32 +47,72 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 ";
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let scene_path = std::env::args()
-        .nth(1)
-        .ok_or("usage: mlpl-native3d-window SCENE.json")?;
-    let scene = LineScene::parse(&fs::read_to_string(scene_path)?)
-        .map_err(|error| format!("invalid line scene: {error:?}"))?;
-    println!("MLPL Native 3D PoC: generic line scene; Escape or window close exits.");
-    println!("Cube-specific controls remain MLPL-owned and require the upstream live API.");
-
     let event_loop = EventLoop::new()?;
-    let mut application = Application::new(scene);
-    event_loop.run_app(&mut application)?;
+    println!("MLPL Native 3D — live controls are evaluated by controls.mlpl");
+    println!("W/S width • arrows height • A/D length • +/- speed • Space pause");
+    println!("C color • [/] thickness • R reset • Escape closes");
+    let mut host_error = None;
+    let result = run_applet_with_host(&applet_source(), |commands, events| {
+        let mut application = Application::new(commands, events);
+        if let Err(error) = event_loop.run_app(&mut application) {
+            host_error = Some(error.to_string());
+        }
+    });
+    if let Some(error) = host_error {
+        return Err(error.into());
+    }
+    result.map_err(|error| format!("MLPL applet failed: {error}"))?;
     Ok(())
 }
 
 struct Application {
-    scene: LineScene,
+    scene: Option<LineScene>,
     graphics: Option<Graphics>,
-    started: Instant,
+    commands: Receiver<Value>,
+    events: Sender<Value>,
+    angle: f32,
+    rotation_speed: f32,
+    help: String,
+    last_frame: Instant,
 }
 
 impl Application {
-    fn new(scene: LineScene) -> Self {
+    fn new(commands: Receiver<Value>, events: Sender<Value>) -> Self {
         Self {
-            scene,
+            scene: None,
             graphics: None,
-            started: Instant::now(),
+            commands,
+            events,
+            angle: 0.0,
+            rotation_speed: 0.0,
+            help: String::new(),
+            last_frame: Instant::now(),
+        }
+    }
+
+    fn drain_commands(&mut self, event_loop: &ActiveEventLoop) {
+        while let Ok(value) = self.commands.try_recv() {
+            match parse_scene_command(value) {
+                Ok(command) => {
+                    if let Some(graphics) = &self.graphics {
+                        graphics.window.set_title(&scene_title(&command));
+                    }
+                    self.scene = Some(command.scene);
+                    self.rotation_speed = command.rotation_speed;
+                    self.help = command.help;
+                }
+                Err(error) => {
+                    eprintln!("MLPL scene command rejected: {error}");
+                    event_loop.exit();
+                    return;
+                }
+            }
+        }
+    }
+
+    fn send(&self, event: Value, event_loop: &ActiveEventLoop) {
+        if self.events.send(event).is_err() {
+            event_loop.exit();
         }
     }
 }
@@ -76,7 +123,7 @@ impl ApplicationHandler for Application {
             return;
         }
         let attributes = Window::default_attributes()
-            .with_title("MLPL Native 3D PoC — MLPL scene • Esc closes")
+            .with_title("MLPL Native 3D — interactive controls run in MLPL")
             .with_inner_size(LogicalSize::new(900, 700));
         match event_loop.create_window(attributes) {
             Ok(window) => match pollster::block_on(Graphics::new(Arc::new(window))) {
@@ -99,25 +146,49 @@ impl ApplicationHandler for Application {
         _window_id: WindowId,
         event: WindowEvent,
     ) {
-        let Some(graphics) = self.graphics.as_mut() else {
-            return;
-        };
         match event {
-            WindowEvent::CloseRequested
-            | WindowEvent::KeyboardInput {
+            WindowEvent::CloseRequested => {
+                self.send(close_event(), event_loop);
+                event_loop.exit();
+            }
+            WindowEvent::KeyboardInput {
                 event:
                     KeyEvent {
-                        logical_key: Key::Named(NamedKey::Escape),
+                        logical_key,
                         state: ElementState::Pressed,
+                        repeat: false,
                         ..
                     },
                 ..
-            } => event_loop.exit(),
-            WindowEvent::Resized(size) => graphics.resize(size.width, size.height),
+            } => {
+                if let Some(key) = normalize_key(&logical_key) {
+                    self.send(key_event(key), event_loop);
+                    if key == "escape" {
+                        self.send(close_event(), event_loop);
+                        event_loop.exit();
+                    }
+                }
+            }
+            WindowEvent::Resized(size) => {
+                if let Some(graphics) = self.graphics.as_mut() {
+                    graphics.resize(size.width, size.height);
+                }
+                self.send(resize_event(size.width, size.height), event_loop);
+            }
             WindowEvent::RedrawRequested => {
-                let elapsed = self.started.elapsed().as_secs_f32();
-                let angle = elapsed * self.scene.controls().rotation_speed();
-                if let Err(error) = graphics.render(&self.scene, angle) {
+                self.drain_commands(event_loop);
+                let now = Instant::now();
+                self.angle +=
+                    now.duration_since(self.last_frame).as_secs_f32() * self.rotation_speed;
+                self.last_frame = now;
+                let Some(graphics) = self.graphics.as_mut() else {
+                    return;
+                };
+                let Some(scene) = self.scene.as_ref() else {
+                    graphics.window.request_redraw();
+                    return;
+                };
+                if let Err(error) = graphics.render(scene, self.angle, &self.help) {
                     match error {
                         wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated => {
                             graphics.reconfigure();
@@ -131,6 +202,47 @@ impl ApplicationHandler for Application {
             _ => {}
         }
     }
+
+    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        self.drain_commands(event_loop);
+        if let Some(graphics) = &self.graphics {
+            graphics.window.request_redraw();
+        }
+    }
+}
+
+fn normalize_key(key: &Key) -> Option<&'static str> {
+    match key {
+        Key::Named(NamedKey::ArrowUp) => Some("arrow_up"),
+        Key::Named(NamedKey::ArrowDown) => Some("arrow_down"),
+        Key::Named(NamedKey::Escape) => Some("escape"),
+        Key::Character(value) => match value.to_lowercase().as_str() {
+            "w" => Some("w"),
+            "s" => Some("s"),
+            "a" => Some("a"),
+            "d" => Some("d"),
+            "=" | "+" => Some("equal"),
+            "-" | "_" => Some("minus"),
+            " " => Some("space"),
+            "r" => Some("r"),
+            "c" => Some("c"),
+            "[" | "{" => Some("bracket_left"),
+            "]" | "}" => Some("bracket_right"),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+fn scene_title(command: &mlpl_native3d_window::live::SceneCommand) -> String {
+    let positions = command.scene.positions().values();
+    let width = positions[0].abs() * 2.0;
+    let height = positions[1].abs() * 2.0;
+    let length = positions[2].abs() * 2.0;
+    format!(
+        "MLPL live • rev {} • W {:.2} H {:.2} L {:.2} • speed {:.1} • Space/C/[/]/R",
+        command.revision, width, height, length, command.rotation_speed
+    )
 }
 
 struct Graphics {
@@ -226,7 +338,12 @@ impl Graphics {
         self.surface.configure(&self.device, &self.configuration);
     }
 
-    fn render(&mut self, scene: &LineScene, angle: f32) -> Result<(), wgpu::SurfaceError> {
+    fn render(
+        &mut self,
+        scene: &LineScene,
+        angle: f32,
+        help: &str,
+    ) -> Result<(), wgpu::SurfaceError> {
         let Ok(viewport) = Viewport::new(self.configuration.width, self.configuration.height)
         else {
             return Ok(());
@@ -234,7 +351,8 @@ impl Graphics {
         let Ok(lines) = scene.plan_lines(Camera::default(), viewport, angle) else {
             return Ok(());
         };
-        let vertices = line_vertices(&lines, viewport);
+        let mut vertices = line_vertices(&lines, viewport);
+        vertices.extend(text_vertices(help, viewport));
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {

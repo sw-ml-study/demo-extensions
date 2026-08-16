@@ -158,7 +158,7 @@ Closed for interpreted static providers: a real MLPL variable retains the
 provider handle across calls, while closed, stale, cross-extension, and
 non-handle values fail cleanly in `data_boundary.rs`.
 
-## B6: event loop, callbacks, and persistent resources
+## B6: event loop, callbacks, and persistent resources — closed locally
 
 Requirement:
 
@@ -179,18 +179,11 @@ Acceptance:
 - A headless lifecycle harness and a real-window smoke test cover repeated
   open/update/poll/close, bounded events, callback errors, and shutdown.
 
-Current workaround: `just cube-3d` opens a real opt-in wgpu/winit window from
-an MLPL-generated scene and proves native rendering and close behavior. Its
-standalone smoke harness advances rotation from the MLPL-provided speed, but it
-cannot return a handle or events to MLPL. It is visual evidence only, not proof
-of open/update/poll/close through the public extension API.
-
-Downstream progress: `_native3d` now proves the generic headless create,
-bulk-update, state/size, render-state, close, stale-handle, and deactivation
-slice through the real interpreter. The MLPL reducer now proves every cube
-control over normalized synthetic event records and emits deterministic bulk
-arrays. Only window/event-loop delivery remains blocked for interpreted
-interaction.
+Closed for the local interpreted applet: `just cube-3d` keeps winit/wgpu on the
+main thread, runs MLPL on the worker, sends owned normalized events through the
+Port, and applies owned bulk scene commands. The headless live-applet test
+proves the same lifecycle without a display. Compiler and dynamic-package
+parity remain B2/B3 rather than B6 blockers.
 
 ## B7: package discovery, deployment, and trust
 

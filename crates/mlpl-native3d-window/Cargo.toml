@@ -8,6 +8,8 @@ rust-version.workspace = true
 [dependencies]
 bytemuck = { version = "1", features = ["derive"] }
 mlpl-native3d-scene = { path = "../mlpl-native3d-scene" }
+mlpl-array = { path = "../../../sw-mlpl/components/array/crates/mlpl-array" }
+mlpl-eval = { path = "../../../sw-mlpl/components/eval/crates/mlpl-eval" }
 pollster = "0.4"
 wgpu = "24"
 winit = "0.30"

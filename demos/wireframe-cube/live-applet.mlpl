@@ -1,0 +1,19 @@
+include "controls.mlpl";
+
+def u:wireframe_cube_submit(state) {
+  bulk=u:wireframe_cube_bulk_update(state)?;
+  port_send(port,{op: "set_scene",positions: bulk.positions,edges: bulk.edges,colors: bulk.colors,thicknesses: bulk.thicknesses,ids: bulk.ids,rotation_y_speed: bulk.rotation_y_speed,revision: bulk.revision,help: "W/S WIDTH   UP/DOWN HEIGHT\nA/D LENGTH   +/- SPEED   SPACE PAUSE\nC COLOR   [/] THICKNESS   R RESET   ESC CLOSE"});
+  ok(state)
+}
+
+def u:wireframe_cube_on_event(event,state) {
+  next=u:wireframe_cube_reduce(state,event);
+  u:wireframe_cube_submit(next)?;
+  next
+}
+
+state=u:wireframe_cube_control_defaults();
+u:wireframe_cube_submit(state)?;
+on(port,"key",:u:wireframe_cube_on_event);
+on(port,"resize",:u:wireframe_cube_on_event);
+run(port,state)

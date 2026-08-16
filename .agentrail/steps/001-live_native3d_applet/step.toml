@@ -1,0 +1,9 @@
+number = 1
+slug = "live_native3d_applet"
+status = "in-progress"
+description = "Using TDD, implement and launch the fully interactive native cube against adj..."
+role = "production"
+context_files = []
+created_at = "2026-08-15T20:08:07"
+task_type = "native3d"
+commits = []

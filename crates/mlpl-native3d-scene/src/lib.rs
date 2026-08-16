@@ -53,6 +53,43 @@ pub enum SceneError {
 }
 
 impl LineScene {
+    /// Builds one validated generic line scene from owned row-major arrays.
+    ///
+    /// # Errors
+    ///
+    /// Applies the same shape, bounds, finite-value, index, and style checks as
+    /// JSON parsing.
+    pub fn from_arrays(
+        positions: Vec<f32>,
+        edges: Vec<usize>,
+        rotation_speed: f32,
+        line_color: [f32; 4],
+        line_thickness: f32,
+    ) -> Result<Self, SceneError> {
+        if positions.len().checked_rem(3) != Some(0) || edges.len().checked_rem(2) != Some(0) {
+            return Err(SceneError::Malformed);
+        }
+        let scene = Self {
+            schema: SCHEMA.to_owned(),
+            version: 1,
+            positions: NumericArray {
+                shape: [positions.len() / 3, 3],
+                values: positions,
+            },
+            edges: IndexArray {
+                shape: [edges.len() / 2, 2],
+                values: edges,
+            },
+            controls: SceneControls {
+                rotation_speed,
+                line_color,
+                line_thickness,
+            },
+        };
+        scene.validate()?;
+        Ok(scene)
+    }
+
     /// Parses and validates one deterministic renderer-neutral line scene.
     ///
     /// # Errors

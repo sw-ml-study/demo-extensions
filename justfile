@@ -23,7 +23,7 @@ mlpl-path:
 mlplunit-path:
     ./scripts/select-mlplunit
 
-# Open the opt-in native rotating-cube smoke window.
+# Open the interactive MLPL-driven native cube window.
 cube-3d:
     ./scripts/run-3d-cube
 

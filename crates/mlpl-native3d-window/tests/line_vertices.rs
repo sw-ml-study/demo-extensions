@@ -1,5 +1,5 @@
 use mlpl_native3d_scene::{Camera, LineScene, Viewport};
-use mlpl_native3d_window::line_vertices;
+use mlpl_native3d_window::{line_vertices, text_vertices};
 
 fn line_scene() -> LineScene {
     LineScene::parse(
@@ -40,4 +40,14 @@ fn expands_planned_lines_to_gpu_triangles_without_scene_semantics() {
 #[test]
 fn empty_line_plan_produces_no_gpu_work() {
     assert!(line_vertices(&[], Viewport::new(32, 32).unwrap()).is_empty());
+}
+
+#[test]
+fn help_text_expands_to_visible_gpu_quads() {
+    let viewport = Viewport::new(800, 600).unwrap();
+    let vertices = text_vertices("W/S WIDTH", viewport);
+    assert!(!vertices.is_empty());
+    assert!(vertices.iter().all(|vertex| {
+        (-1.0..=1.0).contains(&vertex.position[0]) && (-1.0..=1.0).contains(&vertex.position[1])
+    }));
 }

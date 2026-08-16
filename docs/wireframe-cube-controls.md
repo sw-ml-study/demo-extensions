@@ -15,15 +15,15 @@ monotonic revision. Normalized key names are:
 
 | Key | MLPL behavior |
 |---|---|
-| `width_up`, `width_down` | Adjust width by 0.25 within `0.25..=100` |
-| `height_up`, `height_down` | Adjust height by 0.25 within `0.25..=100` |
-| `length_up`, `length_down` | Adjust length by 0.25 within `0.25..=100` |
-| `speed_up`, `speed_down` | Adjust signed radians/second by 0.1 within `-10..=10` |
-| `pause` | Toggle paused state without discarding signed speed |
-| `reset` | Restore application defaults while retaining drawable size |
-| `color_cycle` | Advance the deterministic four-color MLPL palette |
-| `thickness_up`, `thickness_down` | Adjust pixels within `0.5..=20` |
-| `close` | Set sticky close intent |
+| W, S | Adjust width by 0.25 within `0.25..=100` |
+| Up, Down | Adjust height by 0.25 within `0.25..=100` |
+| D, A | Adjust length by 0.25 within `0.25..=100` |
+| +, - | Adjust signed radians/second by 0.1 within `-10..=10` |
+| Space | Toggle paused state without discarding signed speed |
+| R | Restore application defaults while retaining drawable size |
+| C | Advance the deterministic four-color MLPL palette |
+| ], [ | Adjust pixels within `0.5..=20` |
+| Escape | Request close |
 
 Resize events have `{kind:"resize",width:number,height:number}` and clamp the
 drawable dimensions to `1..=16384`. Close events have `{kind:"close"}`. Key
@@ -48,15 +48,14 @@ The same state yields an identical complete update. Native mlplunit covers all
 controls, bounds, unknown events, resizing, close intent, reset, reverse
 rotation, array shapes, stable IDs, pause behavior, and determinism.
 
-## Final event-loop seam
+## Live event-loop connection
 
-Only live delivery remains. The host/window integration must open the native
-viewer on the platform-required thread and expose bounded ordered polling that
-returns the records above. The MLPL application then folds each event through
-`u:wireframe_cube_reduce`, calls `u:wireframe_cube_bulk_update` when its
-revision changes, passes arrays to `_native3d:set_lines`, supplies explicit
-rotation to `_native3d:render`, and closes when requested.
+`just cube-3d` now opens winit/wgpu on the required main thread while sw-MLPL
+runs this reducer on a worker. The UI sends one owned normalized event at a
+time, and MLPL returns a complete owned scene command. The command also carries
+the help text rendered at the top of the native view; the title displays the
+MLPL revision and live dimensions/speed for explicit feedback.
 
-Synthetic records make this logic executable and deterministic today. They do
-not claim real winit delivery, callback reentrancy, queue backpressure, or
-compiled-provider startup.
+The headless `live_applet.rs` host proves this same path without a display,
+including physical W/S events. Compiled-provider startup and dynamic loading
+remain separate future work.
