@@ -1,9 +1,10 @@
 number = 1
 slug = "camera_gesture_arbitration"
-status = "in-progress"
+status = "completed"
 description = "Using native mlplunit and Rust worker/Port TDD, add MLPL-owned left-drag orbi..."
 role = "production"
 context_files = []
 created_at = "2026-08-16T10:46:12"
+completed_at = "2026-08-16T10:49:43"
 task_type = "native3d"
-commits = []
+commits = ["4f6cc61c529f78439a87c4b32c4200db04e5e86c"]
