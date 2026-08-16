@@ -1,0 +1,1 @@
+Fixed Life input starvation with generic acknowledgement-driven single-flight frame delivery: the host permits one outstanding frame, MLPL acknowledges after transition/scene work, and later discrete keys or pointers can have at most one frame ahead. Added unit and real worker/Port regressions plus protocol, bounds, acceptance, and saga documentation.
