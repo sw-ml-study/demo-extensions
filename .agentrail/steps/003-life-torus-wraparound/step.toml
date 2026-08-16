@@ -1,9 +1,10 @@
 number = 3
 slug = "life-torus-wraparound"
-status = "in-progress"
+status = "completed"
 description = "Using MLPL and Rust TDD, add a native 3D torus (donut) Life demo that reuses ..."
 role = "production"
 context_files = []
 created_at = "2026-08-16T12:08:49"
+completed_at = "2026-08-16T12:34:28"
 task_type = "native3d"
-commits = []
+commits = ["dc46e5d7325968eb4d6cdee9226a72fd8ad53b14"]
