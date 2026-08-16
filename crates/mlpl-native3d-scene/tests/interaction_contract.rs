@@ -1,4 +1,4 @@
-use mlpl_native3d_scene::{OrbitCamera, Ray3, Viewport};
+use mlpl_native3d_scene::{Camera, LineScene, OrbitCamera, Ray3, Viewport};
 
 #[test]
 fn orbit_camera_validates_bounds_and_builds_center_pick_ray() {
@@ -18,6 +18,47 @@ fn orbit_camera_validates_bounds_and_builds_center_pick_ray() {
             .pick_ray(Viewport::new(800, 600).unwrap(), [-1.0, 4.0])
             .is_err()
     );
+}
+
+#[test]
+fn renderer_camera_orbits_and_pans_without_application_semantics() {
+    let scene = LineScene::from_arrays(
+        vec![-1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        vec![0, 1],
+        0.0,
+        [1.0; 4],
+        1.0,
+    )
+    .unwrap();
+    let viewport = Viewport::new(800, 600).unwrap();
+    let front = scene
+        .plan_lines(
+            Camera::orbit([0.0; 3], 0.0, 0.0, 5.0, 1.0, 0.1).unwrap(),
+            viewport,
+            0.0,
+        )
+        .unwrap();
+    let orbited = scene
+        .plan_lines(
+            Camera::orbit([0.5, 0.25, 0.0], 0.6, 0.3, 7.0, 1.0, 0.1).unwrap(),
+            viewport,
+            0.0,
+        )
+        .unwrap();
+    let start_delta: f32 = front[0]
+        .start()
+        .into_iter()
+        .zip(orbited[0].start())
+        .map(|(a, b)| (a - b).abs())
+        .sum();
+    let end_delta: f32 = front[0]
+        .end()
+        .into_iter()
+        .zip(orbited[0].end())
+        .map(|(a, b)| (a - b).abs())
+        .sum();
+    assert!(start_delta > 0.01);
+    assert!(end_delta > 0.01);
 }
 
 #[test]

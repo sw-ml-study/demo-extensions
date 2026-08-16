@@ -52,7 +52,7 @@ Downstream acceptance: one MLPL call updates a complete line scene in bulk.
 Tests cover wrong dtype/rank/shape, invalid indices, overflow, non-contiguous
 storage, expired storage, and explicit copy-versus-borrow evidence.
 
-### Generic viewer calls exposed to MLPL — headless slice proven
+### Generic viewer calls exposed to MLPL — interpreted live slice proven
 
 The public extension surface must be able to register and invoke these generic
 operations:
@@ -72,10 +72,12 @@ as completion.
 Downstream acceptance: native mlplunit exercises the public functions through
 the real host adapter, not only the downstream Rust registry.
 
-Current evidence: the headless `_native3d` provider implements create,
-bulk set-lines, size/state records, explicit render state, and close through
-the actual interpreter in `native3d_provider.rs`. Window creation, present,
-and event polling remain gated on the event-loop contract below.
+Current evidence: the headless `_native3d` provider implements create, bulk
+set-lines, size/state records, explicit render state, and close through the
+actual interpreter in `native3d_provider.rs`. The live parked-main host now
+delivers normalized key, pointer, wheel, coalesced frame, resize, and close
+records and consumes validated MLPL-owned camera commands. Reusable MLPL camera
+reduction and demo mappings remain downstream saga work, not an upstream gate.
 
 ### Interpreted and compiled parity
 

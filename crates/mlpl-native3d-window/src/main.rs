@@ -7,15 +7,18 @@ use std::time::Instant;
 
 use mlpl_eval::{Value, run_applet_with_host};
 use mlpl_native3d_scene::{Camera, LineScene, Viewport};
+use mlpl_native3d_window::interaction::{
+    BoundedInput, InputError, InputEvent, Modifiers, PointerButton, PointerButtons,
+};
 use mlpl_native3d_window::live::{
-    applet_source, close_event, key_event, parse_scene_command, resize_event,
+    applet_source, close_event, input_event, key_event, parse_scene_command, resize_event,
 };
 use mlpl_native3d_window::{GpuVertex, line_vertices, text_vertices};
 use wgpu::util::DeviceExt;
 use winit::{
     application::ApplicationHandler,
     dpi::LogicalSize,
-    event::{ElementState, KeyEvent, WindowEvent},
+    event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent},
     event_loop::{ActiveEventLoop, EventLoop},
     keyboard::{Key, NamedKey},
     window::{Window, WindowId},
@@ -72,7 +75,13 @@ struct Application {
     events: Sender<Value>,
     angle: f32,
     rotation_speed: f32,
+    camera: Camera,
     help: String,
+    pointer_position: [f64; 2],
+    pointer_buttons: PointerButtons,
+    modifiers: Modifiers,
+    pending_input: BoundedInput,
+    started: Instant,
     last_frame: Instant,
 }
 
@@ -85,7 +94,13 @@ impl Application {
             events,
             angle: 0.0,
             rotation_speed: 0.0,
+            camera: Camera::default(),
             help: String::new(),
+            pointer_position: [0.0; 2],
+            pointer_buttons: PointerButtons::NONE,
+            modifiers: Modifiers::NONE,
+            pending_input: BoundedInput::new(64).expect("nonzero input capacity"),
+            started: Instant::now(),
             last_frame: Instant::now(),
         }
     }
@@ -98,6 +113,7 @@ impl Application {
                         graphics.window.set_title(&scene_title(&command));
                     }
                     self.scene = Some(command.scene);
+                    self.camera = command.camera;
                     self.rotation_speed = command.rotation_speed;
                     self.help = command.help;
                 }
@@ -114,6 +130,54 @@ impl Application {
         if self.events.send(event).is_err() {
             event_loop.exit();
         }
+    }
+
+    fn flush_input(&mut self, event_loop: &ActiveEventLoop) {
+        for event in self.pending_input.drain() {
+            self.send(input_event(event), event_loop);
+        }
+    }
+
+    fn queue_input(&mut self, event: InputEvent, event_loop: &ActiveEventLoop) {
+        match self.pending_input.push(event) {
+            Ok(()) => {}
+            Err(InputError::Full) => {
+                self.flush_input(event_loop);
+                if self.pending_input.push(event).is_err() {
+                    event_loop.exit();
+                }
+            }
+            Err(InputError::InvalidCapacity | InputError::NonFinite) => event_loop.exit(),
+        }
+    }
+
+    fn redraw(&mut self, event_loop: &ActiveEventLoop) {
+        self.drain_commands(event_loop);
+        let now = Instant::now();
+        let elapsed = now.duration_since(self.started);
+        let delta = now.duration_since(self.last_frame);
+        self.queue_input(
+            InputEvent::frame(delta.as_secs_f64() * 1000.0, elapsed.as_secs_f64() * 1000.0),
+            event_loop,
+        );
+        self.flush_input(event_loop);
+        self.angle += delta.as_secs_f32() * self.rotation_speed;
+        self.last_frame = now;
+        let Some(graphics) = self.graphics.as_mut() else {
+            return;
+        };
+        let Some(scene) = self.scene.as_ref() else {
+            graphics.window.request_redraw();
+            return;
+        };
+        if let Err(error) = graphics.render(scene, self.camera, self.angle, &self.help) {
+            match error {
+                wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated => graphics.reconfigure(),
+                wgpu::SurfaceError::OutOfMemory => event_loop.exit(),
+                wgpu::SurfaceError::Timeout | wgpu::SurfaceError::Other => {}
+            }
+        }
+        graphics.window.request_redraw();
     }
 }
 
@@ -175,29 +239,53 @@ impl ApplicationHandler for Application {
                 }
                 self.send(resize_event(size.width, size.height), event_loop);
             }
-            WindowEvent::RedrawRequested => {
-                self.drain_commands(event_loop);
-                let now = Instant::now();
-                self.angle +=
-                    now.duration_since(self.last_frame).as_secs_f32() * self.rotation_speed;
-                self.last_frame = now;
-                let Some(graphics) = self.graphics.as_mut() else {
-                    return;
-                };
-                let Some(scene) = self.scene.as_ref() else {
-                    graphics.window.request_redraw();
-                    return;
-                };
-                if let Err(error) = graphics.render(scene, self.angle, &self.help) {
-                    match error {
-                        wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated => {
-                            graphics.reconfigure();
-                        }
-                        wgpu::SurfaceError::OutOfMemory => event_loop.exit(),
-                        wgpu::SurfaceError::Timeout | wgpu::SurfaceError::Other => {}
-                    }
+            WindowEvent::CursorMoved { position, .. } => {
+                self.pointer_position = [position.x, position.y];
+                self.queue_input(
+                    InputEvent::pointer_move(
+                        self.pointer_position,
+                        self.pointer_buttons,
+                        self.modifiers,
+                    ),
+                    event_loop,
+                );
+            }
+            WindowEvent::MouseInput { state, button, .. } => {
+                if let Some((button, flag)) = normalize_button(button) {
+                    let pressed = state == ElementState::Pressed;
+                    self.pointer_buttons = self.pointer_buttons.with(flag, pressed);
+                    self.queue_input(
+                        InputEvent::pointer_button(
+                            button,
+                            pressed,
+                            self.pointer_position,
+                            self.modifiers,
+                        ),
+                        event_loop,
+                    );
                 }
-                graphics.window.request_redraw();
+            }
+            WindowEvent::MouseWheel { delta, .. } => {
+                self.queue_input(
+                    InputEvent::wheel(
+                        normalize_wheel(delta),
+                        self.pointer_position,
+                        self.modifiers,
+                    ),
+                    event_loop,
+                );
+            }
+            WindowEvent::ModifiersChanged(value) => {
+                let state = value.state();
+                self.modifiers = Modifiers::from_flags([
+                    state.shift_key(),
+                    state.control_key(),
+                    state.alt_key(),
+                    state.super_key(),
+                ]);
+            }
+            WindowEvent::RedrawRequested => {
+                self.redraw(event_loop);
             }
             _ => {}
         }
@@ -205,9 +293,26 @@ impl ApplicationHandler for Application {
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
         self.drain_commands(event_loop);
+        self.flush_input(event_loop);
         if let Some(graphics) = &self.graphics {
             graphics.window.request_redraw();
         }
+    }
+}
+
+fn normalize_button(button: MouseButton) -> Option<(PointerButton, PointerButtons)> {
+    match button {
+        MouseButton::Left => Some((PointerButton::Left, PointerButtons::LEFT)),
+        MouseButton::Middle => Some((PointerButton::Middle, PointerButtons::MIDDLE)),
+        MouseButton::Right => Some((PointerButton::Right, PointerButtons::RIGHT)),
+        _ => None,
+    }
+}
+
+fn normalize_wheel(delta: MouseScrollDelta) -> [f64; 2] {
+    match delta {
+        MouseScrollDelta::LineDelta(x, y) => [f64::from(x) * 40.0, f64::from(y) * 40.0],
+        MouseScrollDelta::PixelDelta(position) => [position.x, position.y],
     }
 }
 
@@ -342,6 +447,7 @@ impl Graphics {
     fn render(
         &mut self,
         scene: &LineScene,
+        camera: Camera,
         angle: f32,
         help: &str,
     ) -> Result<(), wgpu::SurfaceError> {
@@ -349,7 +455,7 @@ impl Graphics {
         else {
             return Ok(());
         };
-        let Ok(lines) = scene.plan_lines(Camera::default(), viewport, angle) else {
+        let Ok(lines) = scene.plan_lines(camera, viewport, angle) else {
             return Ok(());
         };
         let mut vertices = line_vertices(&lines, viewport);
@@ -402,11 +508,30 @@ impl Graphics {
 
 #[cfg(test)]
 mod tests {
-    use super::normalize_key;
+    use super::{normalize_button, normalize_key, normalize_wheel};
+    use mlpl_native3d_window::interaction::{PointerButton, PointerButtons};
+    use winit::dpi::PhysicalPosition;
+    use winit::event::{MouseButton, MouseScrollDelta};
     use winit::keyboard::{Key, NamedKey};
 
     #[test]
     fn normalizes_named_space_for_the_live_event_path() {
         assert_eq!(normalize_key(&Key::Named(NamedKey::Space)), Some("space"));
+    }
+
+    #[test]
+    fn normalizes_platform_pointer_buttons_and_wheel_units() {
+        assert_eq!(
+            normalize_button(MouseButton::Middle),
+            Some((PointerButton::Middle, PointerButtons::MIDDLE))
+        );
+        let line = normalize_wheel(MouseScrollDelta::LineDelta(1.0, -2.0));
+        assert!((line[0] - 40.0).abs() < f64::EPSILON);
+        assert!((line[1] + 80.0).abs() < f64::EPSILON);
+        let pixel = normalize_wheel(MouseScrollDelta::PixelDelta(PhysicalPosition::new(
+            3.0, 4.0,
+        )));
+        assert!((pixel[0] - 3.0).abs() < f64::EPSILON);
+        assert!((pixel[1] - 4.0).abs() < f64::EPSILON);
     }
 }

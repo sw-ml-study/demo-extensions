@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use crate::interaction::{InputEvent, Modifiers, PointerButton, PointerButtons};
 use mlpl_array::DenseArray;
 use mlpl_eval::Value;
-use mlpl_native3d_scene::LineScene;
+use mlpl_native3d_scene::{Camera, LineScene};
 
 const SCENE_SOURCE: &str = include_str!("../../../demos/wireframe-cube/scene.mlpl");
 const CONTROLS_SOURCE: &str = include_str!("../../../demos/wireframe-cube/controls.mlpl");
@@ -21,6 +21,7 @@ pub fn applet_source() -> String {
 #[derive(Debug)]
 pub struct SceneCommand {
     pub scene: LineScene,
+    pub camera: Camera,
     pub rotation_speed: f32,
     pub revision: u64,
     pub help: String,
@@ -56,69 +57,59 @@ pub fn input_event(event: InputEvent) -> Value {
             position,
             buttons,
             modifiers,
-        } => record([
-            ("kind", Value::Str("pointer_move".into())),
-            ("x", scalar(position[0])),
-            ("y", scalar(position[1])),
-            (
-                "left",
-                scalar(bool_number(buttons.contains(PointerButtons::LEFT))),
-            ),
-            (
-                "shift",
-                scalar(bool_number(modifiers.contains(Modifiers::SHIFT))),
-            ),
-        ]),
+        } => record(
+            [
+                ("kind", Value::Str("pointer_move".into())),
+                ("x", scalar(position[0])),
+                ("y", scalar(position[1])),
+                (
+                    "left",
+                    scalar(bool_number(buttons.contains(PointerButtons::LEFT))),
+                ),
+            ]
+            .into_iter()
+            .chain(modifier_fields(modifiers)),
+        ),
         InputEvent::PointerButton {
             button,
             pressed,
             position,
             modifiers,
-        } => record([
-            (
-                "kind",
-                Value::Str(
-                    if pressed {
-                        "pointer_down"
-                    } else {
-                        "pointer_up"
-                    }
-                    .into(),
+        } => record(
+            [
+                (
+                    "kind",
+                    Value::Str(
+                        if pressed {
+                            "pointer_down"
+                        } else {
+                            "pointer_up"
+                        }
+                        .into(),
+                    ),
                 ),
-            ),
-            (
-                "button",
-                Value::Str(
-                    match button {
-                        PointerButton::Left => "left",
-                        PointerButton::Middle => "middle",
-                        PointerButton::Right => "right",
-                    }
-                    .into(),
-                ),
-            ),
-            ("x", scalar(position[0])),
-            ("y", scalar(position[1])),
-            (
-                "shift",
-                scalar(bool_number(modifiers.contains(Modifiers::SHIFT))),
-            ),
-        ]),
+                ("button", Value::Str(button_name(button).into())),
+                ("x", scalar(position[0])),
+                ("y", scalar(position[1])),
+            ]
+            .into_iter()
+            .chain(modifier_fields(modifiers)),
+        ),
         InputEvent::Wheel {
             delta,
             position,
             modifiers,
-        } => record([
-            ("kind", Value::Str("wheel".into())),
-            ("dx", scalar(delta[0])),
-            ("dy", scalar(delta[1])),
-            ("x", scalar(position[0])),
-            ("y", scalar(position[1])),
-            (
-                "shift",
-                scalar(bool_number(modifiers.contains(Modifiers::SHIFT))),
-            ),
-        ]),
+        } => record(
+            [
+                ("kind", Value::Str("wheel".into())),
+                ("dx", scalar(delta[0])),
+                ("dy", scalar(delta[1])),
+                ("x", scalar(position[0])),
+                ("y", scalar(position[1])),
+            ]
+            .into_iter()
+            .chain(modifier_fields(modifiers)),
+        ),
         InputEvent::Frame {
             delta_ms,
             elapsed_ms,
@@ -127,6 +118,35 @@ pub fn input_event(event: InputEvent) -> Value {
             ("delta_ms", scalar(delta_ms)),
             ("elapsed_ms", scalar(elapsed_ms)),
         ]),
+    }
+}
+
+fn modifier_fields(modifiers: Modifiers) -> [(&'static str, Value); 4] {
+    [
+        (
+            "shift",
+            scalar(bool_number(modifiers.contains(Modifiers::SHIFT))),
+        ),
+        (
+            "control",
+            scalar(bool_number(modifiers.contains(Modifiers::CONTROL))),
+        ),
+        (
+            "alt",
+            scalar(bool_number(modifiers.contains(Modifiers::ALT))),
+        ),
+        (
+            "meta",
+            scalar(bool_number(modifiers.contains(Modifiers::META))),
+        ),
+    ]
+}
+
+const fn button_name(button: PointerButton) -> &'static str {
+    match button {
+        PointerButton::Left => "left",
+        PointerButton::Middle => "middle",
+        PointerButton::Right => "right",
     }
 }
 
@@ -165,6 +185,11 @@ pub fn parse_scene_command(value: Value) -> Result<SceneCommand, String> {
     )?)
     .map_err(|_| "revision is out of range".to_owned())?;
     let help = string_field(&fields, "help")?.to_owned();
+    let camera = match fields.get("camera") {
+        None => Camera::default(),
+        Some(Value::Record { fields }) => parse_camera(fields)?,
+        Some(_) => return Err("camera must be a record".into()),
+    };
     let line_color = [
         to_f32(colors[0], "color")?,
         to_f32(colors[1], "color")?,
@@ -184,10 +209,27 @@ pub fn parse_scene_command(value: Value) -> Result<SceneCommand, String> {
     .map_err(|error| format!("invalid live scene: {error:?}"))?;
     Ok(SceneCommand {
         scene,
+        camera,
         rotation_speed,
         revision,
         help,
     })
+}
+
+fn parse_camera(fields: &BTreeMap<String, Value>) -> Result<Camera, String> {
+    let target = array_field(fields, "target", &[3])?
+        .into_iter()
+        .map(|value| to_f32(value, "camera target"))
+        .collect::<Result<Vec<_>, _>>()?;
+    Camera::orbit(
+        [target[0], target[1], target[2]],
+        to_f32(scalar_field(fields, "yaw")?, "camera yaw")?,
+        to_f32(scalar_field(fields, "pitch")?, "camera pitch")?,
+        to_f32(scalar_field(fields, "distance")?, "camera distance")?,
+        to_f32(scalar_field(fields, "fov")?, "camera fov")?,
+        to_f32(scalar_field(fields, "near")?, "camera near")?,
+    )
+    .map_err(|_| "camera values are outside supported bounds".into())
 }
 
 fn validate_parallel_styles(

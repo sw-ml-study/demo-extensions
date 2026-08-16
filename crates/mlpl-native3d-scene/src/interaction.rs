@@ -68,7 +68,7 @@ impl OrbitCamera {
         })
     }
 
-    /// Builds a world ray for a logical-pixel point with a top-left origin.
+    /// Builds a world ray for a physical-pixel point with a top-left origin.
     ///
     /// # Errors
     ///

@@ -11,9 +11,20 @@ pub struct PointerButtons(u8);
 impl PointerButtons {
     pub const NONE: Self = Self(0);
     pub const LEFT: Self = Self(1);
+    pub const MIDDLE: Self = Self(2);
+    pub const RIGHT: Self = Self(4);
     #[must_use]
     pub const fn contains(self, other: Self) -> bool {
         self.0 & other.0 == other.0
+    }
+
+    #[must_use]
+    pub const fn with(self, button: Self, pressed: bool) -> Self {
+        if pressed {
+            Self(self.0 | button.0)
+        } else {
+            Self(self.0 & !button.0)
+        }
     }
 }
 
@@ -23,9 +34,17 @@ pub struct Modifiers(u8);
 impl Modifiers {
     pub const NONE: Self = Self(0);
     pub const SHIFT: Self = Self(1);
+    pub const CONTROL: Self = Self(2);
+    pub const ALT: Self = Self(4);
+    pub const META: Self = Self(8);
     #[must_use]
     pub const fn contains(self, other: Self) -> bool {
         self.0 & other.0 == other.0
+    }
+
+    #[must_use]
+    pub const fn from_flags([shift, control, alt, meta]: [bool; 4]) -> Self {
+        Self((shift as u8) | ((control as u8) << 1) | ((alt as u8) << 2) | ((meta as u8) << 3))
     }
 }
 

@@ -1,6 +1,6 @@
 number = 2
 slug = "live_pointer_camera_host"
-status = "pending"
+status = "in-progress"
 description = "Using TDD, connect generic winit cursor, mouse-button, drag, wheel, and bound..."
 role = "production"
 context_files = []

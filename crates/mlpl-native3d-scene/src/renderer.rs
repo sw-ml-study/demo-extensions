@@ -8,6 +8,9 @@ const BACKGROUND: [u8; 4] = [8, 10, 16, 255];
 /// Perspective camera parameters for the renderer-neutral line pipeline.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Camera {
+    target: [f32; 3],
+    yaw: f32,
+    pitch: f32,
     distance: f32,
     vertical_fov_radians: f32,
     near: f32,
@@ -16,6 +19,9 @@ pub struct Camera {
 impl Default for Camera {
     fn default() -> Self {
         Self {
+            target: [0.0; 3],
+            yaw: 0.0,
+            pitch: 0.0,
             distance: 4.0,
             vertical_fov_radians: 60.0_f32.to_radians(),
             near: 0.1,
@@ -36,12 +42,58 @@ impl Camera {
         near: f32,
     ) -> Result<Self, RenderError> {
         let camera = Self {
+            target: [0.0; 3],
+            yaw: 0.0,
+            pitch: 0.0,
             distance,
             vertical_fov_radians,
             near,
         };
         validate_camera(camera)?;
         Ok(camera)
+    }
+
+    /// Creates an orbit camera looking at `target`.
+    ///
+    /// # Errors
+    ///
+    /// Rejects non-finite values, pitch outside `-1.55..=1.55`, invalid clip
+    /// distance, or field of view outside `(0.01, 3.13)` radians.
+    pub fn orbit(
+        target: [f32; 3],
+        yaw: f32,
+        pitch: f32,
+        distance: f32,
+        vertical_fov_radians: f32,
+        near: f32,
+    ) -> Result<Self, RenderError> {
+        let camera = Self {
+            target,
+            yaw,
+            pitch,
+            distance,
+            vertical_fov_radians,
+            near,
+        };
+        validate_camera(camera)?;
+        Ok(camera)
+    }
+
+    #[must_use]
+    pub const fn target(self) -> [f32; 3] {
+        self.target
+    }
+    #[must_use]
+    pub const fn yaw(self) -> f32 {
+        self.yaw
+    }
+    #[must_use]
+    pub const fn pitch(self) -> f32 {
+        self.pitch
+    }
+    #[must_use]
+    pub const fn distance(self) -> f32 {
+        self.distance
     }
 }
 
@@ -170,6 +222,16 @@ pub(crate) fn plan_lines(
         return Err(RenderError::NonFiniteRotation);
     }
     let (sin, cos) = rotation_y.sin_cos();
+    let (sin_yaw, cos_yaw) = camera.yaw.sin_cos();
+    let (sin_pitch, cos_pitch) = camera.pitch.sin_cos();
+    let eye = [
+        camera.target[0] + camera.distance * cos_pitch * sin_yaw,
+        camera.target[1] + camera.distance * sin_pitch,
+        camera.target[2] + camera.distance * cos_pitch * cos_yaw,
+    ];
+    let forward = normalize(sub(camera.target, eye)).ok_or(RenderError::InvalidCamera)?;
+    let right = normalize(cross(forward, [0.0, 1.0, 0.0])).ok_or(RenderError::InvalidCamera)?;
+    let up = cross(right, forward);
     let transformed: Vec<[f32; 3]> = scene
         .positions
         .values
@@ -177,7 +239,12 @@ pub(crate) fn plan_lines(
         .map(|point| {
             let x = point[0].mul_add(cos, point[2] * sin);
             let z = (-point[0]).mul_add(sin, point[2] * cos);
-            [x, point[1], camera.distance - z]
+            let relative = sub([x, point[1], z], eye);
+            [
+                dot(relative, right),
+                dot(relative, up),
+                dot(relative, forward),
+            ]
         })
         .collect();
 
@@ -206,7 +273,11 @@ pub(crate) fn plan_lines(
 }
 
 fn validate_camera(camera: Camera) -> Result<(), RenderError> {
-    if !camera.distance.is_finite()
+    if !camera.target.into_iter().all(f32::is_finite)
+        || !camera.yaw.is_finite()
+        || !camera.pitch.is_finite()
+        || !(-1.55..=1.55).contains(&camera.pitch)
+        || !camera.distance.is_finite()
         || !camera.vertical_fov_radians.is_finite()
         || !camera.near.is_finite()
         || camera.distance <= camera.near
@@ -216,6 +287,28 @@ fn validate_camera(camera: Camera) -> Result<(), RenderError> {
         return Err(RenderError::InvalidCamera);
     }
     Ok(())
+}
+
+fn sub(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
+    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+fn dot(a: [f32; 3], b: [f32; 3]) -> f32 {
+    a[0].mul_add(b[0], a[1].mul_add(b[1], a[2] * b[2]))
+}
+
+fn cross(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
+}
+
+fn normalize(value: [f32; 3]) -> Option<[f32; 3]> {
+    let length = dot(value, value).sqrt();
+    (length > f32::EPSILON && length.is_finite())
+        .then(|| [value[0] / length, value[1] / length, value[2] / length])
 }
 
 fn clip_near(mut start: [f32; 3], mut end: [f32; 3], near: f32) -> Option<([f32; 3], [f32; 3])> {
