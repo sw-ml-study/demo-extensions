@@ -1,0 +1,78 @@
+# Renderer-neutral tic-tac-toe line geometry, entirely assembled in MLPL.
+include "model.mlpl";
+include "../../lib/native3d/geometry.mlpl";
+
+def u:ttt_line_state() { {positions: fill([0],0),edges: fill([0],0),colors: fill([0],0),thicknesses: fill([0],0),ids: fill([0],0),count:0} }
+
+def u:ttt_add_segment(state,start,end,color,thickness) {
+  vertex=state.count*2;
+  {positions: concat(state.positions,concat(start,end)),edges: concat(state.edges,[vertex,vertex+1]),colors: concat(state.colors,color),thicknesses: concat(state.thicknesses,thickness),ids: concat(state.ids,state.count),count: state.count+1}
+}
+
+def u:ttt_cell_center(cell,height) {
+  row=floor(cell/3); column=cell-row*3; [column-1,height,row-1]
+}
+
+def u:ttt_add_grid(state) {
+  state=u:ttt_add_segment(state,[-0.5,0,-1.5],[-0.5,0,1.5],[0.65,0.7,0.8,1],2);
+  state=u:ttt_add_segment(state,[0.5,0,-1.5],[0.5,0,1.5],[0.65,0.7,0.8,1],2);
+  state=u:ttt_add_segment(state,[-1.5,0,-0.5],[1.5,0,-0.5],[0.65,0.7,0.8,1],2);
+  u:ttt_add_segment(state,[-1.5,0,0.5],[1.5,0,0.5],[0.65,0.7,0.8,1],2)
+}
+
+def u:ttt_add_x(state,cell) {
+  center=u:ttt_cell_center(cell,0.02); x=take(center,0,0); z=take(center,0,2); color=[0.2,0.8,1,1];
+  state=u:ttt_add_segment(state,[x-0.3,0.02,z-0.3],[x+0.3,0.02,z+0.3],color,4);
+  u:ttt_add_segment(state,[x-0.3,0.02,z+0.3],[x+0.3,0.02,z-0.3],color,4)
+}
+
+def u:ttt_add_o_from(state,x,z,segment) {
+  if eq(segment,8) { state } else {
+    a=segment*0.7853981633974483; b=(segment+1)*0.7853981633974483; color=[1,0.45,0.2,1];
+    next=u:ttt_add_segment(state,[x+cos(a)*0.34,0.02,z+sin(a)*0.34],[x+cos(b)*0.34,0.02,z+sin(b)*0.34],color,4);
+    u:ttt_add_o_from(next,x,z,segment+1)
+  }
+}
+
+def u:ttt_add_o(state,cell) { center=u:ttt_cell_center(cell,0.02); u:ttt_add_o_from(state,take(center,0,0),take(center,0,2),0) }
+
+def u:ttt_add_marks(state,board,cell) {
+  if eq(cell,9) { state } else {
+    mark=take(board,0,cell); next=if eq(mark,1) { u:ttt_add_x(state,cell) } else { if eq(mark,-1) { u:ttt_add_o(state,cell) } else { state } };
+    u:ttt_add_marks(next,board,cell+1)
+  }
+}
+
+def u:ttt_add_hover(state,board,cell) {
+  outcome=u:ttt_outcome(board);
+  if lt(cell,0)+gt(cell,8)+(1-equal(outcome.status,"playing")) { state } else { if 1-eq(take(board,0,cell),0) { state } else {
+    center=u:ttt_cell_center(cell,0.01); x=take(center,0,0); z=take(center,0,2); color=[0.45,1,0.45,1];
+    state=u:ttt_add_segment(state,[x-0.42,0.01,z-0.42],[x+0.42,0.01,z-0.42],color,2);
+    state=u:ttt_add_segment(state,[x+0.42,0.01,z-0.42],[x+0.42,0.01,z+0.42],color,2);
+    state=u:ttt_add_segment(state,[x+0.42,0.01,z+0.42],[x-0.42,0.01,z+0.42],color,2);
+    u:ttt_add_segment(state,[x-0.42,0.01,z+0.42],[x-0.42,0.01,z-0.42],color,2)
+  } }
+}
+
+def u:ttt_winning_line(board,line) {
+  if eq(line,8) { -1 } else {
+    a=take([0,3,6,0,1,2,0,2],0,line); b=take([1,4,7,3,4,5,4,4],0,line); c=take([2,5,8,6,7,8,8,6],0,line);
+    if u:ttt_line_winner(board,a,b,c) { line } else { u:ttt_winning_line(board,line+1) }
+  }
+}
+
+def u:ttt_add_result(state,board) {
+  outcome=u:ttt_outcome(board);
+  if equal(outcome.status,"won") {
+    line=u:ttt_winning_line(board,0); a=take([0,3,6,0,1,2,0,2],0,line); c=take([2,5,8,6,7,8,8,6],0,line);
+    u:ttt_add_segment(state,u:ttt_cell_center(a,0.06),u:ttt_cell_center(c,0.06),[1,0.9,0.15,1],6)
+  } else { state }
+}
+
+def u:ttt_scene(board,hover_cell) {
+  if (1-u:ttt_valid_board(board))+(1-eq(hover_cell,floor(hover_cell)))+lt(hover_cell,-1)+gt(hover_cell,8) { err({kind:"tic_tac_toe_scene",message:"invalid board or hover cell"}) } else {
+    state=u:ttt_add_grid(u:ttt_line_state()); state=u:ttt_add_marks(state,board,0); state=u:ttt_add_hover(state,board,hover_cell); state=u:ttt_add_result(state,board);
+    style={colors: reshape(state.colors,[state.count,4]),thicknesses: state.thicknesses,ids: state.ids};
+    u:n3d_lines(reshape(state.positions,[state.count*2,3]),reshape(state.edges,[state.count,2]),style,0)
+  }
+}

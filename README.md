@@ -29,7 +29,7 @@ crates/mlpl-extension-sdk/      Safe author-facing SDK scaffold
 crates/mlpl-native3d-scene/      Generic line-scene parser and validation
 lib/native3d/                    Reusable MLPL camera, picking, geometry, app loop
 demos/wireframe-cube/            MLPL-owned bulk-array cube scene
-demos/tic-tac-toe/               Pure MLPL board rules and deterministic minimax
+demos/tic-tac-toe/               MLPL rules, minimax, and generic line scene
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
 extensions/boundary-probe/      Public-SDK array/handle/record host probe
 extensions/native3d/            Generic headless viewer and bulk line provider

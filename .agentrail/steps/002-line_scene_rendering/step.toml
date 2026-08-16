@@ -1,6 +1,6 @@
 number = 2
 slug = "line_scene_rendering"
-status = "pending"
+status = "in-progress"
 description = "Using native mlplunit and focused Rust TDD where needed, map MLPL tic-tac-toe..."
 role = "production"
 context_files = []

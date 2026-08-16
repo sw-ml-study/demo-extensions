@@ -29,3 +29,18 @@ moves, row/column wins, draw and in-progress outcomes, X/O plus first/second
 setup, immediate wins, required blocks, and deterministic empty-board choice.
 The later rendering and interaction steps consume this model without changing
 its rules.
+
+## Generic line scene
+
+`scene.mlpl` maps model state to the reusable native3d bulk-line contract. The
+empty board is four grid segments. Each X is two diagonal segments and each O
+is an eight-segment polygon. An empty hovered cell gets a four-segment green
+outline; a win gets a thick gold line through its winning cells. Hover is
+suppressed for occupied cells and terminal boards.
+
+Every line owns two `[x,y,z]` endpoints. The resulting arrays have shapes
+`[2M,3]` positions, `[M,2]` edges, `[M,4]` colors, and parallel `[M]`
+thickness/ID vectors. IDs are deterministic `0..M-1`, rotation is zero, and
+all arrays are owned MLPL values. No tic-tac-toe renderer or mark primitive was
+added to Rust. Native mlplunit pins empty, marked, hovered, occupied-hover, and
+winning geometry plus deterministic output.

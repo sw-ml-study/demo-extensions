@@ -1,0 +1,33 @@
+include "demos/tic-tac-toe/scene.mlpl";
+
+@test {name: "tic tac toe empty board is a generic bulk line grid", tags: ["native3d", "tic-tac-toe", "scene"]}
+def u:test_ttt_empty_scene() {
+  scene=unwrap(u:ttt_scene(u:ttt_empty_board(),-1));
+  u:assert_eq(shape(scene.positions),[8,3],"four grid segments duplicate eight endpoints")?;
+  u:assert_eq(shape(scene.edges),[4,2],"grid has four generic edges")?;
+  u:assert_eq(shape(scene.colors),[4,4],"grid colors are parallel")?;
+  u:assert_eq(scene.ids,range(4),"stable ids are sequential")?;
+  u:assert_eq(scene.rotation_y_speed,0,"board does not rotate")
+}
+
+@test {name: "tic tac toe renders polygonal marks without native game primitives", tags: ["native3d", "tic-tac-toe", "marks"]}
+def u:test_ttt_marks_scene() {
+  board=[1,-1,0,0,0,0,0,0,0]; scene=unwrap(u:ttt_scene(board,-1));
+  u:assert_eq(shape(scene.edges),[14,2],"grid plus two X and eight O segments")?;
+  u:assert_eq(shape(scene.positions),[28,3],"every line owns two xyz endpoints")?;
+  u:assert_eq(shape(scene.thicknesses),[14],"thickness is parallel")?;
+  u:assert_eq(scene.ids,range(14),"marks retain deterministic ids")
+}
+
+@test {name: "tic tac toe hover and winner feedback remain MLPL geometry", tags: ["native3d", "tic-tac-toe", "feedback"]}
+def u:test_ttt_feedback_scene() {
+  hovered=unwrap(u:ttt_scene(u:ttt_empty_board(),4));
+  occupied=unwrap(u:ttt_scene([1,0,0,0,0,0,0,0,0],0));
+  won=unwrap(u:ttt_scene([1,1,1,-1,-1,0,0,0,0],8));
+  u:assert_eq(shape(hovered.edges),[8,2],"empty hovered cell adds four outline segments")?;
+  u:assert_eq(shape(occupied.edges),[6,2],"occupied hover is ignored and only X is added")?;
+  u:assert_eq(shape(won.edges),[27,2],"winning board adds one MLPL-owned result line and ignores hover")?;
+  u:assert_eq(u:ttt_scene([1,1,1,-1,-1,0,0,0,0],8),u:ttt_scene([1,1,1,-1,-1,0,0,0,0],8),"scene generation is deterministic")
+}
+
+u:run_registered_tests()
