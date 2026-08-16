@@ -1,0 +1,1 @@
+Added the MLPL-owned Life application reducer with initially empty state, ray/plane cell picking, stationary toggle and Ctrl-drag painting, deterministic camera gesture arbitration, shared orbit/pan/zoom, bounded animation, speed and preset controls, resize/close handling, and an exact visible help legend. Documented and queued topology-aware torus and sphere follow-on work.
