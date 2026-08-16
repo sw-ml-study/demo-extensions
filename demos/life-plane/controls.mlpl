@@ -13,7 +13,8 @@ def u:life_app_defaults() {
 }
 
 def u:life_restate(state,grid,running,generation,speed,accumulator_ms,camera,hover_cell,close_requested,random_seed,press_x,press_y,gesture_dragged,painting) {
-  u:life_app_state(grid,running,generation,speed,accumulator_ms,camera,state.viewport_width,state.viewport_height,hover_cell,state.revision+1,close_requested,random_seed,press_x,press_y,gesture_dragged,painting)
+  visual_changed=(1-equal(grid,state.grid))+(1-equal(camera,state.camera))+(1-eq(hover_cell,state.hover_cell)); visual_changed=if visual_changed { 1 } else { 0 };
+  u:life_app_state(grid,running,generation,speed,accumulator_ms,camera,state.viewport_width,state.viewport_height,hover_cell,state.revision+visual_changed,close_requested,random_seed,press_x,press_y,gesture_dragged,painting)
 }
 
 def u:life_pointer_cell(state,event) {
@@ -88,7 +89,7 @@ def u:life_reduce(state,event) {
       camera=u:n3d_camera_reduce(state.camera,event); released=u:life_restate(state,state.grid,state.running,state.generation,state.speed,state.accumulator_ms,camera,-1,state.close_requested,state.random_seed,state.press_x,state.press_y,0,0); cell=unwrap(u:life_pointer_cell(released,event)); if equal(event.button,"left")*(1-state.gesture_dragged) { u:life_toggle_index(released,cell) } else { released }
     }
   } else { if equal(event.kind,"wheel") { camera=u:n3d_camera_reduce(state.camera,event); u:life_restate(state,state.grid,state.running,state.generation,state.speed,state.accumulator_ms,camera,state.hover_cell,state.close_requested,state.random_seed,state.press_x,state.press_y,state.gesture_dragged,state.painting) } else {
-    if equal(event.kind,"resize") { resized=u:life_app_state(state.grid,state.running,state.generation,state.speed,state.accumulator_ms,state.camera,u:n3d_clamp(event.width,1,8192),u:n3d_clamp(event.height,1,8192),-1,state.revision+1,state.close_requested,state.random_seed,state.press_x,state.press_y,state.gesture_dragged,state.painting); resized } else {
+    if equal(event.kind,"resize") { resized=u:life_app_state(state.grid,state.running,state.generation,state.speed,state.accumulator_ms,state.camera,u:n3d_clamp(event.width,1,8192),u:n3d_clamp(event.height,1,8192),-1,state.revision,state.close_requested,state.random_seed,state.press_x,state.press_y,state.gesture_dragged,state.painting); resized } else {
       if equal(event.kind,"close") { u:life_restate(state,state.grid,0,state.generation,state.speed,state.accumulator_ms,state.camera,-1,1,state.random_seed,state.press_x,state.press_y,0,0) } else { state }
     }
   } } } } } } }

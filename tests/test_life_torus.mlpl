@@ -34,4 +34,13 @@ def u:test_life_torus_click() {
   u:assert_eq(reduce(:add,state.grid.cells),1,"stationary click toggles the picked torus cell")
 }
 
+@test {name:"Toroidal Life emits bounded stable-ID cell patches",tags:["native3d","life","torus","patch"]}
+def u:test_life_torus_patch() {
+  before=u:life_torus_defaults(); after=u:life_torus_reduce(before,{kind:"key",key:"g"}); patch=u:life_torus_scene_patch(before,after);
+  u:assert_eq(shape(patch.ids),[20],"glider adds five four-line cells")?;
+  u:assert_true(gt(take(patch.ids,0,0),1599),"cell IDs do not collide with the 1600 lattice lines")?;
+  evolved=u:life_torus_reduce(after,{kind:"key",key:"n"}); next=u:life_torus_scene_patch(after,evolved);
+  u:assert_true(lt(tally(next.ids)+tally(next.remove_ids),1600),"generation patch is smaller than the torus lattice")
+}
+
 u:run_registered_tests()

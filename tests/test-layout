@@ -25,6 +25,7 @@ crates/mlpl-native3d-window/tests/live_applet.rs
 crates/mlpl-native3d-window/tests/tic_tac_toe_applet.rs
 crates/mlpl-native3d-window/tests/life_applet.rs
 crates/mlpl-native3d-window/tests/life_torus_applet.rs
+crates/mlpl-native3d-window/tests/scene_patch.rs
 crates/mlpl-native3d-window/tests/input_contract.rs
 crates/mlpl-native3d-window/tests/camera_command.rs
 demos/wireframe-cube/default-scene.mlpl
@@ -81,6 +82,7 @@ docs/life-model.md
 docs/life-controls.md
 docs/life-acceptance.md
 docs/life-torus.md
+docs/retained-scene-patches.md
 tests/test_tic_tac_toe_scene.mlpl
 tests/test_wireframe_cube_scene.mlpl
 tests/test_wireframe_cube_controls.mlpl

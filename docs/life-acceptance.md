@@ -46,12 +46,11 @@ visible binding. MLPL also accepts winit's `equal`/`minus` spellings for the
 displayed plus/minus speed controls.
 
 The worker/Port regression proves that a run toggle produces no command, a
-glider generation produces one scene replacement, and wheel input produces one
-view update. This is the first retained-scene, or “shadow DOM,” slice. A future
-generic ID-addressed patch protocol should update changed line/cell objects
-without rebuilding a full scene. Until that exists, generation and click
-updates still pay the complete MLPL geometry cost; camera and idle motion do
-not.
+glider generation produces one stable-ID patch, and wheel input produces one
+view update. The generic retained-scene protocol now sends four line upserts or
+removals per changed cell and requests a complete MLPL snapshot after a rejected
+patch. Rust still rebuilds its validated contiguous line scene after accepting
+the diff; incremental GPU-buffer mutation remains future work.
 
 ## Memory and work bounds
 
@@ -59,8 +58,9 @@ The MLPL grid is capped at 256×256 and this demo uses 40×40. Input buffering i
 fixed at 64 normalized events with coalescing for pointer and wheel traffic.
 Frame delivery is single-flight across the Port, and each reducer frame
 advances at most one generation. A scene
-replacement contains 82 grid lines plus four lines per live cell; view updates
-contain no arrays. All values crossing the Port are owned.
+snapshot contains 82 grid lines plus four lines per live cell; ordinary cell
+updates carry only changed-cell lines and view updates contain no geometry
+arrays. All values crossing the Port are owned.
 
 ## Ownership
 

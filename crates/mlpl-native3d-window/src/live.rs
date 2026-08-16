@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::interaction::{InputEvent, Modifiers, PointerButton, PointerButtons};
 use mlpl_array::DenseArray;
@@ -70,10 +70,100 @@ pub fn life_torus_applet_source() -> String {
 #[derive(Debug)]
 pub struct SceneCommand {
     pub scene: LineScene,
+    pub objects: BTreeMap<u64, LineObject>,
     pub camera: Camera,
     pub rotation_speed: f32,
     pub revision: u64,
     pub help: String,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct LineObject {
+    pub start: [f32; 3],
+    pub end: [f32; 3],
+    pub color: [f32; 4],
+    pub thickness: f32,
+}
+
+#[derive(Clone, Debug)]
+pub struct ScenePatchCommand {
+    pub base_revision: u64,
+    pub target_revision: u64,
+    pub upserts: BTreeMap<u64, LineObject>,
+    pub remove_ids: Vec<u64>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct RetainedScene {
+    scene: LineScene,
+    objects: BTreeMap<u64, LineObject>,
+    revision: u64,
+    rotation_speed: f32,
+}
+
+impl RetainedScene {
+    /// Creates retained ID-addressed state from a validated complete scene.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the validated command cannot initialize retained state.
+    pub fn from_scene_command(command: &SceneCommand) -> Result<Self, String> {
+        Ok(Self {
+            scene: command.scene.clone(),
+            objects: command.objects.clone(),
+            revision: command.revision,
+            rotation_speed: command.rotation_speed,
+        })
+    }
+
+    /// Applies a complete patch transaction or leaves the scene unchanged.
+    ///
+    /// # Errors
+    ///
+    /// Rejects stale revisions, unknown removals, or a candidate scene that
+    /// violates generic line-scene bounds.
+    pub fn apply(&mut self, patch: &ScenePatchCommand) -> Result<(), String> {
+        if patch.base_revision != self.revision || patch.target_revision <= patch.base_revision {
+            return Err("scene patch revision mismatch".into());
+        }
+        let mut next = self.objects.clone();
+        for id in &patch.remove_ids {
+            if next.remove(id).is_none() {
+                return Err("scene patch removes an unknown id".into());
+            }
+        }
+        for (id, line) in &patch.upserts {
+            next.insert(*id, line.clone());
+        }
+        let scene = scene_from_objects(&next, self.rotation_speed)?;
+        self.objects = next;
+        self.scene = scene;
+        self.revision = patch.target_revision;
+        Ok(())
+    }
+
+    /// Advances the shared visual revision for a geometry-preserving view update.
+    ///
+    /// # Errors
+    ///
+    /// Rejects a view revision older than the retained scene revision.
+    pub fn apply_view_revision(&mut self, revision: u64) -> Result<(), String> {
+        if revision < self.revision {
+            return Err("view revision is stale".into());
+        }
+        self.revision = revision;
+        Ok(())
+    }
+
+    #[must_use]
+    pub const fn revision(&self) -> u64 {
+        self.revision
+    }
+
+    #[must_use]
+    pub const fn scene(&self) -> &LineScene {
+        &self.scene
+    }
 }
 
 #[derive(Debug)]
@@ -86,6 +176,7 @@ pub struct ViewCommand {
 #[derive(Debug)]
 pub enum LiveCommand {
     Scene(SceneCommand),
+    Patch(ScenePatchCommand),
     View(ViewCommand),
     FrameAck(u64),
 }
@@ -110,6 +201,11 @@ pub fn resize_event(width: u32, height: u32) -> Value {
 #[must_use]
 pub fn close_event() -> Value {
     record([("kind", Value::Str("close".into()))])
+}
+
+#[must_use]
+pub fn resync_event() -> Value {
+    record([("kind", Value::Str("resync".into()))])
 }
 
 /// Encodes one validated, renderer-neutral input event as an owned MLPL record.
@@ -266,10 +362,69 @@ pub fn parse_live_command(value: Value) -> Result<LiveCommand, String> {
     let fields = record_fields(value, "command")?;
     match string_field(&fields, "op")? {
         "set_scene" => parse_scene_fields(&fields).map(LiveCommand::Scene),
+        "patch_scene" => parse_scene_patch_fields(&fields).map(LiveCommand::Patch),
         "set_view" => parse_view_fields(&fields).map(LiveCommand::View),
         "frame_ack" => parse_revision(&fields).map(LiveCommand::FrameAck),
         _ => Err("unsupported live command".into()),
     }
+}
+
+/// Decodes one bounded, versioned ID-addressed line patch.
+///
+/// # Errors
+///
+/// Rejects malformed records, invalid arrays or styles, duplicate/conflicting
+/// IDs, non-advancing revisions, and descriptors above the operation bound.
+pub fn parse_scene_patch_command(value: Value) -> Result<ScenePatchCommand, String> {
+    let fields = record_fields(value, "command")?;
+    if string_field(&fields, "op")? != "patch_scene" {
+        return Err("unsupported live command".into());
+    }
+    parse_scene_patch_fields(&fields)
+}
+
+fn parse_scene_patch_fields(fields: &BTreeMap<String, Value>) -> Result<ScenePatchCommand, String> {
+    const MAX_PATCH_LINES: usize = 100_000;
+    let base_revision = parse_named_revision(fields, "base_revision")?;
+    let target_revision = parse_named_revision(fields, "target_revision")?;
+    if target_revision <= base_revision {
+        return Err("target_revision must advance".into());
+    }
+    let ids_raw = vector_field(fields, "ids")?;
+    let remove_raw = vector_field(fields, "remove_ids")?;
+    if ids_raw.len().saturating_add(remove_raw.len()) > MAX_PATCH_LINES {
+        return Err("scene patch exceeds line budget".into());
+    }
+    let starts = array_field(fields, "starts", &[ids_raw.len(), 3])?;
+    let ends = array_field(fields, "ends", &[ids_raw.len(), 3])?;
+    let colors = array_field(fields, "colors", &[ids_raw.len(), 4])?;
+    let thicknesses = array_field(fields, "thicknesses", &[ids_raw.len()])?;
+    let ids = parse_unique_ids(&ids_raw, "id")?;
+    let remove_ids = parse_unique_ids(&remove_raw, "remove id")?;
+    if ids.iter().any(|id| remove_ids.contains(id)) {
+        return Err("scene patch cannot upsert and remove the same id".into());
+    }
+    let mut upserts = BTreeMap::new();
+    for (row, id) in ids.iter().copied().enumerate() {
+        let start = triple(&starts[row * 3..row * 3 + 3], "start")?;
+        let end = triple(&ends[row * 3..row * 3 + 3], "end")?;
+        let color = color4(&colors[row * 4..row * 4 + 4])?;
+        let thickness = to_f32(thicknesses[row], "thickness")?;
+        let line = LineObject {
+            start,
+            end,
+            color,
+            thickness,
+        };
+        validate_line_object(&line)?;
+        upserts.insert(id, line);
+    }
+    Ok(ScenePatchCommand {
+        base_revision,
+        target_revision,
+        upserts,
+        remove_ids,
+    })
 }
 
 fn parse_scene_fields(fields: &BTreeMap<String, Value>) -> Result<SceneCommand, String> {
@@ -279,7 +434,7 @@ fn parse_scene_fields(fields: &BTreeMap<String, Value>) -> Result<SceneCommand, 
     let colors = array_field(fields, "colors", &[edge_count, 4])?;
     let thicknesses = array_field(fields, "thicknesses", &[edge_count])?;
     let ids = array_field(fields, "ids", &[edge_count])?;
-    validate_parallel_styles(&colors, &thicknesses, &ids)?;
+    let parsed_ids = parse_unique_ids(&ids, "id")?;
     let edges = raw_edges
         .iter()
         .map(|value| numeric_index(*value, "edge"))
@@ -304,19 +459,40 @@ fn parse_scene_fields(fields: &BTreeMap<String, Value>) -> Result<SceneCommand, 
         .into_iter()
         .map(|value| to_f32(value, "thickness"))
         .collect::<Result<Vec<_>, _>>()?;
-    let scene = LineScene::from_parallel_arrays(
-        positions
-            .into_iter()
-            .map(|value| to_f32(value, "position"))
-            .collect::<Result<Vec<_>, _>>()?,
-        edges,
-        rotation_speed,
-        colors,
-        thicknesses,
-    )
-    .map_err(|error| format!("invalid live scene: {error:?}"))?;
+    let positions = positions
+        .into_iter()
+        .map(|value| to_f32(value, "position"))
+        .collect::<Result<Vec<_>, _>>()?;
+    let objects = parsed_ids
+        .into_iter()
+        .enumerate()
+        .map(|(row, id)| {
+            let edge = &edges[row * 2..row * 2 + 2];
+            (
+                id,
+                LineObject {
+                    start: [
+                        positions[edge[0] * 3],
+                        positions[edge[0] * 3 + 1],
+                        positions[edge[0] * 3 + 2],
+                    ],
+                    end: [
+                        positions[edge[1] * 3],
+                        positions[edge[1] * 3 + 1],
+                        positions[edge[1] * 3 + 2],
+                    ],
+                    color: colors[row],
+                    thickness: thicknesses[row],
+                },
+            )
+        })
+        .collect();
+    let scene =
+        LineScene::from_parallel_arrays(positions, edges, rotation_speed, colors, thicknesses)
+            .map_err(|error| format!("invalid live scene: {error:?}"))?;
     Ok(SceneCommand {
         scene,
+        objects,
         camera: view.camera,
         rotation_speed,
         revision: view.revision,
@@ -340,11 +516,12 @@ fn parse_view_fields(fields: &BTreeMap<String, Value>) -> Result<ViewCommand, St
 }
 
 fn parse_revision(fields: &BTreeMap<String, Value>) -> Result<u64, String> {
-    u64::try_from(numeric_index(
-        scalar_field(fields, "revision")?,
-        "revision",
-    )?)
-    .map_err(|_| "revision is out of range".to_owned())
+    parse_named_revision(fields, "revision")
+}
+
+fn parse_named_revision(fields: &BTreeMap<String, Value>, name: &str) -> Result<u64, String> {
+    u64::try_from(numeric_index(scalar_field(fields, name)?, name)?)
+        .map_err(|_| "revision is out of range".to_owned())
 }
 
 fn parse_camera(fields: &BTreeMap<String, Value>) -> Result<Camera, String> {
@@ -363,17 +540,79 @@ fn parse_camera(fields: &BTreeMap<String, Value>) -> Result<Camera, String> {
     .map_err(|_| "camera values are outside supported bounds".into())
 }
 
-fn validate_parallel_styles(
-    _colors: &[f64],
-    _thicknesses: &[f64],
-    ids: &[f64],
-) -> Result<(), String> {
-    for (index, id) in ids.iter().copied().enumerate() {
-        if numeric_index(id, "id")? != index {
-            return Err("line ids must be stable and contiguous".into());
+fn parse_unique_ids(values: &[f64], name: &str) -> Result<Vec<u64>, String> {
+    let mut seen = BTreeSet::new();
+    let mut ids = Vec::with_capacity(values.len());
+    for value in values {
+        let id = u64::try_from(numeric_index(*value, name)?)
+            .map_err(|_| format!("{name} is out of range"))?;
+        if !seen.insert(id) {
+            return Err(format!("duplicate {name}"));
         }
+        ids.push(id);
     }
-    Ok(())
+    Ok(ids)
+}
+
+fn vector_field(fields: &BTreeMap<String, Value>, name: &str) -> Result<Vec<f64>, String> {
+    let Value::Array(array) = fields.get(name).ok_or_else(|| format!("missing {name}"))? else {
+        return Err(format!("{name} must be an array"));
+    };
+    if array.shape().dims().len() != 1 {
+        return Err(format!("{name} has the wrong shape"));
+    }
+    Ok(array.data().to_vec())
+}
+
+fn triple(values: &[f64], name: &str) -> Result<[f32; 3], String> {
+    Ok([
+        to_f32(values[0], name)?,
+        to_f32(values[1], name)?,
+        to_f32(values[2], name)?,
+    ])
+}
+
+fn color4(values: &[f64]) -> Result<[f32; 4], String> {
+    Ok([
+        to_f32(values[0], "color")?,
+        to_f32(values[1], "color")?,
+        to_f32(values[2], "color")?,
+        to_f32(values[3], "color")?,
+    ])
+}
+
+fn validate_line_object(line: &LineObject) -> Result<(), String> {
+    LineScene::from_parallel_arrays(
+        line.start.into_iter().chain(line.end).collect(),
+        vec![0, 1],
+        0.0,
+        vec![line.color],
+        vec![line.thickness],
+    )
+    .map(|_| ())
+    .map_err(|error| format!("invalid patched line: {error:?}"))
+}
+
+fn scene_from_objects(
+    objects: &BTreeMap<u64, LineObject>,
+    rotation_speed: f32,
+) -> Result<LineScene, String> {
+    if objects.is_empty() {
+        return Err("retained scene cannot be empty".into());
+    }
+    let mut positions = Vec::with_capacity(objects.len() * 6);
+    let mut edges = Vec::with_capacity(objects.len() * 2);
+    let mut colors = Vec::with_capacity(objects.len());
+    let mut thicknesses = Vec::with_capacity(objects.len());
+    for (index, line) in objects.values().enumerate() {
+        positions.extend(line.start);
+        positions.extend(line.end);
+        edges.extend([index * 2, index * 2 + 1]);
+        colors.push(line.color);
+        thicknesses.push(line.thickness);
+    }
+    LineScene::from_parallel_arrays(positions, edges, rotation_speed, colors, thicknesses)
+        .map_err(|error| format!("invalid retained scene: {error:?}"))
 }
 
 fn matrix_field(

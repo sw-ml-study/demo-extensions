@@ -240,6 +240,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   retained view diffs, bounds, platform evidence, and remaining patch work.
 - [Toroidal Life](docs/life-torus.md) — two-axis wrap topology, curved mapping,
   surface picking, controls, ownership, and current performance bounds.
+- [Retained scene patches](docs/retained-scene-patches.md) — stable-ID atomic
+  line diffs, revision/resync behavior, bounds, ownership, and measured scope.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

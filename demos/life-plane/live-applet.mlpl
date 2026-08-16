@@ -11,12 +11,16 @@ def u:life_submit_view(state) {
   ok(state)
 }
 
+def u:life_submit_patch(before,after) { port_send(port,u:life_scene_patch(before,after)); ok(after) }
+
 def u:life_on_event(event,state) {
   next=u:life_reduce(state,event); geometry_changed=(1-equal(next.grid,state.grid))+(1-eq(next.hover_cell,state.hover_cell)); view_changed=1-equal(next.camera,state.camera);
-  if geometry_changed { u:life_submit(next)? } else { if view_changed { u:life_submit_view(next)? } };
+  if geometry_changed { u:life_submit_patch(state,next)? } else { if view_changed { u:life_submit_view(next)? } };
   if equal(event.kind,"frame") { port_send(port,{op:"frame_ack",revision: next.revision}) };
   next
 }
 
+def u:life_on_resync(event,state) { u:life_submit(state)?; state }
+
 state=u:life_app_defaults(); u:life_submit(state)?;
-on(port,"key",:u:life_on_event); on(port,"frame",:u:life_on_event); on(port,"pointer_move",:u:life_on_event); on(port,"pointer_down",:u:life_on_event); on(port,"pointer_up",:u:life_on_event); on(port,"wheel",:u:life_on_event); on(port,"resize",:u:life_on_event); run(port,state)
+on(port,"key",:u:life_on_event); on(port,"frame",:u:life_on_event); on(port,"pointer_move",:u:life_on_event); on(port,"pointer_down",:u:life_on_event); on(port,"pointer_up",:u:life_on_event); on(port,"wheel",:u:life_on_event); on(port,"resize",:u:life_on_event); on(port,"resync",:u:life_on_resync); run(port,state)

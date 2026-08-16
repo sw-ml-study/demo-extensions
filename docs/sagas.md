@@ -152,9 +152,34 @@ than display refresh, then introduce generic shadow-scene patches.
 3. Add versioned ID-addressed atomic add/update/remove patches and use them for
    changed Life cells instead of complete scene replacement.
 
+The first two steps and the torus insertion are complete. The active patch
+step is the performance and transport foundation for the queued Model Atlas.
+
 Acceptance: at most one frame is outstanding across the Port, discrete input
 stays ordered, malformed or stale patches fail closed, and retained Rust scene
 objects contain no Life rules.
+
+## Queued: native3d-model-atlas
+
+Purpose: connect bounded model-file analysis from `demo-ml-utils` to this
+repository's generic native renderer without loading a whole model file or
+tensor payload into memory.
+
+1. Define a range-read, optionally multi-pass scanner that retains only capped
+   catalog/summary IR and fetches selected details on demand.
+2. Pin a versioned renderer-neutral interchange compatible with tensor-city
+   Safetensors/GGUF output and explicit provenance.
+3. Render interactive tensor buildings, districts, labels, selection,
+   filtering, camera controls, and bounded level of detail.
+4. Add architecture metadata plus visibly labeled tensor-name inference for
+   embeddings, attention, MLP, normalization, MoE, Mamba/SSM, and output heads.
+5. Add on-demand bounded statistics, histogram/surface, and quantization-error
+   detail views using stable-ID scene patches.
+
+Acceptance: total model size does not determine resident payload memory; every
+range/pass/cache budget fails closed; metadata and heuristic inference remain
+visibly distinct; Rust contains no model semantics; and macOS/Linux use the
+same native winit/wgpu path.
 
 ## In progress: native3d-life-surfaces
 

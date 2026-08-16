@@ -1,0 +1,8 @@
+number = 9
+slug = "model-atlas-detail"
+status = "pending"
+description = "Add bounded interactive tensor drill-down views using renderer-neutral statis..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T12:57:43"
+commits = []

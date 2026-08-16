@@ -30,9 +30,10 @@ proves the independently assembled MLPL source drives the generic host,
 retains geometry for camera-only updates, acknowledges frames, and tears down.
 
 The lattice contains 1,600 lines (two per cell); each live cell adds four
-lines. Camera changes use retained `set_view` diffs and frame delivery is
-single-flight. Cell changes and generations still replace the complete scene
-until the queued generic ID-addressed scene-patch step lands.
+lines. Camera changes use retained `set_view` diffs, cell changes use stable-ID
+line patches, and frame delivery is single-flight. Rust currently rebuilds the
+contiguous validated scene after applying a patch atomically; incremental GPU
+buffer writes are not claimed.
 
 The source and dependencies are conditional only through winit/wgpu's platform
 backends and build targets; the same MLPL app and Rust host build on macOS and

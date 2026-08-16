@@ -20,4 +20,15 @@ def u:test_life_cell_scene() {
   u:assert_eq(scene.rotation_y_speed,0,"Life plane never delegates animation semantics")
 }
 
+@test {name:"Life scene patches address only changed cells by stable ID",tags:["native3d","life","scene","patch"]}
+def u:test_life_scene_patch() {
+  before=u:life_app_defaults(); after=u:life_reduce(before,{kind:"key",key:"g"}); patch=u:life_scene_patch(before,after);
+  u:assert_eq(shape(patch.ids),[20],"five born cells upsert twenty lines")?;
+  u:assert_eq(shape(patch.starts),[20,3],"patch carries independent line starts")?;
+  u:assert_eq(shape(patch.remove_ids),[0],"birth-only patch removes nothing")?;
+  u:assert_eq([patch.base_revision,patch.target_revision],[0,1],"visual revision advances atomically")?;
+  evolved=u:life_reduce(after,{kind:"key",key:"n"}); next_patch=u:life_scene_patch(after,evolved);
+  u:assert_true(lt(tally(next_patch.ids)+tally(next_patch.remove_ids),82),"one generation is smaller than the static grid scene")
+}
+
 u:run_registered_tests()

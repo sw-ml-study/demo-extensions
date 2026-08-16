@@ -1,0 +1,8 @@
+number = 5
+slug = "model-atlas-bounded-scan"
+status = "pending"
+description = "Specify and implement the bounded model-file scan contract for Model Atlas wi..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T12:58:38"
+commits = []

@@ -82,6 +82,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 struct Application {
     scene: Option<LineScene>,
+    retained_scene: Option<mlpl_native3d_window::live::RetainedScene>,
     graphics: Option<Graphics>,
     commands: Receiver<Value>,
     events: Sender<Value>,
@@ -102,6 +103,7 @@ impl Application {
     fn new(commands: Receiver<Value>, events: Sender<Value>) -> Self {
         Self {
             scene: None,
+            retained_scene: None,
             graphics: None,
             commands,
             events,
@@ -126,12 +128,40 @@ impl Application {
                     if let Some(graphics) = &self.graphics {
                         graphics.window.set_title(&scene_title(&command));
                     }
+                    match mlpl_native3d_window::live::RetainedScene::from_scene_command(&command) {
+                        Ok(retained) => self.retained_scene = Some(retained),
+                        Err(error) => {
+                            eprintln!("MLPL retained scene rejected: {error}");
+                            event_loop.exit();
+                            return;
+                        }
+                    }
                     self.scene = Some(command.scene);
                     self.camera = command.camera;
                     self.rotation_speed = command.rotation_speed;
                     self.help = command.help;
                 }
+                Ok(mlpl_native3d_window::live::LiveCommand::Patch(command)) => {
+                    let Some(retained) = self.retained_scene.as_mut() else {
+                        eprintln!("MLPL scene patch arrived before a complete scene");
+                        event_loop.exit();
+                        return;
+                    };
+                    if let Err(error) = retained.apply(&command) {
+                        eprintln!("MLPL scene patch rejected: {error}");
+                        self.send(mlpl_native3d_window::live::resync_event(), event_loop);
+                        continue;
+                    }
+                    self.scene = Some(retained.scene().clone());
+                }
                 Ok(mlpl_native3d_window::live::LiveCommand::View(command)) => {
+                    if let Some(retained) = self.retained_scene.as_mut()
+                        && let Err(error) = retained.apply_view_revision(command.revision)
+                    {
+                        eprintln!("MLPL retained view rejected: {error}");
+                        event_loop.exit();
+                        return;
+                    }
                     self.camera = command.camera;
                     self.help = command.help;
                 }
