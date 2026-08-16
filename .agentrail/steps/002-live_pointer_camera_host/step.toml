@@ -1,9 +1,10 @@
 number = 2
 slug = "live_pointer_camera_host"
-status = "in-progress"
+status = "completed"
 description = "Using TDD, connect generic winit cursor, mouse-button, drag, wheel, and bound..."
 role = "production"
 context_files = []
 created_at = "2026-08-16T08:22:24"
+completed_at = "2026-08-16T08:41:30"
 task_type = "native3d"
-commits = []
+commits = ["8294b7f39524b0662007d21814f14fe53e22b4a8"]
