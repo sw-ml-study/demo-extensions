@@ -1,9 +1,10 @@
 number = 2
 slug = "fix_space_pause"
-status = "in-progress"
+status = "completed"
 description = "Fix the live native 3D applet Space key so it reliably toggles pause/resume. ..."
 role = "production"
 context_files = []
 created_at = "2026-08-15T20:28:12"
+completed_at = "2026-08-15T20:30:45"
 task_type = "native3d"
-commits = []
+commits = ["3fe048dd157b963052802be2efb220cc6cb4b535"]

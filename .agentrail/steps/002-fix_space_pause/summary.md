@@ -1,0 +1,1 @@
+Fixed live Space pause/resume by normalizing winit NamedKey::Space to the generic space event while retaining MLPL ownership of pause state. Added native key normalization, end-to-end worker/port two-toggle speed restoration, and mlplunit reducer regressions; updated controls and acceptance docs. Full just check gate passed.

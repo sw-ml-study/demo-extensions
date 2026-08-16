@@ -1,0 +1,11 @@
+{
+  "task_type": "native3d",
+  "state": {
+    "number": 2,
+    "step": "fix_space_pause"
+  },
+  "action": "Used focused red/green cargo tests to reproduce NamedKey::Space returning no event, added the minimal adapter mapping, extended live applet and native mlplunit coverage, reviewed gitignore/tracking, ran just check, and committed as 3fe048d.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-08-15T20:30:45"
+}
