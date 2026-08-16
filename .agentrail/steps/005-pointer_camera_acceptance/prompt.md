@@ -1,0 +1,1 @@
+Run and document final pointer-camera acceptance: bounded event behavior, picking math, MLPL ownership, real cube interaction, teardown, macOS evidence and Linux build/design limitations. Reconcile blockers and the next tic-tac-toe saga, run the complete gate, commit, complete the saga, and push main.

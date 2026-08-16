@@ -2,8 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
+mod interaction;
 mod renderer;
 
+pub use interaction::{InteractionError, OrbitCamera, Ray3};
 pub use renderer::{Camera, HeadlessImage, PlannedLine, RenderError, Viewport};
 
 const SCHEMA: &str = "sw-ml-study.native3d.line-scene";

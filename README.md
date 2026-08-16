@@ -178,6 +178,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   primitives, bulk-array contract, lifecycle evidence, and deliberate scope.
 - [Native window](docs/native-window.md) — opt-in cube command, wgpu/winit
   architecture, macOS/Linux handling, and live-interaction blocker.
+- [Native3D interaction contract](docs/native3d-interaction-contract.md) —
+  bounded pointer/frame events, orbit-camera coordinates, and pick rays.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

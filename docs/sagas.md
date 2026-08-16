@@ -49,7 +49,7 @@ Acceptance: ordinary extension authors write no unsafe code, bulk `[N,3]`
 arrays cross once, stale/wrong handles fail closed, and generated metadata is
 identical to the hand-written contract.
 
-## Active: native-wireframe-cube
+## Completed: native-wireframe-cube
 
 Purpose: make immediate, honest visual progress with an array-generated cube
 and a generic native line renderer while upstream array/handle integration is
@@ -64,6 +64,57 @@ Acceptance: MLPL bulk array operations define the cube; Rust contains no cube
 semantics; headless evidence is authoritative; and the opt-in native window
 rotates and adjusts dimensions, speed, color, and thickness without web
 technology.
+
+## Active: native3d-pointer-camera
+
+Purpose: add reusable pointer, wheel, bounded-frame, orbit-camera, and picking
+contracts before building more application demos.
+
+1. Specify pure input, orbit-camera, pick-ray, plane-hit, validation, and
+   coalescing contracts with headless Rust TDD.
+2. Connect winit pointer/wheel/frame events and MLPL-owned camera commands.
+3. Add ordinary MLPL app, camera, picking, grid, and style helpers.
+4. Migrate the cube to MLPL-owned drag orbit/tilt, wheel zoom, and drag pan.
+5. Publish macOS smoke evidence, Linux limitations, bounded-event evidence,
+   teardown results, and acceptance.
+
+Acceptance: Rust translates platform input and renders a supplied camera but
+contains no cube mouse map; MLPL owns camera transitions; high-rate events are
+bounded/coalesced without reordering discrete clicks; headless evidence remains
+authoritative.
+
+## Queued: native3d-tic-tac-toe
+
+Purpose: prove click picking and application state with a small complete game.
+
+1. Build an MLPL board reducer, legal-move, result, and deterministic minimax
+   suite with native mlplunit.
+2. Render the board, X, and polygonal O marks through generic line arrays.
+3. Add click-to-cell picking, X/O and first/second selection, restart, hover,
+   result feedback, and clean close.
+4. Launch the real native game and publish headless/live acceptance.
+
+Acceptance: the user chooses X or O, turn order follows that choice, only empty
+squares accept clicks, MLPL owns all rules and AI decisions, and Rust remains a
+generic input/render service.
+
+## Queued: native3d-life-plane
+
+Purpose: demonstrate array programming, editing, animation, and reusable 3D
+camera interaction on a cellular grid.
+
+1. Implement deterministic MLPL Life evolution and boundary policy with
+   oscillator/still-life mlplunit fixtures.
+2. Add an empty editable grid, ray/plane cell picking, click/drag cell toggles,
+   start/pause/step/clear, and bounded frame-driven generations.
+3. Add efficient bulk grid/cell rendering, preferring generic filled
+   quads/instances after profiling the wireframe baseline.
+4. Reuse orbit/tilt/zoom/pan and publish performance, memory, teardown, and
+   macOS/Linux acceptance evidence.
+
+Acceptance: users seed an empty grid before starting, animation remains MLPL
+state evolution, the view is fully mouse-controlled, updates are bounded, and
+the extension exposes no Life-specific primitive.
 
 ## Queued: native3d-point-cloud
 

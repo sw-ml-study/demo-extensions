@@ -1,0 +1,9 @@
+number = 1
+slug = "pointer_camera_contract"
+status = "in-progress"
+description = "Using TDD, specify and implement the renderer-neutral pointer, wheel, bounded..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T08:22:24"
+task_type = "native3d"
+commits = []

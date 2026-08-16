@@ -1,0 +1,1 @@
+Completed live keyboard-controlled native3d cube, Space regression, and compiled-app/library design; beginning the shared pointer-camera-picking foundation for the next demo sequence.

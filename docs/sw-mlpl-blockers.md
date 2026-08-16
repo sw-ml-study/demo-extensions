@@ -1,6 +1,6 @@
 # sw-MLPL Blockers for Interactive Native 3D
 
-Status date: 2026-08-15
+Status date: 2026-08-16
 
 The native wgpu/winit renderer and MLPL-generated cube scene work today.
 sw-MLPL commits `5c695fe1`, `03c7559b`, `797d910f`, and `f8585846` have now
@@ -8,6 +8,11 @@ shipped dense arrays in both directions, opaque native handles, and nested
 structured record returns, parked-main UI launch, handler dispatch, and bounded
 Port delivery. This repository now proves the complete local interpreted loop.
 This repository does not modify `../sw-mlpl`.
+
+Pointer, wheel, frame, orbit-camera, and pick-ray work is downstream extension
+and MLPL-library work. Existing owned records, arrays, handler dispatch, and
+bounded Ports can express it; no additional sw-MLPL language primitive is
+currently required. Compiled application parity remains the upstream gap.
 
 ## Required host primitives
 

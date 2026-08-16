@@ -1,0 +1,9 @@
+number = 4
+slug = "mouse_controlled_cube"
+status = "pending"
+description = "Using Rust and native mlplunit TDD, migrate the cube to the shared library an..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T08:22:24"
+task_type = "native3d"
+commits = []

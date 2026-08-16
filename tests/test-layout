@@ -13,12 +13,16 @@ crates/mlpl-extension-sdk/src/lib.rs
 crates/mlpl-extension-sdk/tests/records.rs
 crates/mlpl-native3d-scene/Cargo.toml
 crates/mlpl-native3d-scene/src/lib.rs
+crates/mlpl-native3d-scene/src/interaction.rs
 crates/mlpl-native3d-scene/src/renderer.rs
+crates/mlpl-native3d-scene/tests/interaction_contract.rs
 crates/mlpl-native3d-window/Cargo.toml
 crates/mlpl-native3d-window/src/lib.rs
+crates/mlpl-native3d-window/src/interaction.rs
 crates/mlpl-native3d-window/src/live.rs
 crates/mlpl-native3d-window/src/main.rs
 crates/mlpl-native3d-window/tests/live_applet.rs
+crates/mlpl-native3d-window/tests/input_contract.rs
 demos/wireframe-cube/default-scene.mlpl
 demos/wireframe-cube/scene.mlpl
 demos/wireframe-cube/controls.mlpl

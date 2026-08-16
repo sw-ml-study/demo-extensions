@@ -1,0 +1,1 @@
+Using native mlplunit TDD, implement reusable ordinary MLPL libraries for app lifecycle, camera orbit/zoom/pan reduction, pick-ray/plane helpers, and generic line/grid/style construction. Document shapes, coordinates, ownership, bounds, and public API. Keep demo semantics out of the library; run mlplunit, Rust regression, full gate, commit, complete, and push.

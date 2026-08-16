@@ -1,0 +1,1 @@
+Using Rust and native mlplunit TDD, migrate the cube to the shared library and add MLPL-owned left-drag orbit/tilt, wheel zoom, and shift- or middle-drag pan while retaining keyboard controls. Prove state transitions headlessly and launch the real native window for opt-in smoke evidence on this Mac; update help and acceptance docs, run all gates, commit, complete, and push.

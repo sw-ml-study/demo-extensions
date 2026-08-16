@@ -1,0 +1,9 @@
+number = 5
+slug = "pointer_camera_acceptance"
+status = "pending"
+description = "Run and document final pointer-camera acceptance: bounded event behavior, pic..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T08:22:24"
+task_type = "native3d"
+commits = []

@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use crate::interaction::{InputEvent, Modifiers, PointerButton, PointerButtons};
 use mlpl_array::DenseArray;
 use mlpl_eval::Value;
 use mlpl_native3d_scene::LineScene;
@@ -45,6 +46,92 @@ pub fn resize_event(width: u32, height: u32) -> Value {
 #[must_use]
 pub fn close_event() -> Value {
     record([("kind", Value::Str("close".into()))])
+}
+
+/// Encodes one validated, renderer-neutral input event as an owned MLPL record.
+#[must_use]
+pub fn input_event(event: InputEvent) -> Value {
+    match event {
+        InputEvent::PointerMove {
+            position,
+            buttons,
+            modifiers,
+        } => record([
+            ("kind", Value::Str("pointer_move".into())),
+            ("x", scalar(position[0])),
+            ("y", scalar(position[1])),
+            (
+                "left",
+                scalar(bool_number(buttons.contains(PointerButtons::LEFT))),
+            ),
+            (
+                "shift",
+                scalar(bool_number(modifiers.contains(Modifiers::SHIFT))),
+            ),
+        ]),
+        InputEvent::PointerButton {
+            button,
+            pressed,
+            position,
+            modifiers,
+        } => record([
+            (
+                "kind",
+                Value::Str(
+                    if pressed {
+                        "pointer_down"
+                    } else {
+                        "pointer_up"
+                    }
+                    .into(),
+                ),
+            ),
+            (
+                "button",
+                Value::Str(
+                    match button {
+                        PointerButton::Left => "left",
+                        PointerButton::Middle => "middle",
+                        PointerButton::Right => "right",
+                    }
+                    .into(),
+                ),
+            ),
+            ("x", scalar(position[0])),
+            ("y", scalar(position[1])),
+            (
+                "shift",
+                scalar(bool_number(modifiers.contains(Modifiers::SHIFT))),
+            ),
+        ]),
+        InputEvent::Wheel {
+            delta,
+            position,
+            modifiers,
+        } => record([
+            ("kind", Value::Str("wheel".into())),
+            ("dx", scalar(delta[0])),
+            ("dy", scalar(delta[1])),
+            ("x", scalar(position[0])),
+            ("y", scalar(position[1])),
+            (
+                "shift",
+                scalar(bool_number(modifiers.contains(Modifiers::SHIFT))),
+            ),
+        ]),
+        InputEvent::Frame {
+            delta_ms,
+            elapsed_ms,
+        } => record([
+            ("kind", Value::Str("frame".into())),
+            ("delta_ms", scalar(delta_ms)),
+            ("elapsed_ms", scalar(elapsed_ms)),
+        ]),
+    }
+}
+
+const fn bool_number(value: bool) -> f64 {
+    if value { 1.0 } else { 0.0 }
 }
 
 /// Decodes and validates one MLPL-owned generic scene command.

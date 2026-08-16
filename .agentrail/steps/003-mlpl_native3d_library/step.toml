@@ -1,0 +1,9 @@
+number = 3
+slug = "mlpl_native3d_library"
+status = "pending"
+description = "Using native mlplunit TDD, implement reusable ordinary MLPL libraries for app..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T08:22:24"
+task_type = "native3d"
+commits = []
