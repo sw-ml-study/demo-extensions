@@ -36,10 +36,10 @@ def u:ttt_pointer_cell(state,event) {
 }
 
 def u:ttt_user_move(state,cell) {
-  if (1-equal(state.turn,"user"))+(1-equal(state.status,"playing"))+lt(cell,0)+gt(cell,8)+(1-eq(take(state.board,0,cell),0)) { state } else {
+  if (1-equal(state.turn,"user"))+(1-equal(state.status,"playing"))+lt(cell,0)+gt(cell,8) { state } else { if 1-eq(take(state.board,0,cell),0) { state } else {
     board=u:ttt_place(state.board,cell,state.user_mark)?; outcome=u:ttt_outcome(board); turn=if equal(outcome.status,"playing") { "ai" } else { "done" };
     u:ttt_apply_ai(u:ttt_with_board(state,board,turn))
-  }
+  } }
 }
 
 def u:ttt_reduce(state,event) {

@@ -70,4 +70,6 @@ delivers a normalized center click, and verifies that the initial four-line
 grid becomes a variable styled scene containing both the human and AI marks.
 It also reproduces the formerly failing O-first sequence—press O, then click
 the center—and proves the applet remains alive with an O and an X rendered.
+Terminal-board drag/release and off-board `-1` picks are explicit no-ops, pinned
+after interactive testing exposed an eager out-of-bounds board lookup.
 The interactive smoke remains opt-in and uses identical source.

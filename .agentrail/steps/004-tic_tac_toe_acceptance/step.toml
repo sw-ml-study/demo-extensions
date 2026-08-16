@@ -1,6 +1,6 @@
 number = 4
 slug = "tic_tac_toe_acceptance"
-status = "pending"
+status = "in-progress"
 description = "Run and document final tic-tac-toe acceptance for rules/minimax determinism, ..."
 role = "production"
 context_files = []

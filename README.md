@@ -200,6 +200,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   picking, grid/line, callback, and application-lifecycle helpers.
 - [MLPL tic-tac-toe model](docs/tic-tac-toe-model.md) — validated board,
   legal moves, outcomes, player setup, and deterministic minimax.
+- [Native tic-tac-toe acceptance](docs/tic-tac-toe-acceptance.md) — playable
+  behavior, regressions, ownership, portability, and remaining limits.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

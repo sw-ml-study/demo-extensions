@@ -83,7 +83,7 @@ contains no cube mouse map; MLPL owns camera transitions; high-rate events are
 bounded/coalesced without reordering discrete clicks; headless evidence remains
 authoritative.
 
-## Active: native3d-tic-tac-toe
+## Completed: native3d-tic-tac-toe
 
 Purpose: prove click picking and application state with a small complete game.
 

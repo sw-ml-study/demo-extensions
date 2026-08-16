@@ -60,6 +60,7 @@ tests/test_hello_module.mlpl
 tests/test_native3d_library.mlpl
 tests/test_tic_tac_toe_model.mlpl
 tests/test_tic_tac_toe_controls.mlpl
+docs/tic-tac-toe-acceptance.md
 tests/test_tic_tac_toe_scene.mlpl
 tests/test_wireframe_cube_scene.mlpl
 tests/test_wireframe_cube_controls.mlpl

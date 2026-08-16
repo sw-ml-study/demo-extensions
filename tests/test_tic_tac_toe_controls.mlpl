@@ -25,4 +25,14 @@ def u:test_ttt_choices() {
   u:assert_eq([reset.user_mark,reset.user_first],[-1,0],"restart retains choices")
 }
 
+@test {name:"terminal and off-board pointer releases are harmless",tags:["native3d","tic-tac-toe","regression"]}
+def u:test_ttt_terminal_drag_release() {
+  base=u:ttt_app_defaults(); board=[1,-1,1,1,-1,-1,-1,1,1]; terminal=u:ttt_app_state(board,1,-1,1,"done",base.camera,800,600,-1,20,0);
+  u:assert_eq(u:ttt_user_move(terminal,-1),terminal,"terminal off-board release is a no-op")?;
+  moved=u:ttt_reduce(terminal,{kind:"pointer_move",x:0,y:0,left:1,shift:0});
+  released=u:ttt_reduce(moved,{kind:"pointer_up",button:"left",x:0,y:0,shift:0});
+  u:assert_eq(released.board,board,"drag and release cannot alter a tied board")?;
+  u:assert_eq(released.status,"draw","terminal result survives pointer activity")
+}
+
 u:run_registered_tests()
