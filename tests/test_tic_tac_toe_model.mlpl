@@ -8,6 +8,8 @@ def u:test_ttt_validation_and_moves() {
   moved=unwrap(u:ttt_place(empty,4,1));
   u:assert_eq(take(moved,0,4),1,"placement writes the requested mark")?;
   u:assert_true(is_err(u:ttt_place(moved,4,-1)),"occupied square is rejected")?;
+  o_open=unwrap(u:ttt_place(empty,4,-1));
+  u:assert_eq(take(o_open,0,4),-1,"O may play first when the application selects that order")?;
   u:assert_true(1-u:ttt_valid_board([1,1,1,1,0,0,0,0,0]),"unreachable mark counts are invalid")
 }
 
