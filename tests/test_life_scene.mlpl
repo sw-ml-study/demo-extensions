@@ -1,0 +1,23 @@
+include "demos/life-plane/scene.mlpl";
+
+@test {name:"Life empty plane is generic bulk line geometry",tags:["native3d","life","scene"]}
+def u:test_life_empty_scene() {
+  state=u:life_app_defaults(); scene=unwrap(u:life_scene(state));
+  u:assert_eq(shape(scene.positions),[164,3],"40x40 grid has 82 line endpoints")?;
+  u:assert_eq(shape(scene.edges),[82,2],"empty plane has 41 row and 41 column lines")?;
+  u:assert_eq(shape(scene.colors),[82,4],"parallel colors match")?;
+  u:assert_eq(shape(scene.thicknesses),[82],"parallel thicknesses match")?;
+  u:assert_eq(shape(scene.ids),[82],"parallel IDs match")
+}
+
+@test {name:"Life cells and hover are MLPL-generated line overlays",tags:["native3d","life","scene","cells"]}
+def u:test_life_cell_scene() {
+  block=u:life_reduce(u:life_app_defaults(),{kind:"key",key:"b"}); scene=unwrap(u:life_scene(block));
+  u:assert_eq(shape(scene.edges),[98,2],"four live cells add four edges each")?;
+  hovered=u:life_app_state(block.grid,block.running,block.generation,block.speed,block.accumulator_ms,block.camera,block.viewport_width,block.viewport_height,0,block.revision,block.close_requested,block.random_seed,block.press_x,block.press_y,block.gesture_dragged,block.painting);
+  hover_scene=unwrap(u:life_scene(hovered));
+  u:assert_eq(shape(hover_scene.edges),[102,2],"hover adds one generic square")?;
+  u:assert_eq(scene.rotation_y_speed,0,"Life plane never delegates animation semantics")
+}
+
+u:run_registered_tests()

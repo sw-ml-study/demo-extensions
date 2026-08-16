@@ -23,6 +23,7 @@ crates/mlpl-native3d-window/src/live.rs
 crates/mlpl-native3d-window/src/main.rs
 crates/mlpl-native3d-window/tests/live_applet.rs
 crates/mlpl-native3d-window/tests/tic_tac_toe_applet.rs
+crates/mlpl-native3d-window/tests/life_applet.rs
 crates/mlpl-native3d-window/tests/input_contract.rs
 crates/mlpl-native3d-window/tests/camera_command.rs
 demos/wireframe-cube/default-scene.mlpl
@@ -35,6 +36,8 @@ demos/tic-tac-toe/controls.mlpl
 demos/tic-tac-toe/live-applet.mlpl
 demos/life-plane/model.mlpl
 demos/life-plane/controls.mlpl
+demos/life-plane/scene.mlpl
+demos/life-plane/live-applet.mlpl
 extensions/hello/Cargo.toml
 extensions/hello/extension.toml
 extensions/hello/module.mlpl
@@ -55,6 +58,7 @@ scripts/check-tracked
 scripts/run-rust-tests
 scripts/run-3d-cube
 scripts/run-tic-tac-toe
+scripts/run-life-3d
 scripts/run-tests
 scripts/select-mlpl
 scripts/select-mlplunit
@@ -64,6 +68,7 @@ tests/test_tic_tac_toe_model.mlpl
 tests/test_tic_tac_toe_controls.mlpl
 tests/test_life_model.mlpl
 tests/test_life_controls.mlpl
+tests/test_life_scene.mlpl
 docs/tic-tac-toe-acceptance.md
 docs/life-model.md
 docs/life-controls.md

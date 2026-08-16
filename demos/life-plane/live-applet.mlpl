@@ -1,0 +1,12 @@
+include "./scene.mlpl";
+
+def u:life_submit(state) {
+  scene=u:life_scene(state)?;
+  port_send(port,{op:"set_scene",positions: scene.positions,edges: scene.edges,colors: scene.colors,thicknesses: scene.thicknesses,ids: scene.ids,rotation_y_speed:0,revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:life_help()});
+  ok(state)
+}
+
+def u:life_on_event(event,state) { next=u:life_reduce(state,event); u:life_submit(next)?; next }
+
+state=u:life_app_defaults(); u:life_submit(state)?;
+on(port,"key",:u:life_on_event); on(port,"frame",:u:life_on_event); on(port,"pointer_move",:u:life_on_event); on(port,"pointer_down",:u:life_on_event); on(port,"pointer_up",:u:life_on_event); on(port,"wheel",:u:life_on_event); on(port,"resize",:u:life_on_event); run(port,state)

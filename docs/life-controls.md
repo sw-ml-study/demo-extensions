@@ -34,6 +34,19 @@ teardown.
 Its full text is pinned by mlplunit so a binding cannot silently disappear
 from the UI.
 
+## Native plane
+
+`just life-3d` runs the portable `scripts/run-life-3d` entry point. The MLPL
+scene emits 41 horizontal and 41 vertical generic grid lines plus four line
+segments for each live or hovered cell. This baseline intentionally reuses the
+established bulk-line API; no Life-specific or filled-cell primitive was added
+without profiling evidence.
+
+The worker/Port test sends preset, run, frame, wheel, and close events through
+the actual applet. It proves one complete owned scene command per reduced input,
+stable-block evolution, camera changes, visible help, and teardown without a
+display. The native smoke run remains the visual evidence.
+
 ## Ownership and future topology
 
 Life rules, state, picking decisions, gesture arbitration, presets, timing,

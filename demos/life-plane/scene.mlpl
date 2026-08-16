@@ -1,0 +1,36 @@
+# Renderer-neutral Life plane assembled entirely as generic lines in MLPL.
+include "./controls.mlpl";
+include "../../lib/native3d/geometry.mlpl";
+
+def u:life_line_state() { {positions: fill([0],0),edges: fill([0],0),colors: fill([0],0),thicknesses: fill([0],0),ids: fill([0],0),count:0} }
+
+def u:life_add_segment(state,start,end,color,thickness) {
+  vertex=state.count*2;
+  {positions: concat(state.positions,concat(start,end)),edges: concat(state.edges,[vertex,vertex+1]),colors: concat(state.colors,color),thicknesses: concat(state.thicknesses,thickness),ids: concat(state.ids,state.count),count: state.count+1}
+}
+
+def u:life_add_grid(state,rows,columns) {
+  size=0.2; half_width=columns*size/2; half_depth=rows*size/2; column=0;
+  while lt(column,columns+1) { x=column*size-half_width; state=u:life_add_segment(state,[x,0,0-half_depth],[x,0,half_depth],[0.25,0.32,0.4,1],1); column=column+1 };
+  row=0; while lt(row,rows+1) { z=row*size-half_depth; state=u:life_add_segment(state,[0-half_width,0,z],[half_width,0,z],[0.25,0.32,0.4,1],1); row=row+1 };
+  state
+}
+
+def u:life_add_square(state,grid,cell,color,thickness,height,inset) {
+  size=0.2; row=floor(cell/grid.columns); column=cell-row*grid.columns; x0=column*size-grid.columns*size/2+inset; x1=(column+1)*size-grid.columns*size/2-inset; z0=row*size-grid.rows*size/2+inset; z1=(row+1)*size-grid.rows*size/2-inset;
+  state=u:life_add_segment(state,[x0,height,z0],[x1,height,z0],color,thickness); state=u:life_add_segment(state,[x1,height,z0],[x1,height,z1],color,thickness); state=u:life_add_segment(state,[x1,height,z1],[x0,height,z1],color,thickness); u:life_add_segment(state,[x0,height,z1],[x0,height,z0],color,thickness)
+}
+
+def u:life_add_cells(state,grid,cell) {
+  while lt(cell,grid.rows*grid.columns) { state=if take(grid.cells,0,cell) { u:life_add_square(state,grid,cell,[0.15,0.95,0.5,1],3,0.02,0.02) } else { state }; cell=cell+1 };
+  state
+}
+
+def u:life_add_hover(state,grid,hover_cell) { if lt(hover_cell,0)+gt(hover_cell,grid.rows*grid.columns-1) { state } else { u:life_add_square(state,grid,hover_cell,[1,0.85,0.15,1],2,0.04,0.01) } }
+
+def u:life_scene(state) {
+  if (1-u:life_valid(state.grid))+(1-eq(state.hover_cell,floor(state.hover_cell)))+lt(state.hover_cell,-1)+gt(state.hover_cell,state.grid.rows*state.grid.columns-1) { err({kind:"life_scene",message:"invalid Life grid or hover cell"}) } else {
+    lines=u:life_add_grid(u:life_line_state(),state.grid.rows,state.grid.columns); lines=u:life_add_cells(lines,state.grid,0); lines=u:life_add_hover(lines,state.grid,state.hover_cell); style={colors: reshape(lines.colors,[lines.count,4]),thicknesses: lines.thicknesses,ids: lines.ids};
+    u:n3d_lines(reshape(lines.positions,[lines.count*2,3]),reshape(lines.edges,[lines.count,2]),style,0)
+  }
+}

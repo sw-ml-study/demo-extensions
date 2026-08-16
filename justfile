@@ -31,6 +31,10 @@ cube-3d:
 tic-tac-toe:
     ./scripts/run-tic-tac-toe
 
+# Open the editable MLPL-owned native Life plane.
+life-3d:
+    ./scripts/run-life-3d
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

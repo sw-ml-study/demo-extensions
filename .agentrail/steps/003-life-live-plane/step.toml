@@ -1,6 +1,6 @@
 number = 3
 slug = "life-live-plane"
-status = "pending"
+status = "in-progress"
 description = "Using MLPL and Rust worker/Port TDD, connect the Life app to the native windo..."
 role = "production"
 context_files = []

@@ -52,9 +52,13 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let event_loop = EventLoop::new()?;
-    let tic_tac_toe = std::env::args().any(|argument| argument == "--tic-tac-toe");
+    let arguments: Vec<_> = std::env::args().collect();
+    let tic_tac_toe = arguments.iter().any(|argument| argument == "--tic-tac-toe");
+    let life = arguments.iter().any(|argument| argument == "--life");
     let source = if tic_tac_toe {
         tic_tac_toe_applet_source()
+    } else if life {
+        mlpl_native3d_window::live::life_applet_source()
     } else {
         applet_source()
     };

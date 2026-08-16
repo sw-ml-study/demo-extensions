@@ -14,6 +14,10 @@ const TTT_MODEL: &str = include_str!("../../../demos/tic-tac-toe/model.mlpl");
 const TTT_SCENE: &str = include_str!("../../../demos/tic-tac-toe/scene.mlpl");
 const TTT_CONTROLS: &str = include_str!("../../../demos/tic-tac-toe/controls.mlpl");
 const TTT_APPLET: &str = include_str!("../../../demos/tic-tac-toe/live-applet.mlpl");
+const LIFE_MODEL: &str = include_str!("../../../demos/life-plane/model.mlpl");
+const LIFE_CONTROLS: &str = include_str!("../../../demos/life-plane/controls.mlpl");
+const LIFE_SCENE: &str = include_str!("../../../demos/life-plane/scene.mlpl");
+const LIFE_APPLET: &str = include_str!("../../../demos/life-plane/live-applet.mlpl");
 
 #[must_use]
 pub fn applet_source() -> String {
@@ -32,6 +36,17 @@ pub fn tic_tac_toe_applet_source() -> String {
         without_includes(TTT_SCENE),
         without_includes(TTT_CONTROLS),
         without_includes(TTT_APPLET)
+    )
+}
+
+#[must_use]
+pub fn life_applet_source() -> String {
+    format!(
+        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}",
+        without_includes(LIFE_MODEL),
+        without_includes(LIFE_CONTROLS),
+        without_includes(LIFE_SCENE),
+        without_includes(LIFE_APPLET)
     )
 }
 

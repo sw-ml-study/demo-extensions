@@ -81,6 +81,18 @@ Open the playable native tic-tac-toe game:
 just tic-tac-toe
 ```
 
+Open the editable native Life plane:
+
+```sh
+just life-3d
+```
+
+Click toggles a cell and Control-left-drag paints live cells. Plain left-drag
+orbits/tilts, Shift-left-drag or middle-drag pans, and the wheel zooms. Space
+runs/pauses, N steps, C clears, plus/minus changes speed, and B/H/I/T/G/U/R
+select block, beehive, blinker, toad, glider, Gosper gun, and seeded random.
+The same complete legend is visible inside the native window.
+
 Click an empty square to move. Left-drag orbits/tilts, the wheel zooms, and
 Shift-left-drag or middle-drag pans; crossing the four-pixel drag threshold
 suppresses mark placement. X/O chooses the human mark, 1/2 chooses first or
@@ -105,11 +117,11 @@ just tests
 just list-tests
 ```
 
-The next native demo is an editable Conway's Life plane. Its MLPL layer now
+The native demos include an editable Conway's Life plane. Its MLPL layer
 provides dead finite boundaries, whole-array B3/S23 evolution, owned cell
 updates, deterministic replacement presets, mouse cell editing, animation and
 speed controls, shared orbit/pan/zoom, and the complete visible control legend.
-The next slice connects that tested reducer to generic native bulk rendering.
+connects to the existing native host through complete generic bulk line arrays.
 
 Run the mandatory pre-commit gate:
 
