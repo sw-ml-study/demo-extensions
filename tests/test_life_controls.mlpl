@@ -28,6 +28,7 @@ def u:test_life_keyboard_and_frames() {
   u:assert_eq([state.running,state.generation,reduce(:add,state.grid.cells)],[1,1,4],"running frame advances stable block")?;
   state=u:life_reduce(state,{kind:"key",key:"n"}); u:assert_eq(state.generation,2,"single step always advances")?;
   faster=u:life_reduce(state,{kind:"key",key:"+"}); u:assert_true(gt(faster.speed,state.speed),"plus increases speed")?;
+  native_faster=u:life_reduce(state,{kind:"key",key:"equal"}); u:assert_true(gt(native_faster.speed,state.speed),"native equal key increases speed")?;
   random=u:life_reduce(state,{kind:"key",key:"r"}); u:assert_eq(random.generation,0,"preset replacement resets generation")?;
   cleared=u:life_reduce(random,{kind:"key",key:"c"}); u:assert_eq(reduce(:add,cleared.grid.cells),0,"clear replaces with empty grid")
 }

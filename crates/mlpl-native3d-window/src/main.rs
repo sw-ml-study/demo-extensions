@@ -354,6 +354,13 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
             " " => Some("space"),
             "r" => Some("r"),
             "c" => Some("c"),
+            "b" => Some("b"),
+            "g" => Some("g"),
+            "h" => Some("h"),
+            "i" => Some("i"),
+            "n" => Some("n"),
+            "t" => Some("t"),
+            "u" => Some("u"),
             "x" => Some("x"),
             "o" => Some("o"),
             "1" => Some("1"),
@@ -542,6 +549,9 @@ mod tests {
     #[test]
     fn normalizes_named_space_for_the_live_event_path() {
         assert_eq!(normalize_key(&Key::Named(NamedKey::Space)), Some("space"));
+        for key in ["b", "g", "h", "i", "n", "t", "u"] {
+            assert_eq!(normalize_key(&Key::Character(key.into())), Some(key));
+        }
     }
 
     #[test]

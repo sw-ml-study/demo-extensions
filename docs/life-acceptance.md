@@ -37,6 +37,14 @@ events can therefore have at most one frame ahead of them, so G/U cannot
 starve behind stale animation frames. Clearing only a local queue would not
 remove frames already delivered through the Port.
 
+A second live report found that C and R worked while B/G/H/U appeared ignored.
+This was not queueing: winit's native key normalizer used a deliberate
+whitelist that omitted the Life-only letters, while the original worker test
+injected `"g"` after normalization and therefore could not expose the bug. The
+native test now pins B/G/H/I/N/T/U plus Space, and the whitelist forwards every
+visible binding. MLPL also accepts winit's `equal`/`minus` spellings for the
+displayed plus/minus speed controls.
+
 The worker/Port regression proves that a run toggle produces no command, a
 glider generation produces one scene replacement, and wheel input produces one
 view update. This is the first retained-scene, or “shadow DOM,” slice. A future

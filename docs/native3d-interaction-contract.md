@@ -56,6 +56,11 @@ frame backlog at one while discrete input remains ordered. Close/disconnect
 still exits the event loop, and resize changes both the GPU surface and MLPL
 viewport record.
 
+Native logical keys are normalized into stable lowercase names before crossing
+the Port. Tests pin every key advertised by the live Life legend; applet tests
+that inject post-normalization records are not sufficient evidence for this
+winit boundary.
+
 Scene commands may include `camera:{target:[3],yaw,pitch,distance,fov,near}`.
 The parser rejects malformed shapes, non-finite values, pole-singular pitch,
 invalid clipping, and invalid field of view. Commands without `camera` retain

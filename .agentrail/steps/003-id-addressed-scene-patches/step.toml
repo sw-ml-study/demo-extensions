@@ -1,6 +1,6 @@
-number = 2
+number = 3
 slug = "id-addressed-scene-patches"
-status = "pending"
+status = "in-progress"
 description = "Design and implement the generic retained-scene shadow-DOM slice: MLPL sends ..."
 role = "production"
 context_files = []
