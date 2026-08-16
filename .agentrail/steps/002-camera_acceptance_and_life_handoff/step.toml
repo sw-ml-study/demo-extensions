@@ -1,6 +1,6 @@
 number = 2
 slug = "camera_acceptance_and_life_handoff"
-status = "pending"
+status = "in-progress"
 description = "Run final combined tic-tac-toe click/camera acceptance including stationary c..."
 role = "production"
 context_files = []

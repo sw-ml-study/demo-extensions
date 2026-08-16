@@ -74,8 +74,10 @@ colon-qualified names. `test_upstream_static_registry.mlpl` proves
 `:describe hello:answer` exposes its signature and documentation. The public C
 adapter now accepts this repository's byte-compatible static descriptor;
 `tests/upstream-host/tests/c_provider.rs` proves `_hello:answer()` and
-`_hello:fail()` through the upstream interpreter. `use` facade resolution, compiler parity, packaged
-dynamic loading, arrays at the host boundary, and native-handle values remain
+`_hello:fail()` through the upstream interpreter. The native3d integration now
+also proves interpreted static-provider arrays, typed persistent handles,
+parked-main event-loop ownership, and bounded Port delivery. `use` facade
+resolution, compiled-provider parity, and packaged dynamic loading remain
 upstream work. No upstream files are changed by this repository.
 
 ### Execution modes as of foundation acceptance
@@ -84,6 +86,8 @@ upstream work. No upstream files are changed by this repository.
   colon spelling.
 - Downstream C descriptor registration: proven for a statically linked scalar
   provider through the public upstream adapter.
+- Interpreted native3d arrays, handles, and bounded interaction: proven through
+  the static provider and worker/Port application path.
 - `use hello` facade invocation: blocked pending the upstream facade saga.
 - Compiled native invocation: blocked; no static-provider or packaged dynamic
   provider hook exists in the compiler/runtime contract.

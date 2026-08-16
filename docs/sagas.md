@@ -98,7 +98,7 @@ Acceptance: the user chooses X or O, turn order follows that choice, only empty
 squares accept clicks, MLPL owns all rules and AI decisions, and Rust remains a
 generic input/render service.
 
-## Active: native3d-tic-tac-toe-camera
+## Completed: native3d-tic-tac-toe-camera
 
 Purpose: combine board clicks with the reusable 3D camera without ambiguous
 release behavior.
@@ -109,23 +109,36 @@ release behavior.
 Acceptance: stationary clicks place marks, camera drags never place marks, all
 cube-equivalent mouse controls work, and Rust remains application-neutral.
 
-## Queued: native3d-life-plane
+## Next: native3d-life-plane
 
 Purpose: demonstrate array programming, editing, animation, and reusable 3D
 camera interaction on a cellular grid.
 
-1. Implement deterministic MLPL Life evolution and boundary policy with
-   oscillator/still-life mlplunit fixtures.
-2. Add an empty editable grid, ray/plane cell picking, click/drag cell toggles,
-   start/pause/step/clear, and bounded frame-driven generations.
-3. Add efficient bulk grid/cell rendering, preferring generic filled
-   quads/instances after profiling the wireframe baseline.
-4. Reuse orbit/tilt/zoom/pan and publish performance, memory, teardown, and
-   macOS/Linux acceptance evidence.
+1. `life-model` — implement deterministic MLPL Life evolution with an explicit
+   finite dead-boundary policy; named empty, still-life, oscillator, glider,
+   Gosper glider-gun, and deterministically seeded random presets; and
+   mlplunit fixtures for evolution and placement.
+2. `life-edit-and-controls` — add an initially empty grid, ray/plane cell
+   picking, click/drag seeding, start/pause/step/clear, and deterministic
+   click-versus-camera-drag arbitration. Publish a visible help legend for
+   clear, each preset family, animation controls, editing, orbit/tilt, pan,
+   and zoom.
+3. `life-live-plane` — render the animated grid as generic bulk geometry,
+   consume bounded frame events, and reuse orbit/tilt/zoom/pan without putting
+   Life semantics in Rust.
+4. `life-acceptance` — publish performance, memory, teardown, macOS visual
+   evidence, Linux build evidence and limitations, and the MLPL/Rust ownership
+   split.
 
 Acceptance: users seed an empty grid before starting, animation remains MLPL
 state evolution, the view is fully mouse-controlled, updates are bounded, and
-the extension exposes no Life-specific primitive.
+the extension exposes no Life-specific primitive. Every keyboard binding is
+visible in the native window, and choosing a preset has deterministic replace
+semantics rather than silently merging with an existing grid.
+
+The first implementation slice deliberately starts with the pure MLPL model.
+That gives cell editing and frame animation one tested transition function and
+keeps renderer performance choices out of the game rules.
 
 ## Queued: native3d-point-cloud
 

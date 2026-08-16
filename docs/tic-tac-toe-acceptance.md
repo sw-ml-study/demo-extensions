@@ -34,6 +34,14 @@ middle drag pans, and wheel input zooms. Once movement crosses four pixels, the
 release is never interpreted as a board click. This arbitration is deterministic
 and covered both in native mlplunit and through the real worker/Port applet.
 
+Final combined acceptance on 2026-08-16 ran the three native worker/Port tests
+and all twelve tic-tac-toe mlplunit cases. Together they exercise stationary
+placement, O-first play, drag suppression, orbit/tilt, pan, zoom, terminal and
+off-board safety, bounded host exchanges, and close-driven worker teardown.
+The full repository `just check` remains the publication gate. Repeated native
+window use supplied macOS visual evidence; Linux remains build/design evidence
+only because this acceptance run occurred on macOS.
+
 ## Ownership and next demo
 
 MLPL owns every game-specific rule, board transition, AI choice, pointer-cell
