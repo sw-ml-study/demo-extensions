@@ -1,0 +1,1 @@
+Completed combined native tic-tac-toe camera acceptance across MLPL and the real worker/Port path, documented macOS evidence and Linux limitations, reconciled remaining upstream compiler/package gaps, and defined the next four-step Life-plane saga with editable cells, visible controls, deterministic presets, animation, shared camera interaction, and generic rendering.
