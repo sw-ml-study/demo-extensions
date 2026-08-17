@@ -33,7 +33,8 @@ Safetensors/GGUF contracts rather than inventing another format implementation.
 ## Bounds and evidence
 
 - Discovery retains at most 64 relative model paths.
-- Catalog reads are capped at 1 MiB, 4,096 tensors/metadata entries, rank 8,
+- Safetensors catalog reads are capped at 1 MiB and GGUF catalogs at 4 MiB,
+  with 4,096 tensors/metadata entries, rank 8,
   and MLPL's exact-integer parameter ceiling.
 - A selected Safetensors tensor reads at most 2,048 aligned integer values
   (4 KiB for I16/U16); GGUF reads at most 2,048 I8/I16 values or 64 complete
@@ -60,9 +61,10 @@ Unsupported formats fail closed before payload reads. See
 precise decoder ownership split and why the first slice requires no sw-MLPL
 language change.
 
-A real SmolLM2 Q8_0 acceptance run exposed a separate catalog gate: ordinary
-GGUF tokenizer metadata arrays are not yet supported by `demo-ml-utils`, even
-though Q8_0 payload blocks are. The app renders a red 3D X with the catalog
-reason instead of leaving the prior flat placeholder or guessing payload
-offsets. This limitation and the exact upstream requirement are recorded in
-the blocker matrix.
+A real SmolLM2 Q8_0 acceptance run first exposed a catalog correctness gate;
+`demo-ml-utils` commit `31b038f` now parses those arrays and recovers the exact
+tensor boundary. The downstream interactive run then exposed the remaining
+performance gate: traversing 147,209 metadata elements took about 100 seconds
+and overflowed the applet worker's 16 MiB stack before the tensor menu returned.
+The app continues to fail closed rather than guessing offsets. The exact
+stack-safe streaming requirement is recorded in the blocker matrix.

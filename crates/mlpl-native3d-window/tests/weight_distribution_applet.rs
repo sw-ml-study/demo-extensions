@@ -76,3 +76,24 @@ fn shared_q8_0_fixture_decodes_one_bounded_block() {
     });
     assert!(result.is_ok(), "Q8_0 applet failed: {result:?}");
 }
+
+#[test]
+#[ignore = "set WEIGHT_MODEL_ROOT to opt into a downloaded real-model acceptance"]
+fn downloaded_real_q8_0_model_reaches_supported_tensor_menu() {
+    let root = std::path::PathBuf::from(
+        std::env::var("WEIGHT_MODEL_ROOT").expect("WEIGHT_MODEL_ROOT must be absolute"),
+    );
+    let paths = mlpl_native3d_window::model_files::discover_model_paths(&root, 4).unwrap();
+    assert!(!paths.is_empty(), "real-model root has no GGUF input");
+    let source = weight_distribution_applet_source(&paths);
+    let result = run_applet_with_host_root(&source, &root, |commands, events| {
+        parse_scene_command(commands.recv().unwrap()).unwrap();
+        events.send(key_event("enter")).unwrap();
+        let tensors = parse_scene_command(commands.recv().unwrap()).unwrap();
+        assert!(tensors.help.contains("CHOOSE TENSOR"));
+        assert!(tensors.help.contains("[SUPPORTED]"));
+        assert!(!tensors.status.contains("CATALOG REJECTED"));
+        events.send(close_event()).unwrap();
+    });
+    assert!(result.is_ok(), "real Q8_0 applet failed: {result:?}");
+}
