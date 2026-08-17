@@ -124,6 +124,21 @@ Use Up/Down and Enter to choose a file, then M to return to the menu. See
 [Model Atlas real files](docs/model-atlas-real-files.md) for bounds, ownership,
 format support, and the filesystem containment contract.
 
+Explore a bounded sample of real Safetensors or GGUF tensor values:
+
+```sh
+just weight-distribution
+```
+
+The default picker searches `../demo-ml-utils/models`; set an absolute
+`MODEL_ROOT` to inspect a different confined tree. Choose a model and tensor
+with Up/Down and Enter. The histogram uses value units on X and logarithmic
+sample counts on Y; drag to orbit, Shift-drag or middle-drag to pan, use the
+wheel to zoom, Left/Backspace to return to tensors, and M to return to models.
+Only explicitly supported integer and Q8_0 decoders are enabled. See the
+[weight-distribution guide](docs/native3d-weight-distribution.md) and
+[blocker matrix](docs/weight-distribution-blockers.md).
+
 The bundled, derived fixture renders tensor metadata as stable-ID wireframe
 buildings grouped into Safetensors and GGUF districts. Building height uses a
 visible logarithmic stored-byte scale, so one large tensor cannot flatten the

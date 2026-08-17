@@ -1,0 +1,20 @@
+include "lib/native3d/camera.mlpl";
+include "lib/native3d/geometry.mlpl";
+include "demos/model-atlas/model.mlpl";
+include "demos/model-atlas/scene.mlpl";
+include "demos/weight-distribution/model.mlpl";
+include "demos/weight-distribution/scene.mlpl";
+
+@test {name:"Weight distributions bin bounded signed samples",tags:["native3d","weights","histogram"]}
+def u:test_weight_histogram() { tile=u:wd_tile([-4,-2,-1,0,0,1,2,4],8,8)?; u:assert_eq(tile.count,8,"sample count")?; u:assert_eq(reduce_add(tile.bin_counts),8,"bins conserve samples")?; u:assert_eq([tile.minimum,tile.maximum],[-4,4],"range retained")?; u:assert_eq(tile.zero_count,2,"zero count") }
+
+@test {name:"Weight explorer fails closed for unsupported shared decoders",tags:["native3d","weights","dtype","adversarial"]}
+def u:test_weight_dtype_gate() { u:assert_true(u:wd_dtype_supported("safetensors","I16"),"Safetensors I16")?; u:assert_true(u:wd_dtype_supported("gguf",8),"GGUF Q8_0")?; u:assert_true(1-u:wd_dtype_supported("safetensors","F16"),"Safetensors F16 rejected")?; u:assert_true(u:atlas_text_contains(u:wd_dtype_reason("gguf",2),"DEMO-ML-UTILS"),"GGUF unsupported ownership is visible") }
+
+@test {name:"Weight histogram scene uses stable retained IDs and legends",tags:["native3d","weights","retained"]}
+def u:test_weight_scene() { state=u:wd_fixture_state([-2,-1,0,1,2]); scene=u:wd_scene(state)?; u:assert_eq(tally(scene.ids),8*12+24,"fixed histogram topology")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,1000)),"first stable histogram ID")?; help=u:wd_help(state); u:assert_true(u:atlas_text_contains(help,"X=WEIGHT VALUE"),"value axis legend")?; u:assert_true(u:atlas_text_contains(help,"Y=LOG2 SAMPLE COUNT"),"count scale legend") }
+
+@test {name:"Fail-closed model errors render an unmistakable red 3D X",tags:["native3d","weights","error"]}
+def u:test_weight_error_scene() { base=u:wd_defaults(["blocked.gguf"]); state=u:wd_restate(base,"error",0,0,base.tile,8,0,base.camera,"CATALOG REJECTED"); scene=u:wd_mode_scene(state)?; u:assert_eq(tally(scene.ids),3,"error glyph has three strokes")?; u:assert_eq(take(scene.colors,0,0),[1,0.15,0.1,1],"error glyph is red")?; u:assert_true(u:atlas_text_contains(u:wd_help(state),"NO UNSUPPORTED PAYLOAD WAS READ"),"error help explains fail closed") }
+
+u:run_registered_tests()

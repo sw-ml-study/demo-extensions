@@ -7,6 +7,7 @@ pub mod audio;
 pub mod disk_usage;
 pub mod interaction;
 pub mod live;
+pub mod model_files;
 
 /// One GPU-ready position/color vertex in normalized device coordinates.
 #[repr(C)]

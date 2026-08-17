@@ -63,6 +63,10 @@ disk-usage:
 audio-spectrum:
     ./scripts/run-audio-spectrum
 
+# Explore bounded samples from real Safetensors or GGUF weight tensors.
+weight-distribution:
+    ./scripts/run-weight-distribution
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

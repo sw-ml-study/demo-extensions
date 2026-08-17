@@ -287,6 +287,13 @@ contracts exist. The step will distinguish requirements owned by
 `docs/weight-distribution-blockers.md`; no language change is required for the
 initial supported-dtype slice.
 
+**Delivered first slice:** `just weight-distribution` now offers a real
+Safetensors/GGUF picker, tensor selection, capped aligned integer/Q8_0 samples,
+an eight-bin logarithmic-height histogram, visible units/legends/statistics,
+camera controls, stable-ID selection patches, and explicit fail-closed decoder
+reasons. The exact shared-library and host ownership matrix is recorded in
+`docs/weight-distribution-blockers.md`.
+
 ## In progress: native3d-life-surfaces
 
 Purpose: reuse the Life application on closed 3D surfaces after the finite

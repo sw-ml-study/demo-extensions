@@ -72,6 +72,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         .position(|argument| argument == "--audio-spectrum")
         .and_then(|index| arguments.get(index + 1))
         .map(std::path::PathBuf::from);
+    let weight_distribution = arguments
+        .iter()
+        .position(|argument| argument == "--weight-distribution")
+        .and_then(|index| arguments.get(index + 1))
+        .map(std::path::PathBuf::from);
     let source = if tic_tac_toe {
         tic_tac_toe_applet_source()
     } else if let Some(root) = disk_usage.as_ref() {
@@ -86,6 +91,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     } else if let Some(root) = audio_spectrum.as_ref() {
         let paths = mlpl_native3d_window::audio::discover_audio_paths(root, 128)?;
         mlpl_native3d_window::live::audio_spectrum_applet_source(&paths)
+    } else if let Some(root) = weight_distribution.as_ref() {
+        let paths = mlpl_native3d_window::model_files::discover_model_paths(root, 64)?;
+        mlpl_native3d_window::live::weight_distribution_applet_source(&paths)
     } else if model_atlas_file.is_some() {
         mlpl_native3d_window::live::model_atlas_file_applet_source()
     } else if model_atlas {
@@ -99,7 +107,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     println!("MLPL Native 3D — application behavior is evaluated by MLPL");
     let mut host_error = None;
-    let rooted = disk_usage.or(model_atlas_file).or(audio_spectrum);
+    let rooted = disk_usage
+        .or(model_atlas_file)
+        .or(audio_spectrum)
+        .or(weight_distribution);
     let result = if let Some(root) = rooted {
         mlpl_native3d_window::live::run_applet_with_host_root(&source, &root, |commands, events| {
             let mut application = Application::new_rooted(commands, events, Some(root.clone()));

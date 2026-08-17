@@ -98,6 +98,19 @@ const DISK_USAGE_APPLET: &str = include_str!("../../../demos/disk-usage/live-app
 const AUDIO_MODEL: &str = include_str!("../../../demos/audio-spectrum/model.mlpl");
 const AUDIO_SCENE: &str = include_str!("../../../demos/audio-spectrum/scene.mlpl");
 const AUDIO_APPLET: &str = include_str!("../../../demos/audio-spectrum/live-applet.mlpl");
+const WD_SAFE_HEADER: &str =
+    include_str!("../../../../demo-ml-utils/src/formats/safetensors_header.mlpl");
+const WD_SAFE_CATALOG: &str =
+    include_str!("../../../../demo-ml-utils/src/formats/safetensors_catalog.mlpl");
+const WD_SAFE_SLICE: &str =
+    include_str!("../../../../demo-ml-utils/src/formats/safetensors_slice.mlpl");
+const WD_GGUF_CATALOG: &str =
+    include_str!("../../../../demo-ml-utils/src/formats/gguf_catalog.mlpl");
+const WD_GGUF_SLICE: &str = include_str!("../../../../demo-ml-utils/src/formats/gguf_slice.mlpl");
+const WD_GGUF_Q8: &str = include_str!("../../../../demo-ml-utils/src/formats/gguf_q8_0.mlpl");
+const WD_MODEL: &str = include_str!("../../../demos/weight-distribution/model.mlpl");
+const WD_SCENE: &str = include_str!("../../../demos/weight-distribution/scene.mlpl");
+const WD_APPLET: &str = include_str!("../../../demos/weight-distribution/live-applet.mlpl");
 
 #[must_use]
 pub fn applet_source() -> String {
@@ -206,6 +219,29 @@ pub fn audio_spectrum_applet_source(paths: &[String]) -> String {
         without_includes(AUDIO_MODEL),
         without_includes(AUDIO_SCENE),
         without_includes(AUDIO_APPLET)
+    )
+}
+
+#[must_use]
+pub fn weight_distribution_applet_source(paths: &[String]) -> String {
+    let files = paths
+        .iter()
+        .map(|path| format!("\"{}\"", path.replace('\\', "\\\\").replace('"', "\\\"")))
+        .collect::<Vec<_>>()
+        .join(",");
+    format!(
+        "weight_files=[{files}];\n{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+        without_includes(ATLAS_MODEL),
+        without_includes(ATLAS_SCENE),
+        without_includes(WD_SAFE_HEADER),
+        without_includes(WD_SAFE_CATALOG),
+        without_includes(WD_SAFE_SLICE),
+        without_includes(WD_GGUF_CATALOG),
+        without_includes(WD_GGUF_SLICE),
+        without_includes(WD_GGUF_Q8),
+        without_includes(WD_MODEL),
+        without_includes(WD_SCENE),
+        without_includes(WD_APPLET)
     )
 }
 

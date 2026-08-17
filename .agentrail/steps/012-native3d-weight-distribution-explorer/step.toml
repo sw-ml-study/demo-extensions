@@ -1,6 +1,6 @@
 number = 12
 slug = "native3d-weight-distribution-explorer"
-status = "pending"
+status = "in-progress"
 description = "Build an interactive native 3D weight-distribution explorer over real bounded..."
 role = "production"
 context_files = []
