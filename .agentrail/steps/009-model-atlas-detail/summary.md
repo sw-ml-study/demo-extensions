@@ -1,0 +1,1 @@
+Delivered bounded MLPL-owned Model Atlas detail views and a confined real Safetensors picker with header-only scanning, file sizes and UTC dates, log-scale legends, improved selection, documentation, and queued the read-only disk-usage explorer as the next step. Full just check passed.

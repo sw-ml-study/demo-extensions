@@ -1,8 +1,9 @@
 number = 9
 slug = "model-atlas-detail"
-status = "in-progress"
+status = "completed"
 description = "Add bounded interactive tensor drill-down views using renderer-neutral statis..."
 role = "production"
 context_files = []
 created_at = "2026-08-16T12:57:43"
-commits = []
+completed_at = "2026-08-16T18:01:04"
+commits = ["82a613f0d84df2c4e8931ca45d23cf2751aa33f5"]
