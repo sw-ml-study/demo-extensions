@@ -1,0 +1,10 @@
+def u:file_atlas_menu_state(paths,selected,mode,path) { {paths: paths,selected: selected,mode: mode,path: path} }
+def u:file_atlas_menu(paths) { u:file_atlas_menu_state(paths,0,"menu","") }
+def u:file_atlas_menu_key(state,key) {
+  count=list_len(state.paths); selected=state.selected; mode=state.mode; path=state.path;
+  if equal(key,"arrow_down")*gt(count,0) { selected=if lt(selected+1,count) { selected+1 } else { selected } };
+  if equal(key,"arrow_up")*gt(selected,0) { selected=selected-1 };
+  if equal(key,"enter")*equal(mode,"menu")*gt(count,0) { mode="analyze"; path=list_get(state.paths,selected)? };
+  if equal(key,"m") { mode="menu"; path="" };
+  u:file_atlas_menu_state(state.paths,selected,mode,path)
+}

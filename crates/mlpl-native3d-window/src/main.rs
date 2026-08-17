@@ -14,7 +14,7 @@ use mlpl_native3d_window::live::{
     applet_source, close_event, input_event, key_event, life_torus_applet_source,
     model_atlas_applet_source, resize_event, tic_tac_toe_applet_source,
 };
-use mlpl_native3d_window::{GpuVertex, line_vertices, text_vertices};
+use mlpl_native3d_window::{GpuVertex, line_vertices, text_vertices, text_vertices_colored};
 use wgpu::util::DeviceExt;
 use winit::{
     application::ApplicationHandler,
@@ -57,8 +57,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     let life = arguments.iter().any(|argument| argument == "--life");
     let life_torus = arguments.iter().any(|argument| argument == "--life-torus");
     let model_atlas = arguments.iter().any(|argument| argument == "--model-atlas");
+    let model_atlas_file = arguments
+        .iter()
+        .position(|argument| argument == "--model-atlas-file")
+        .and_then(|index| arguments.get(index + 1))
+        .map(std::path::PathBuf::from);
     let source = if tic_tac_toe {
         tic_tac_toe_applet_source()
+    } else if model_atlas_file.is_some() {
+        mlpl_native3d_window::live::model_atlas_file_applet_source()
     } else if model_atlas {
         model_atlas_applet_source()
     } else if life_torus {
@@ -70,12 +77,21 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     println!("MLPL Native 3D — application behavior is evaluated by MLPL");
     let mut host_error = None;
-    let result = run_applet_with_host(&source, |commands, events| {
-        let mut application = Application::new(commands, events);
-        if let Err(error) = event_loop.run_app(&mut application) {
-            host_error = Some(error.to_string());
-        }
-    });
+    let result = if let Some(root) = model_atlas_file {
+        mlpl_native3d_window::live::run_applet_with_host_root(&source, &root, |commands, events| {
+            let mut application = Application::new(commands, events);
+            if let Err(error) = event_loop.run_app(&mut application) {
+                host_error = Some(error.to_string());
+            }
+        })
+    } else {
+        run_applet_with_host(&source, |commands, events| {
+            let mut application = Application::new(commands, events);
+            if let Err(error) = event_loop.run_app(&mut application) {
+                host_error = Some(error.to_string());
+            }
+        })
+    };
     if let Some(error) = host_error {
         return Err(error.into());
     }
@@ -93,6 +109,7 @@ struct Application {
     rotation_speed: f32,
     camera: Camera,
     help: String,
+    status: String,
     pointer_position: [f64; 2],
     pointer_buttons: PointerButtons,
     modifiers: Modifiers,
@@ -114,6 +131,7 @@ impl Application {
             rotation_speed: 0.0,
             camera: Camera::default(),
             help: String::new(),
+            status: String::new(),
             pointer_position: [0.0; 2],
             pointer_buttons: PointerButtons::NONE,
             modifiers: Modifiers::NONE,
@@ -143,6 +161,7 @@ impl Application {
                     self.camera = command.camera;
                     self.rotation_speed = command.rotation_speed;
                     self.help = command.help;
+                    self.status = command.status;
                 }
                 Ok(mlpl_native3d_window::live::LiveCommand::Patch(command)) => {
                     let Some(retained) = self.retained_scene.as_mut() else {
@@ -167,6 +186,7 @@ impl Application {
                     }
                     self.camera = command.camera;
                     self.help = command.help;
+                    self.status = command.status;
                 }
                 Ok(mlpl_native3d_window::live::LiveCommand::FrameAck(_revision)) => {
                     self.frame_gate.acknowledge();
@@ -229,7 +249,9 @@ impl Application {
             graphics.window.request_redraw();
             return;
         };
-        if let Err(error) = graphics.render(scene, self.camera, self.angle, &self.help) {
+        if let Err(error) =
+            graphics.render(scene, self.camera, self.angle, &self.help, &self.status)
+        {
             match error {
                 wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated => graphics.reconfigure(),
                 wgpu::SurfaceError::OutOfMemory => event_loop.exit(),
@@ -381,6 +403,7 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
         Key::Named(NamedKey::ArrowDown) => Some("arrow_down"),
         Key::Named(NamedKey::Escape) => Some("escape"),
         Key::Named(NamedKey::Space) => Some("space"),
+        Key::Named(NamedKey::Enter) => Some("enter"),
         Key::Character(value) => match value.to_lowercase().as_str() {
             "w" => Some("w"),
             "s" => Some("s"),
@@ -396,6 +419,7 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
             "h" => Some("h"),
             "i" => Some("i"),
             "l" => Some("l"),
+            "m" => Some("m"),
             "n" => Some("n"),
             "t" => Some("t"),
             "u" => Some("u"),
@@ -520,6 +544,7 @@ impl Graphics {
         camera: Camera,
         angle: f32,
         help: &str,
+        status: &str,
     ) -> Result<(), wgpu::SurfaceError> {
         let Ok(viewport) = Viewport::new(self.configuration.width, self.configuration.height)
         else {
@@ -530,6 +555,14 @@ impl Graphics {
         };
         let mut vertices = line_vertices(&lines, viewport);
         vertices.extend(text_vertices(help, viewport));
+        let help_line_count = help.lines().fold(0.0_f32, |count, _| count + 1.0);
+        let status_y = 14.0 + help_line_count * 18.0;
+        vertices.extend(text_vertices_colored(
+            status,
+            viewport,
+            [14.0, status_y],
+            [1.0, 0.9, 0.15, 1.0],
+        ));
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {

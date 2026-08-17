@@ -51,6 +51,10 @@ model-atlas-contract:
 model-atlas:
     ./scripts/run-model-atlas
 
+# Choose and inspect a real local Safetensors model without reading its payload.
+model-atlas-file:
+    ./scripts/run-model-atlas-file
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

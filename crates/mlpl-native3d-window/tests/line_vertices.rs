@@ -1,5 +1,5 @@
 use mlpl_native3d_scene::{Camera, LineScene, Viewport};
-use mlpl_native3d_window::{line_vertices, text_vertices};
+use mlpl_native3d_window::{line_vertices, text_vertices, text_vertices_colored};
 
 fn line_scene() -> LineScene {
     LineScene::parse(
@@ -50,4 +50,34 @@ fn help_text_expands_to_visible_gpu_quads() {
     assert!(vertices.iter().all(|vertex| {
         (-1.0..=1.0).contains(&vertex.position[0]) && (-1.0..=1.0).contains(&vertex.position[1])
     }));
+}
+
+#[test]
+fn colored_status_text_preserves_requested_accent() {
+    let color = [1.0, 0.9, 0.15, 1.0];
+    let vertices = text_vertices_colored(
+        "SELECTED: tensor",
+        Viewport::new(800, 600).unwrap(),
+        [14.0, 180.0],
+        color,
+    );
+    assert!(!vertices.is_empty());
+    assert!(vertices.iter().all(|vertex| {
+        vertex
+            .color
+            .into_iter()
+            .zip(color)
+            .all(|(actual, expected)| (actual - expected).abs() < f32::EPSILON)
+    }));
+}
+
+#[test]
+fn model_metadata_digits_and_path_punctuation_are_visible() {
+    let viewport = Viewport::new(800, 600).unwrap();
+    for character in "0123456789._:%=,".chars() {
+        assert!(
+            !text_vertices(&character.to_string(), viewport).is_empty(),
+            "metadata glyph {character:?} must produce visible geometry"
+        );
+    }
 }

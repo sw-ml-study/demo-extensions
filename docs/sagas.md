@@ -182,12 +182,78 @@ tensor payload into memory.
    **Complete:** the UI distinguishes GGUF `[METADATA]` from selected tensor
    `[HEURISTIC]` roles and fails ambiguous/adversarial names to `UNKNOWN`.
 5. Add on-demand bounded statistics, histogram/surface, and quantization-error
-   detail views using stable-ID scene patches.
+   detail views using stable-ID scene patches. **Complete:** checked-in
+   Safetensors/GGUF fixtures use `demo-ml-utils` compatible schemas, enforce
+   4/4/4 caps, patch only selected/detail IDs, and visibly reject unsupported
+   payload decoding.
+6. Open on a confined real-file picker, reuse the bounded `demo-ml-utils`
+   Safetensors catalog, render a capped tensor view, and return with M.
+   **Implemented in the active detail slice:** `just model-atlas-file` starts
+   at the picker and never reads tensor payloads. GGUF remains a later format
+   addition.
 
 Acceptance: total model size does not determine resident payload memory; every
 range/pass/cache budget fails closed; metadata and heuristic inference remain
 visibly distinct; Rust contains no model semantics; and macOS/Linux use the
 same native winit/wgpu path.
+
+## Queued: native3d-audio-spectrum-player
+
+Purpose: make compressed-audio processing visible as a native, normal-speed
+3D stereo spectrum rather than treating decoding as a silent batch task.
+
+1. Reuse bounded MP3/Ogg discovery and decode contracts from
+   `demo-file-processing`, with explicit frame/ring-buffer budgets.
+2. Expose generic native audio output and timestamp primitives only where the
+   existing extension boundary lacks them; keep player state in MLPL.
+3. Compute deterministic windowed stereo spectra and MLPL mappings for bass,
+   mid-range, and high bands, with channel/color/scale legends.
+4. Render a native 3D equalizer with play/pause, seek, orbit/pan/zoom, file
+   menu, and an option to mute or play synchronized audio.
+5. Add headless decoder/spectrum/timing tests plus opt-in macOS/Linux audio and
+   window smoke evidence.
+
+Acceptance: decoding and visualization remain bounded while playing at normal
+speed; left/right channels and frequency units are unambiguous; muted mode is
+fully useful; audio synchronization has measured drift bounds; and neither
+the Rust extension nor renderer encodes application-specific equalizer rules.
+
+## Queued: native3d-disk-usage-explorer
+
+Purpose: demonstrate a read-only native disk-usage explorer inspired by
+`dua-cli`, using MLPL aggregation and the generic renderer to explain which
+directories and files consume a selected tree's space.
+
+1. Define a confined, read-only scan contract over one host-selected root.
+   Record relative path, entry kind, file size, parent identity, scan errors,
+   and explicit entry/depth/output budgets; never read file contents.
+2. Aggregate direct and recursive byte totals by directory in MLPL, preserve
+   stable path IDs, sort deterministically by descending bytes then path, and
+   account visibly for inaccessible or budget-excluded entries.
+3. Present an initial root picker/confirmation view followed by a native 3D
+   treemap or nested-block view. Area or footprint represents recursive bytes;
+   height may represent direct bytes or depth only when the legend makes that
+   mapping explicit. Use logarithmic scaling only where labeled with units.
+4. Add click drill-down, parent/back navigation, largest-first filters,
+   minimum-size thresholds, orbit/pan/zoom, selection details, and a persistent
+   breadcrumb. Retain the completed snapshot; this demo has no recalculate,
+   refresh, mark, delete, move, or write action.
+5. Add deterministic synthetic-tree mlplunit tests, confined-filesystem Rust
+   tests, sparse/large-tree memory evidence, macOS/Linux interactive smoke
+   evidence, and documentation comparing the deliberately narrower behavior
+   with full disk-management tools.
+
+Safety and ownership: every filesystem operation is metadata-only and confined
+to the selected root. Symlink traversal policy is explicit and escape-safe.
+Rust supplies generic sandboxed metadata, window, event, and rendering
+primitives; MLPL owns aggregation, ranking, navigation, labels, and visual
+mapping. The application exposes no mutation command, including hidden keys.
+
+Acceptance: users can identify the largest directories/files and navigate the
+captured hierarchy; totals and unknown/excluded bytes reconcile under fixed
+budgets; file contents are never opened; the snapshot does not change unless
+the application is closed and deliberately launched again; and tests prove no
+remove/write/rename primitive is reachable from the demo.
 
 ## In progress: native3d-life-surfaces
 

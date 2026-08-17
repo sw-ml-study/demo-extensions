@@ -55,13 +55,25 @@ pub fn line_vertices(lines: &[PlannedLine], viewport: Viewport) -> Vec<GpuVertex
 #[must_use]
 #[allow(clippy::cast_precision_loss)]
 pub fn text_vertices(text: &str, viewport: Viewport) -> Vec<GpuVertex> {
+    text_vertices_colored(text, viewport, [14.0, 14.0], [0.85, 0.9, 1.0, 1.0])
+}
+
+/// Rasterizes compact ASCII text at a screen-space origin with a caller-owned color.
+#[must_use]
+#[allow(clippy::cast_precision_loss)]
+pub fn text_vertices_colored(
+    text: &str,
+    viewport: Viewport,
+    origin: [f32; 2],
+    color: [f32; 4],
+) -> Vec<GpuVertex> {
     let [width, height] = viewport.dimensions();
     let (width, height) = (width as f32, height as f32);
     let mut output = Vec::new();
-    let (mut x, mut y) = (14.0_f32, 14.0_f32);
+    let (mut x, mut y) = (origin[0], origin[1]);
     for character in text.chars() {
         if character == '\n' {
-            x = 14.0;
+            x = origin[0];
             y += 18.0;
             continue;
         }
@@ -74,6 +86,7 @@ pub fn text_vertices(text: &str, viewport: Viewport) -> Vec<GpuVertex> {
                         y + row as f32 * 2.0,
                         width,
                         height,
+                        color,
                     );
                 }
             }
@@ -83,10 +96,17 @@ pub fn text_vertices(text: &str, viewport: Viewport) -> Vec<GpuVertex> {
     output
 }
 
-fn push_quad(output: &mut Vec<GpuVertex>, x: f32, y: f32, width: f32, height: f32) {
+fn push_quad(
+    output: &mut Vec<GpuVertex>,
+    x: f32,
+    y: f32,
+    width: f32,
+    height: f32,
+    color: [f32; 4],
+) {
     let point = |px: f32, py: f32| GpuVertex {
         position: [px / width * 2.0 - 1.0, 1.0 - py / height * 2.0],
-        color: [0.85, 0.9, 1.0, 1.0],
+        color,
     };
     let corners = [
         point(x, y),
@@ -127,9 +147,30 @@ fn glyph(character: char) -> [u8; 7] {
         'X' => [17, 17, 10, 4, 10, 17, 17],
         'Y' => [17, 17, 10, 4, 4, 4, 4],
         'Z' => [31, 1, 2, 4, 8, 16, 31],
+        '0' => [14, 17, 19, 21, 25, 17, 14],
+        '1' => [4, 12, 4, 4, 4, 4, 14],
+        '2' => [14, 17, 1, 2, 4, 8, 31],
+        '3' => [30, 1, 1, 14, 1, 1, 30],
+        '4' => [2, 6, 10, 18, 31, 2, 2],
+        '5' => [31, 16, 16, 30, 1, 1, 30],
+        '6' => [14, 16, 16, 30, 17, 17, 14],
+        '7' => [31, 1, 2, 4, 8, 8, 8],
+        '8' => [14, 17, 17, 14, 17, 17, 14],
+        '9' => [14, 17, 17, 15, 1, 1, 14],
         '+' => [0, 4, 4, 31, 4, 4, 0],
         '-' => [0, 0, 0, 31, 0, 0, 0],
         '/' => [1, 2, 2, 4, 8, 8, 16],
+        '.' => [0, 0, 0, 0, 0, 12, 12],
+        ',' => [0, 0, 0, 0, 4, 4, 8],
+        ':' => [0, 12, 12, 0, 12, 12, 0],
+        '_' => [0, 0, 0, 0, 0, 0, 31],
+        '%' => [17, 2, 4, 8, 16, 17, 0],
+        '=' => [0, 0, 31, 0, 31, 0, 0],
+        '|' => [4, 4, 4, 4, 4, 4, 4],
+        '>' => [16, 8, 4, 2, 4, 8, 16],
+        '<' => [1, 2, 4, 8, 4, 2, 1],
+        '(' => [2, 4, 8, 8, 8, 4, 2],
+        ')' => [8, 4, 2, 2, 2, 4, 8],
         '[' => [14, 8, 8, 8, 8, 8, 14],
         ']' => [14, 2, 2, 2, 2, 2, 14],
         _ => [0; 7],

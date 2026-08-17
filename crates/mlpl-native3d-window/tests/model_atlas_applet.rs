@@ -9,10 +9,12 @@ use mlpl_native3d_window::live::{
 fn mlpl_model_atlas_filters_and_updates_the_generic_retained_scene() {
     let result = run_applet_with_host(&model_atlas_applet_source(), |receiver, sender| {
         let initial = parse_scene_command(receiver.recv().unwrap()).unwrap();
-        assert_eq!(initial.scene.edges().len(), 92);
+        assert_eq!(initial.scene.edges().len(), 165);
         assert!(initial.help.contains("MODEL ATLAS"));
-        assert!(initial.help.contains("HEIGHT LOG2(BYTES+1)"));
+        assert!(initial.help.contains("LOG2 BYTE HEIGHT"));
         assert!(initial.help.contains("GGUF ARCH mamba [METADATA]"));
+        assert!(initial.help.contains("CYAN=4-BIN HISTOGRAM"));
+        assert!(initial.help.contains("NEVER USER MODEL PAYLOAD"));
         let distance = initial.camera.distance();
         let mut retained = RetainedScene::from_scene_command(&initial).unwrap();
 
@@ -22,7 +24,13 @@ fn mlpl_model_atlas_filters_and_updates_the_generic_retained_scene() {
             panic!("expected filter patch")
         };
         retained.apply(&patch).unwrap();
-        assert_eq!(retained.scene().edges().len(), 44);
+        assert_eq!(retained.scene().edges().len(), 117);
+        assert!(
+            parse_view_command(receiver.recv().unwrap())
+                .unwrap()
+                .status
+                .is_empty()
+        );
 
         sender.send(key_event("s")).unwrap();
         let LiveCommand::Patch(patch) = parse_live_command(receiver.recv().unwrap()).unwrap()
@@ -30,7 +38,13 @@ fn mlpl_model_atlas_filters_and_updates_the_generic_retained_scene() {
             panic!("expected toggle-to-all patch")
         };
         retained.apply(&patch).unwrap();
-        assert_eq!(retained.scene().edges().len(), 92);
+        assert_eq!(retained.scene().edges().len(), 165);
+        assert!(
+            parse_view_command(receiver.recv().unwrap())
+                .unwrap()
+                .status
+                .is_empty()
+        );
 
         sender.send(key_event("g")).unwrap();
         let LiveCommand::Patch(patch) = parse_live_command(receiver.recv().unwrap()).unwrap()
@@ -38,7 +52,13 @@ fn mlpl_model_atlas_filters_and_updates_the_generic_retained_scene() {
             panic!("expected GGUF filter patch")
         };
         retained.apply(&patch).unwrap();
-        assert_eq!(retained.scene().edges().len(), 56);
+        assert_eq!(retained.scene().edges().len(), 129);
+        assert!(
+            parse_view_command(receiver.recv().unwrap())
+                .unwrap()
+                .status
+                .is_empty()
+        );
 
         sender.send(key_event("l")).unwrap();
         let LiveCommand::Patch(patch) = parse_live_command(receiver.recv().unwrap()).unwrap()
@@ -46,7 +66,13 @@ fn mlpl_model_atlas_filters_and_updates_the_generic_retained_scene() {
             panic!("expected LOD patch")
         };
         retained.apply(&patch).unwrap();
-        assert_eq!(retained.scene().edges().len(), 56);
+        assert_eq!(retained.scene().edges().len(), 129);
+        assert!(
+            parse_view_command(receiver.recv().unwrap())
+                .unwrap()
+                .status
+                .is_empty()
+        );
 
         sender
             .send(input_event(InputEvent::wheel(

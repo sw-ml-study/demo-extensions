@@ -103,3 +103,61 @@ flow back. Headless protocol tests and native mlplunit prove the same logic.
 
 There is no remaining sw-MLPL blocker for the local interpreted interactive
 PoC. Compiler and deployment parity remain explicit later capabilities.
+
+## Model-picker filesystem sandbox — parity gap with downstream workaround
+
+The file-backed Model Atlas can use `fs_walk`, `file_size`, and bounded
+`read_bytes` in ordinary sw-MLPL script mode, but the parked-main applet entry
+point cannot currently configure their sandbox. `run_applet_with_host(source,
+host)` constructs `Environment::new()` internally and leaves `fs_root` unset;
+there is no public applet configuration or root parameter. Consequently an
+MLPL applet receives `err("...no filesystem sandbox on this surface...")` for
+directory discovery and file reads, even when the user explicitly selected a
+root in the native launcher.
+
+Required upstream contract: add a configured parked-main entry point, for
+example `run_applet_with_host_config(source, {fs_root}, host)`, that
+canonicalizes one explicit root before the worker starts and gives the worker
+the same contained `fs_walk`/`file_size`/`read_bytes` behavior as script mode.
+It must reject absent, non-directory, and non-canonical roots; prevent `..` and
+symlink escape; and preserve the existing no-filesystem default for callers
+that do not opt in. The root is host policy, not an MLPL-selected unrestricted
+path.
+
+Downstream status: this repository now uses a small adapter over sw-MLPL's
+public `Environment`, `register_port`, and filesystem-root field. It
+canonicalizes one host-selected directory before starting the worker while
+preserving the ordinary applet helper's no-filesystem default. Headless tests
+prove confined discovery, selection, bounded header analysis, return to the
+menu, and denial on the unconfigured surface. This unblocks the interpreted
+demo without modifying sw-MLPL, but the configured parked-main entry point is
+still needed for first-class host parity and to remove the downstream adapter.
+
+## Confined filesystem modification times — interpreter shipped
+
+sw-MLPL commit `0f4d0e32` shipped `file_metadata(path) ->
+ok({kind,size,modified_unix_ms})` for the interpreter. It uses exact UTC Unix
+milliseconds, returns an error when modification time is unavailable, and
+shares the `file_size` configured-root and symlink-escape rules. This removes
+the interpreted Model Atlas date blocker.
+
+Primary owner: `../sw-mlpl`; the interpreter contract above is complete and
+documented. Remaining upstream work is `file-metadata-compiler-parity`, which
+must lower the same Result record and confinement behavior to compiled Rust.
+There is intentionally no upstream date-formatting builtin: UTC/local
+formatting, sorting, and presentation are MLPL application semantics.
+
+Downstream adopter: `../demo-file-processing` should now demonstrate bounded
+metadata scans, date sorting/formatting, unavailable-time handling, and
+macOS/Linux fixtures. This repository can consume the same API immediately in
+its interpreted model picker. Neither downstream repo needs or should add a
+competing native filesystem API.
+
+Downstream acceptance here: menu rows show an unambiguous size and modification
+timestamp for each candidate, sorting remains deterministic when timestamps
+tie or are unavailable, displayed timezone/format is labeled, and headless
+tests pin exact epoch values without depending on wall-clock time.
+
+Separate remaining applet gap: `run_applet_with_host` still cannot accept a
+configured filesystem root, so this repository's public-`Environment` adapter
+remains necessary even though `file_metadata` itself has shipped.

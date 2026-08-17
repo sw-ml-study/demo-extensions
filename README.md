@@ -111,6 +111,19 @@ Open the interactive native Model Atlas tensor city:
 just model-atlas
 ```
 
+Choose and inspect an actual local Safetensors model without reading its
+tensor payload:
+
+```sh
+just model-atlas-file
+```
+
+The picker searches `../demo-ml-utils/models` by default. Use an absolute
+override such as `MODEL_ROOT=/absolute/model/directory just model-atlas-file`.
+Use Up/Down and Enter to choose a file, then M to return to the menu. See
+[Model Atlas real files](docs/model-atlas-real-files.md) for bounds, ownership,
+format support, and the filesystem containment contract.
+
 The bundled, derived fixture renders tensor metadata as stable-ID wireframe
 buildings grouped into Safetensors and GGUF districts. Building height uses a
 visible logarithmic stored-byte scale, so one large tensor cannot flatten the
@@ -275,11 +288,15 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
 - [Bounded Model Atlas scanning](docs/model-atlas-bounded-scan.md) — range-read
   passes, compact adapter columns, selected detail/cache bounds, and RSS data.
 - [Model Atlas interchange](docs/model-atlas-interchange.md) — versioned tagged
-- [Model Atlas native city](docs/model-atlas-native-city.md) — interactive
-  tensor buildings, filtering, selection, camera controls, and bounded LOD
-- [Model Atlas architecture](docs/model-atlas-architecture.md) — authoritative
-  GGUF metadata versus explicitly qualified tensor-name role inference
   transport, derived cross-format fixture, provenance, layout, and ownership.
+- [Model Atlas native city](docs/model-atlas-native-city.md) — interactive
+  tensor buildings, filtering, selection, camera controls, and bounded LOD.
+- [Model Atlas real files](docs/model-atlas-real-files.md) — confined model
+  picker, bounded Safetensors catalog reads, ownership, and current limits.
+- [Model Atlas architecture](docs/model-atlas-architecture.md) — authoritative
+  GGUF metadata versus explicitly qualified tensor-name role inference.
+- [Model Atlas detail views](docs/model-atlas-detail.md) — bounded statistics,
+  histogram/surface and Q8-error fixtures, retained patches, and limitations.
 - [Wireframe cube acceptance](docs/wireframe-cube-acceptance.md) — evidence
   matrix and deliberately narrow PoC claims.
 - [sw-MLPL blockers](docs/sw-mlpl-blockers.md) — exact handles, arrays, events,

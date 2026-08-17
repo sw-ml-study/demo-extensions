@@ -7,8 +7,8 @@ than reading tensor payloads or an entire model file into memory.
 
 ## Controls
 
-- Click a building to select it and show its tensor name and inferred role in
-  the visible legend.
+- Click a building to select it and show its tensor name, inferred role, and a
+  bounded detail fixture when one exists.
 - Left-drag orbits and tilts. Shift-left-drag or middle-drag pans. The wheel
   zooms.
 - `A` shows all tensors. `S` and `G` select Safetensors or GGUF respectively;
@@ -30,14 +30,15 @@ letting one tensor dominate the scene. Stable line IDs make selection,
 filtering, and LOD changes atomic retained-scene patches instead of full
 geometry replacement.
 
-The default fixture produces 92 lines: eight district-border lines and twelve
-wireframe lines for each of seven tensor buildings. Filtering and LOD preserve
+The default fixture produces 165 lines, including districts, labeled scale and
+legend geometry, and twelve wireframe lines for each of seven tensor buildings.
+Supported selections add only bounded histogram/surface/error IDs. Filtering and LOD preserve
 deterministic ordering and hard caps inherited from the validated interchange.
 The fixture's GGUF `general.architecture=mamba` value is displayed as
 authoritative `[METADATA]`. Selected tensor roles are classified by explicit
 MLPL name patterns and displayed separately as `[HEURISTIC]`; unknown or
-ambiguous names remain `UNKNOWN`. Bounded, on-demand tensor detail is still a
-later step. The complete classification contract is documented in
+ambiguous names remain `UNKNOWN`. Bounded derived drill-downs are documented in
+[Model Atlas detail views](model-atlas-detail.md). The classification contract is documented in
 [architecture metadata and inference](model-atlas-architecture.md).
 
 ## Ownership and portability
@@ -56,10 +57,12 @@ graphics/display session.
 
 ## Current limits
 
-This city uses a small checked-in derived fixture. Arbitrary model discovery
+This city and its detail values use small checked-in derived fixtures. Arbitrary model discovery
 must first produce the bounded interchange using range reads and capped
 summaries described in [bounded scanning](model-atlas-bounded-scan.md). The
 renderer is wireframe-only, selected tensor text is displayed in the help
 overlay rather than attached in world space, and a native retained patch is
 still materialized as one contiguous GPU line buffer after validation. None of
-those limitations require loading tensor payloads.
+those limitations require loading tensor payloads. The real-file picker labels
+payload detail unsupported instead of implying that its header-only scan
+decoded tensor values.

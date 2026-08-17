@@ -1,0 +1,9 @@
+number = 10
+slug = "native3d-disk-usage-explorer"
+status = "pending"
+description = "Build a read-only native disk-usage explorer inspired by dua-cli. Confine one..."
+role = "production"
+context_files = []
+created_at = "2026-08-16T16:10:43"
+task_type = "implementation"
+commits = []

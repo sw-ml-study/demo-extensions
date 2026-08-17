@@ -5,6 +5,58 @@ use mlpl_array::DenseArray;
 use mlpl_eval::Value;
 use mlpl_native3d_scene::{Camera, LineScene};
 
+/// Runs a parked-main MLPL applet with one explicit canonical filesystem root.
+///
+/// This downstream adapter preserves the host's opt-in containment policy until
+/// sw-MLPL exposes a configured variant of `run_applet_with_host` directly.
+///
+/// # Errors
+///
+/// Returns an error when the root cannot be canonicalized, is not a directory,
+/// the worker cannot start, or MLPL evaluation fails.
+pub fn run_applet_with_host_root<H>(
+    source: &str,
+    root: &std::path::Path,
+    host: H,
+) -> Result<Value, mlpl_eval::EvalError>
+where
+    H: FnOnce(std::sync::mpsc::Receiver<Value>, std::sync::mpsc::Sender<Value>),
+{
+    let root = root.canonicalize().map_err(|error| {
+        mlpl_eval::EvalError::Unsupported(format!("invalid applet filesystem root: {error}"))
+    })?;
+    if !root.is_dir() {
+        return Err(mlpl_eval::EvalError::Unsupported(
+            "applet filesystem root is not a directory".into(),
+        ));
+    }
+    let (command_tx, command_rx) = std::sync::mpsc::channel();
+    let (event_tx, event_rx) = std::sync::mpsc::channel();
+    let (result_tx, result_rx) = std::sync::mpsc::channel();
+    let source = source.to_owned();
+    let worker = std::thread::Builder::new()
+        .name("mlpl-native3d-applet".into())
+        .stack_size(16 * 1024 * 1024)
+        .spawn(move || {
+            let mut environment = mlpl_eval::Environment::new();
+            environment.ui_host_thread = true;
+            environment.fs_root = Some(root);
+            let handle = environment.register_port(command_tx, event_rx);
+            environment.ext_handles.insert("port".into(), handle);
+            let _ = result_tx.send(mlpl_eval::eval_source_value(&source, &mut environment));
+        })
+        .map_err(|error| {
+            mlpl_eval::EvalError::Unsupported(format!("cannot start rooted applet worker: {error}"))
+        })?;
+    host(command_rx, event_tx);
+    let _ = worker.join();
+    result_rx.recv().unwrap_or_else(|_| {
+        Err(mlpl_eval::EvalError::Unsupported(
+            "rooted applet worker died".into(),
+        ))
+    })
+}
+
 const SCENE_SOURCE: &str = include_str!("../../../demos/wireframe-cube/scene.mlpl");
 const CAMERA_SOURCE: &str = include_str!("../../../lib/native3d/camera.mlpl");
 const GEOMETRY_SOURCE: &str = include_str!("../../../lib/native3d/geometry.mlpl");
@@ -25,11 +77,21 @@ const LIFE_TORUS_APPLET: &str = include_str!("../../../demos/life-torus/live-app
 const ATLAS_SCAN: &str = include_str!("../../../lib/model-atlas/bounded_scan.mlpl");
 const ATLAS_INTERCHANGE: &str = include_str!("../../../lib/model-atlas/interchange.mlpl");
 const ATLAS_FIXTURE: &str = include_str!("../../../fixtures/model-atlas/tensor_city_derived.mlpl");
+const ATLAS_DETAIL_FIXTURE: &str =
+    include_str!("../../../fixtures/model-atlas/detail_derived.mlpl");
 const ATLAS_ARCHITECTURE: &str = include_str!("../../../demos/model-atlas/architecture.mlpl");
 const ATLAS_MODEL: &str = include_str!("../../../demos/model-atlas/model.mlpl");
 const ATLAS_SCENE: &str = include_str!("../../../demos/model-atlas/scene.mlpl");
 const ATLAS_CONTROLS: &str = include_str!("../../../demos/model-atlas/controls.mlpl");
 const ATLAS_APPLET: &str = include_str!("../../../demos/model-atlas/live-applet.mlpl");
+const FILE_ATLAS_HEADER: &str =
+    include_str!("../../../../demo-ml-utils/src/formats/safetensors_header.mlpl");
+const FILE_ATLAS_CATALOG: &str =
+    include_str!("../../../../demo-ml-utils/src/formats/safetensors_catalog.mlpl");
+const FILE_ATLAS_MENU: &str = include_str!("../../../demos/model-atlas-file/menu.mlpl");
+const FILE_ATLAS_MODEL: &str = include_str!("../../../demos/model-atlas-file/model.mlpl");
+const FILE_ATLAS_SCENE: &str = include_str!("../../../demos/model-atlas-file/scene.mlpl");
+const FILE_ATLAS_APPLET: &str = include_str!("../../../demos/model-atlas-file/live-applet.mlpl");
 
 #[must_use]
 pub fn applet_source() -> String {
@@ -78,15 +140,36 @@ pub fn life_torus_applet_source() -> String {
 #[must_use]
 pub fn model_atlas_applet_source() -> String {
     format!(
-        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
         without_includes(ATLAS_SCAN),
         without_includes(ATLAS_INTERCHANGE),
         without_includes(ATLAS_FIXTURE),
+        without_includes(ATLAS_DETAIL_FIXTURE),
         without_includes(ATLAS_ARCHITECTURE),
         without_includes(ATLAS_MODEL),
         without_includes(ATLAS_SCENE),
         without_includes(ATLAS_CONTROLS),
         without_includes(ATLAS_APPLET)
+    )
+}
+
+#[must_use]
+pub fn model_atlas_file_applet_source() -> String {
+    format!(
+        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+        without_includes(FILE_ATLAS_HEADER),
+        without_includes(FILE_ATLAS_CATALOG),
+        without_includes(ATLAS_SCAN),
+        without_includes(ATLAS_INTERCHANGE),
+        without_includes(ATLAS_FIXTURE),
+        without_includes(ATLAS_DETAIL_FIXTURE),
+        without_includes(ATLAS_ARCHITECTURE),
+        without_includes(ATLAS_MODEL),
+        without_includes(ATLAS_SCENE),
+        without_includes(FILE_ATLAS_MENU),
+        without_includes(FILE_ATLAS_MODEL),
+        without_includes(FILE_ATLAS_SCENE),
+        without_includes(FILE_ATLAS_APPLET)
     )
 }
 
@@ -98,6 +181,7 @@ pub struct SceneCommand {
     pub rotation_speed: f32,
     pub revision: u64,
     pub help: String,
+    pub status: String,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -194,6 +278,7 @@ pub struct ViewCommand {
     pub camera: Camera,
     pub revision: u64,
     pub help: String,
+    pub status: String,
 }
 
 #[derive(Debug)]
@@ -520,12 +605,18 @@ fn parse_scene_fields(fields: &BTreeMap<String, Value>) -> Result<SceneCommand, 
         rotation_speed,
         revision: view.revision,
         help: view.help,
+        status: view.status,
     })
 }
 
 fn parse_view_fields(fields: &BTreeMap<String, Value>) -> Result<ViewCommand, String> {
     let revision = parse_revision(fields)?;
     let help = string_field(fields, "help")?.to_owned();
+    let status = match fields.get("status") {
+        None => String::new(),
+        Some(Value::Str(value)) => value.clone(),
+        Some(_) => return Err("status must be a string".into()),
+    };
     let camera = match fields.get("camera") {
         None => Camera::default(),
         Some(Value::Record { fields }) => parse_camera(fields)?,
@@ -535,6 +626,7 @@ fn parse_view_fields(fields: &BTreeMap<String, Value>) -> Result<ViewCommand, St
         camera,
         revision,
         help,
+        status,
     })
 }
 

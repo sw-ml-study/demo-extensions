@@ -61,6 +61,20 @@ by a named test; supported with a limitation; or blocked upstream. A local mock
 registry may test the ABI and SDK, but it is never evidence that REPL, script,
 or compiled sw-MLPL integration already works.
 
+### Confined file metadata
+
+Native file-selection applications require modification timestamps from the
+same sw-MLPL sandbox that governs `fs_walk`, `file_size`, and bounded byte
+reads. Interpreter commit `0f4d0e32` now exposes the required fallible,
+platform-neutral Unix-millis value through `file_metadata` without allowing
+paths outside the configured root. Formatting, timezone choice, sorting, and
+UI presentation remain MLPL application semantics. Compiled lowering and a
+configured-root parked-main helper remain upstream gaps.
+`demo-file-processing` should validate and teach the shipped primitive; it is
+a consumer, not the primary API owner. See
+[sw-MLPL blockers](sw-mlpl-blockers.md#confined-filesystem-modification-times--open)
+for exact failure and acceptance behavior.
+
 ## Current integration status
 
 The downstream `hello_registration` Rust integration test now proves dynamic

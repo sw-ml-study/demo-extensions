@@ -28,6 +28,10 @@ crates/mlpl-native3d-window/tests/life_torus_applet.rs
 crates/mlpl-native3d-window/tests/scene_patch.rs
 crates/mlpl-native3d-window/tests/input_contract.rs
 crates/mlpl-native3d-window/tests/camera_command.rs
+crates/mlpl-native3d-window/tests/line_vertices.rs
+crates/mlpl-native3d-window/tests/model_atlas_applet.rs
+crates/mlpl-native3d-window/tests/file_applet_root.rs
+crates/mlpl-native3d-window/tests/model_atlas_file_applet.rs
 demos/wireframe-cube/default-scene.mlpl
 demos/wireframe-cube/scene.mlpl
 demos/wireframe-cube/controls.mlpl
@@ -51,6 +55,10 @@ demos/model-atlas/model.mlpl
 demos/model-atlas/scene.mlpl
 demos/model-atlas/controls.mlpl
 demos/model-atlas/live-applet.mlpl
+demos/model-atlas-file/menu.mlpl
+demos/model-atlas-file/model.mlpl
+demos/model-atlas-file/scene.mlpl
+demos/model-atlas-file/live-applet.mlpl
 extensions/hello/Cargo.toml
 extensions/hello/extension.toml
 extensions/hello/module.mlpl
@@ -78,6 +86,7 @@ scripts/run-life-torus
 scripts/run-model-atlas-memory-evidence
 scripts/run-model-atlas-contract
 scripts/run-model-atlas
+scripts/run-model-atlas-file
 scripts/run-tests
 scripts/select-mlpl
 scripts/select-mlplunit
@@ -92,6 +101,7 @@ tests/test_life_torus.mlpl
 tests/test_model_atlas_scan.mlpl
 tests/test_model_atlas_contract.mlpl
 tests/test_model_atlas_city.mlpl
+tests/test_model_atlas_file_menu.mlpl
 docs/tic-tac-toe-acceptance.md
 docs/life-model.md
 docs/life-controls.md
@@ -102,8 +112,11 @@ docs/model-atlas-bounded-scan.md
 docs/model-atlas-interchange.md
 docs/model-atlas-native-city.md
 docs/model-atlas-architecture.md
+docs/model-atlas-real-files.md
+docs/model-atlas-detail.md
 fixtures/model-atlas/sample.bin
 fixtures/model-atlas/tensor_city_derived.mlpl
+fixtures/model-atlas/detail_derived.mlpl
 tests/test_tic_tac_toe_scene.mlpl
 tests/test_wireframe_cube_scene.mlpl
 tests/test_wireframe_cube_controls.mlpl
