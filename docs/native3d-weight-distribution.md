@@ -63,8 +63,8 @@ language change.
 
 A real SmolLM2 Q8_0 acceptance run first exposed a catalog correctness gate;
 `demo-ml-utils` commit `31b038f` now parses those arrays and recovers the exact
-tensor boundary. The downstream interactive run then exposed the remaining
-performance gate: traversing 147,209 metadata elements took about 100 seconds
-and overflowed the applet worker's 16 MiB stack before the tensor menu returned.
-The app continues to fail closed rather than guessing offsets. The exact
-stack-safe streaming requirement is recorded in the blocker matrix.
+tensor boundary. Commit `a72810e` makes the isolated traversal stack-safer and
+measures 5.14 seconds, but the composed applet still exceeded its former 16 MiB
+worker stack. The host now enforces a bounded 64 MiB worker-stack ceiling for
+UI validation. The remaining roughly 505 MB catalog peak RSS and generic
+streaming requirement are recorded in the blocker matrix.
