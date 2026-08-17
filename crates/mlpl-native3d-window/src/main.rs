@@ -62,8 +62,22 @@ fn main() -> Result<(), Box<dyn Error>> {
         .position(|argument| argument == "--model-atlas-file")
         .and_then(|index| arguments.get(index + 1))
         .map(std::path::PathBuf::from);
+    let disk_usage = arguments
+        .iter()
+        .position(|argument| argument == "--disk-usage")
+        .and_then(|index| arguments.get(index + 1))
+        .map(std::path::PathBuf::from);
     let source = if tic_tac_toe {
         tic_tac_toe_applet_source()
+    } else if let Some(root) = disk_usage.as_ref() {
+        let snapshot = mlpl_native3d_window::disk_usage::capture_snapshot(
+            root,
+            mlpl_native3d_window::disk_usage::SnapshotBudgets {
+                max_entries: 256,
+                max_depth: 16,
+            },
+        )?;
+        mlpl_native3d_window::live::disk_usage_applet_source(&snapshot)
     } else if model_atlas_file.is_some() {
         mlpl_native3d_window::live::model_atlas_file_applet_source()
     } else if model_atlas {
@@ -77,7 +91,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     println!("MLPL Native 3D — application behavior is evaluated by MLPL");
     let mut host_error = None;
-    let result = if let Some(root) = model_atlas_file {
+    let rooted = disk_usage.or(model_atlas_file);
+    let result = if let Some(root) = rooted {
         mlpl_native3d_window::live::run_applet_with_host_root(&source, &root, |commands, events| {
             let mut application = Application::new(commands, events);
             if let Err(error) = event_loop.run_app(&mut application) {
@@ -401,9 +416,12 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
     match key {
         Key::Named(NamedKey::ArrowUp) => Some("arrow_up"),
         Key::Named(NamedKey::ArrowDown) => Some("arrow_down"),
+        Key::Named(NamedKey::ArrowLeft) => Some("arrow_left"),
+        Key::Named(NamedKey::ArrowRight) => Some("arrow_right"),
         Key::Named(NamedKey::Escape) => Some("escape"),
         Key::Named(NamedKey::Space) => Some("space"),
         Key::Named(NamedKey::Enter) => Some("enter"),
+        Key::Named(NamedKey::Backspace | NamedKey::Delete) => Some("backspace"),
         Key::Character(value) => match value.to_lowercase().as_str() {
             "w" => Some("w"),
             "s" => Some("s"),
@@ -421,6 +439,7 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
             "l" => Some("l"),
             "m" => Some("m"),
             "n" => Some("n"),
+            "p" => Some("p"),
             "t" => Some("t"),
             "u" => Some("u"),
             "x" => Some("x"),
@@ -620,7 +639,23 @@ mod tests {
     #[test]
     fn normalizes_named_space_for_the_live_event_path() {
         assert_eq!(normalize_key(&Key::Named(NamedKey::Space)), Some("space"));
-        for key in ["a", "b", "g", "h", "i", "l", "n", "s", "t", "u"] {
+        assert_eq!(
+            normalize_key(&Key::Named(NamedKey::Backspace)),
+            Some("backspace")
+        );
+        assert_eq!(
+            normalize_key(&Key::Named(NamedKey::Delete)),
+            Some("backspace")
+        );
+        assert_eq!(
+            normalize_key(&Key::Named(NamedKey::ArrowLeft)),
+            Some("arrow_left")
+        );
+        assert_eq!(
+            normalize_key(&Key::Named(NamedKey::ArrowRight)),
+            Some("arrow_right")
+        );
+        for key in ["a", "b", "g", "h", "i", "l", "n", "p", "s", "t", "u"] {
             assert_eq!(normalize_key(&Key::Character(key.into())), Some(key));
         }
     }

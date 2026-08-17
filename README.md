@@ -285,6 +285,9 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   surface picking, controls, ownership, and current performance bounds.
 - [Retained scene patches](docs/retained-scene-patches.md) — stable-ID atomic
   line diffs, revision/resync behavior, bounds, ownership, and measured scope.
+- [Native 3D disk-usage explorer](docs/native3d-disk-usage.md) — bounded
+  metadata-only scanning, cached MLPL navigation, color semantics, and
+  retained shadow-scene diffs.
 - [Bounded Model Atlas scanning](docs/model-atlas-bounded-scan.md) — range-read
   passes, compact adapter columns, selected detail/cache bounds, and RSS data.
 - [Model Atlas interchange](docs/model-atlas-interchange.md) — versioned tagged

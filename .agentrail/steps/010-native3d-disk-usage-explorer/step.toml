@@ -1,6 +1,6 @@
 number = 10
 slug = "native3d-disk-usage-explorer"
-status = "pending"
+status = "in-progress"
 description = "Build a read-only native disk-usage explorer inspired by dua-cli. Confine one..."
 role = "production"
 context_files = []

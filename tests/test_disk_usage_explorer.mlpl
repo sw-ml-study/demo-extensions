@@ -1,0 +1,20 @@
+include "demos/disk-usage/model.mlpl";
+include "demos/model-atlas/scene.mlpl";
+include "demos/disk-usage/scene.mlpl";
+
+@test {name:"Disk usage aggregates recursive bytes largest-first",tags:["disk-usage","model"]}
+def u:test_disk_usage_aggregate() { snapshot={root:"fixture",paths:["a","a/one.bin","b","b/two.bin"],kinds:["dir","file","dir","file"],bytes:[0,16,0,32],excluded_entries:2,excluded_bytes:9,inaccessible_entries:1,budgets:{max_entries:20,max_depth:4}}; state=u:du_defaults(snapshot); children=u:du_children(state); u:assert_eq(children.count,2,"two root children")?; u:assert_eq(u:du_child_path_at(state,children,0),"b","largest recursive total first")?; u:assert_eq(u:du_total_at(children,0),32,"recursive byte total")?; u:assert_eq(u:du_total_at(children,1),16,"second recursive byte total") }
+
+@test {name:"Disk usage drill-down, parent, threshold, and stable IDs stay MLPL-owned",tags:["disk-usage","navigation"]}
+def u:test_disk_usage_navigation() { snapshot={root:"fixture",paths:["a","a/one.bin","b"],kinds:["dir","file","dir"],bytes:[0,16,0],excluded_entries:0,excluded_bytes:0,inaccessible_entries:0,budgets:{max_entries:20,max_depth:4}}; state=u:du_defaults(snapshot); state=u:du_activate(state,0); u:assert_eq(state.breadcrumb,"a","click/activate enters directory")?; state=u:du_parent(state); u:assert_eq(state.breadcrumb,"","parent returns to root")?; filtered=u:du_threshold(state,20); u:assert_eq(u:du_children(filtered).count,0,"threshold hides smaller entries")?; u:assert_eq(u:du_stable_id(state,"a/one.bin"),u:du_stable_id(state,"a/one.bin"),"path ID stable") }
+
+@test {name:"Disk usage scene labels byte mapping and bounded snapshot limitations",tags:["disk-usage","scene"]}
+def u:test_disk_usage_scene() { snapshot={root:"fixture",paths:["a.bin"],kinds:["file"],bytes:[1024],excluded_entries:2,excluded_bytes:9,inaccessible_entries:1,budgets:{max_entries:20,max_depth:4}}; state=u:du_defaults(snapshot); help=u:du_help(state); u:assert_true(u:atlas_text_contains(help,"DIRS FIRST, THEN FILES; EACH GROUP LARGEST-FIRST"),"ordering visible")?; u:assert_true(u:atlas_text_contains(help,"GREENS=DIR | BLUE/PURPLE/ORANGE=FILE | YELLOW=SELECTED"),"type mapping visible")?; u:assert_true(u:atlas_text_contains(help,"16 VISIBLE ITEMS MAX"),"render cap visible")?; u:assert_true(u:atlas_text_contains(help,"READ-ONLY SNAPSHOT"),"snapshot semantics visible")?; scene=u:du_scene(state)?; u:assert_true(gt(size(scene.ids),11),"3D block rendered") }
+
+@test {name:"Disk usage status exposes exclusion accounting",tags:["disk-usage","status"]}
+def u:test_disk_usage_status() { snapshot={root:"fixture",paths:[],kinds:[],bytes:[],excluded_entries:2,excluded_bytes:9,inaccessible_entries:1,budgets:{max_entries:20,max_depth:4}}; status=u:du_status(u:du_defaults(snapshot)); u:assert_true(u:atlas_text_contains(status,"EXCLUDED 2 ENTRIES / 9 KNOWN B"),"excluded accounting visible") }
+
+@test {name:"Disk usage block primitive accepts aggregated child",tags:["disk-usage","scene"]}
+def u:test_disk_usage_block() { snapshot={root:"fixture",paths:["dir","file.bin","dir/a"],kinds:["dir","file","file"],bytes:[0,4,8],excluded_entries:0,excluded_bytes:0,inaccessible_entries:0,budgets:{max_entries:20,max_depth:4}}; state=u:du_defaults(snapshot); children=u:du_children(state); lines=u:du_add_rank_box(u:atlas_lines(),state,children,0,-1); u:assert_eq(take(reshape(lines.colors,[lines.count,4]),0,0),[0.1,0.95,0.55,1],"directory bar green")?; lines=u:du_add_rank_box(lines,state,children,1,-1); u:assert_eq(take(reshape(lines.colors,[lines.count,4]),0,12),[0.75,0.35,1,1],"file palette varies by rank") }
+
+u:run_registered_tests()

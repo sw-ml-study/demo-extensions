@@ -218,7 +218,7 @@ speed; left/right channels and frequency units are unambiguous; muted mode is
 fully useful; audio synchronization has measured drift bounds; and neither
 the Rust extension nor renderer encodes application-specific equalizer rules.
 
-## Queued: native3d-disk-usage-explorer
+## Delivered: native3d-disk-usage-explorer
 
 Purpose: demonstrate a read-only native disk-usage explorer inspired by
 `dua-cli`, using MLPL aggregation and the generic renderer to explain which
@@ -254,6 +254,13 @@ captured hierarchy; totals and unknown/excluded bytes reconcile under fixed
 budgets; file contents are never opened; the snapshot does not change unless
 the application is closed and deliberately launched again; and tests prove no
 remove/write/rename primitive is reachable from the demo.
+
+Delivered behavior uses a bounded metadata-only breadth-first snapshot, an
+MLPL-cached sixteen-item child view, directory/file/selection palettes,
+four-way keyboard navigation plus click selection, and stable-ID scene diffs.
+The scalar-shape limitation affecting recursive-total status formatting is
+recorded in `docs/sw-mlpl-blockers.md` rather than hidden by a correctness
+claim.
 
 ## In progress: native3d-life-surfaces
 

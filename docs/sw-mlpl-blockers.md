@@ -161,3 +161,25 @@ tests pin exact epoch values without depending on wall-clock time.
 Separate remaining applet gap: `run_applet_with_host` still cannot accept a
 configured filesystem root, so this repository's public-`Environment` adapter
 remains necessary even though `file_metadata` itself has shipped.
+
+## Derived scalar reuse from array/record computations — open
+
+The disk-usage MLPL implementation exposed an interpreter defect while
+formatting or conditionally rendering values derived from array-backed record
+fields. A scalar child count or recursive total can pass arithmetic and
+assertion checks, then fail when reused by `to_json`, string construction, or
+conditional geometry with `array error: shape mismatch: 1 vs 1 elements`.
+The dimensions and element counts reported by the error are identical.
+
+This repository works around the defect by retaining a fixed-capacity compact
+child view, storing a separately serialized count, limiting geometry to
+sixteen stable slots, and omitting the affected recursive-total value from the
+selected status. The workaround keeps this demo usable but is not a general
+language solution.
+
+Owner: `../sw-mlpl`. Required fix: preserve scalar rank/shape consistently
+when extracting a single value from arrays nested in records, including reuse
+across conditionals, `to_json`, and function boundaries. Add a minimal
+regression that constructs a record containing an array and scalar count,
+extracts one element/reduction, and uses the result in arithmetic, a branch,
+and serialization. No change is required in `../demo-file-processing`.

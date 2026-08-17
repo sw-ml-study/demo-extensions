@@ -3,6 +3,7 @@
 use bytemuck::{Pod, Zeroable};
 use mlpl_native3d_scene::{PlannedLine, Viewport};
 
+pub mod disk_usage;
 pub mod interaction;
 pub mod live;
 

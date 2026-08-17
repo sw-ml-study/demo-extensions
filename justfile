@@ -55,6 +55,10 @@ model-atlas:
 model-atlas-file:
     ./scripts/run-model-atlas-file
 
+# Open a bounded, read-only native disk-usage snapshot.
+disk-usage:
+    ./scripts/run-disk-usage
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+scan_root=${DISK_USAGE_ROOT:-$repo_root}
+
+case "$scan_root" in
+    /*) ;;
+    *)
+        echo "DISK_USAGE_ROOT must be an absolute directory path" >&2
+        exit 2
+        ;;
+esac
+
+cd "$repo_root"
+cargo run --release -p mlpl-native3d-window -- --disk-usage "$scan_root"

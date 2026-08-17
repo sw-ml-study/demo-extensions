@@ -92,6 +92,9 @@ const FILE_ATLAS_MENU: &str = include_str!("../../../demos/model-atlas-file/menu
 const FILE_ATLAS_MODEL: &str = include_str!("../../../demos/model-atlas-file/model.mlpl");
 const FILE_ATLAS_SCENE: &str = include_str!("../../../demos/model-atlas-file/scene.mlpl");
 const FILE_ATLAS_APPLET: &str = include_str!("../../../demos/model-atlas-file/live-applet.mlpl");
+const DISK_USAGE_MODEL: &str = include_str!("../../../demos/disk-usage/model.mlpl");
+const DISK_USAGE_SCENE: &str = include_str!("../../../demos/disk-usage/scene.mlpl");
+const DISK_USAGE_APPLET: &str = include_str!("../../../demos/disk-usage/live-applet.mlpl");
 
 #[must_use]
 pub fn applet_source() -> String {
@@ -170,6 +173,19 @@ pub fn model_atlas_file_applet_source() -> String {
         without_includes(FILE_ATLAS_MODEL),
         without_includes(FILE_ATLAS_SCENE),
         without_includes(FILE_ATLAS_APPLET)
+    )
+}
+
+#[must_use]
+pub fn disk_usage_applet_source(snapshot: &crate::disk_usage::DiskUsageSnapshot) -> String {
+    format!(
+        "{}\n{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}\n{}",
+        snapshot.to_mlpl_binding(),
+        without_includes(ATLAS_MODEL),
+        without_includes(ATLAS_SCENE),
+        without_includes(DISK_USAGE_MODEL),
+        without_includes(DISK_USAGE_SCENE),
+        without_includes(DISK_USAGE_APPLET)
     )
 }
 
