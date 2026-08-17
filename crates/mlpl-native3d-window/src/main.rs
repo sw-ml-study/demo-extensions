@@ -67,6 +67,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         .position(|argument| argument == "--disk-usage")
         .and_then(|index| arguments.get(index + 1))
         .map(std::path::PathBuf::from);
+    let audio_spectrum = arguments
+        .iter()
+        .position(|argument| argument == "--audio-spectrum")
+        .and_then(|index| arguments.get(index + 1))
+        .map(std::path::PathBuf::from);
     let source = if tic_tac_toe {
         tic_tac_toe_applet_source()
     } else if let Some(root) = disk_usage.as_ref() {
@@ -78,6 +83,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             },
         )?;
         mlpl_native3d_window::live::disk_usage_applet_source(&snapshot)
+    } else if let Some(root) = audio_spectrum.as_ref() {
+        let paths = mlpl_native3d_window::audio::discover_audio_paths(root, 128)?;
+        mlpl_native3d_window::live::audio_spectrum_applet_source(&paths)
     } else if model_atlas_file.is_some() {
         mlpl_native3d_window::live::model_atlas_file_applet_source()
     } else if model_atlas {
@@ -91,10 +99,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     println!("MLPL Native 3D — application behavior is evaluated by MLPL");
     let mut host_error = None;
-    let rooted = disk_usage.or(model_atlas_file);
+    let rooted = disk_usage.or(model_atlas_file).or(audio_spectrum);
     let result = if let Some(root) = rooted {
         mlpl_native3d_window::live::run_applet_with_host_root(&source, &root, |commands, events| {
-            let mut application = Application::new(commands, events);
+            let mut application = Application::new_rooted(commands, events, Some(root.clone()));
             if let Err(error) = event_loop.run_app(&mut application) {
                 host_error = Some(error.to_string());
             }
@@ -132,10 +140,26 @@ struct Application {
     frame_gate: FrameGate,
     started: Instant,
     last_frame: Instant,
+    fs_root: Option<std::path::PathBuf>,
+    audio: Option<mlpl_native3d_window::audio::PcmStream>,
+    audio_playing: bool,
+    audio_in_flight: bool,
+    audio_next: Instant,
+    audio_output: Option<mlpl_native3d_window::audio::PcmOutput>,
+    audio_visual_pending: Option<mlpl_native3d_window::audio::PcmChunk>,
 }
 
 impl Application {
     fn new(commands: Receiver<Value>, events: Sender<Value>) -> Self {
+        Self::new_rooted(commands, events, None)
+    }
+
+    fn new_rooted(
+        commands: Receiver<Value>,
+        events: Sender<Value>,
+        fs_root: Option<std::path::PathBuf>,
+    ) -> Self {
+        let now = Instant::now();
         Self {
             scene: None,
             retained_scene: None,
@@ -152,8 +176,15 @@ impl Application {
             modifiers: Modifiers::NONE,
             pending_input: BoundedInput::new(64).expect("nonzero input capacity"),
             frame_gate: FrameGate::new(),
-            started: Instant::now(),
-            last_frame: Instant::now(),
+            started: now,
+            last_frame: now,
+            fs_root,
+            audio: None,
+            audio_playing: false,
+            audio_in_flight: false,
+            audio_next: now,
+            audio_output: None,
+            audio_visual_pending: None,
         }
     }
 
@@ -206,6 +237,39 @@ impl Application {
                 Ok(mlpl_native3d_window::live::LiveCommand::FrameAck(_revision)) => {
                     self.frame_gate.acknowledge();
                 }
+                Ok(mlpl_native3d_window::live::LiveCommand::AudioOpen(path)) => {
+                    self.open_audio(&path, event_loop);
+                }
+                Ok(mlpl_native3d_window::live::LiveCommand::AudioPlay(playing)) => {
+                    self.audio_playing = playing;
+                    if let Some(output) = self.audio_output.as_ref() {
+                        let result = if playing {
+                            output.play()
+                        } else {
+                            output.pause()
+                        };
+                        if let Err(error) = result {
+                            eprintln!("audio output state change failed: {error}");
+                        }
+                    }
+                    self.audio_next = Instant::now();
+                }
+                Ok(mlpl_native3d_window::live::LiveCommand::AudioSeek(seconds)) => {
+                    if let Some(audio) = self.audio.as_mut()
+                        && let Err(error) = audio.seek_seconds(seconds)
+                    {
+                        eprintln!("audio seek rejected: {error}");
+                    }
+                    self.audio_in_flight = false;
+                    self.audio_visual_pending = None;
+                    self.audio_next = Instant::now();
+                    if let Some(output) = self.audio_output.as_ref() {
+                        output.clear();
+                    }
+                }
+                Ok(mlpl_native3d_window::live::LiveCommand::AudioAck) => {
+                    self.audio_in_flight = false;
+                }
                 Err(error) => {
                     eprintln!("MLPL scene command rejected: {error}");
                     event_loop.exit();
@@ -213,6 +277,55 @@ impl Application {
                 }
             }
         }
+    }
+
+    fn open_audio(&mut self, path: &str, event_loop: &ActiveEventLoop) {
+        let Some(root) = self.fs_root.as_ref() else {
+            eprintln!("audio open requires a confined filesystem root");
+            return;
+        };
+        let Ok(candidate) = root.join(path).canonicalize() else {
+            eprintln!("audio source does not exist");
+            return;
+        };
+        if !candidate.starts_with(root) {
+            eprintln!("audio source escapes the confined root");
+            return;
+        }
+        let limits = mlpl_native3d_window::audio::DecodeLimits {
+            max_frames_per_chunk: 1024,
+            max_channels: 2,
+        };
+        match mlpl_native3d_window::audio::PcmStream::open(&candidate, limits) {
+            Ok(stream) => self.start_audio(stream),
+            Err(error) => self.send(
+                mlpl_native3d_window::live::audio_error_event(format!(
+                    "DECODER REJECTED SOURCE: {error}"
+                )),
+                event_loop,
+            ),
+        }
+    }
+
+    fn start_audio(&mut self, stream: mlpl_native3d_window::audio::PcmStream) {
+        self.audio_output =
+            match mlpl_native3d_window::audio::PcmOutput::open(stream.sample_rate_hz(), 8192) {
+                Ok(output) => {
+                    if let Err(error) = output.play() {
+                        eprintln!("audio output could not start: {error}");
+                    }
+                    Some(output)
+                }
+                Err(error) => {
+                    eprintln!("audio output unavailable: {error}");
+                    None
+                }
+            };
+        self.audio = Some(stream);
+        self.audio_playing = true;
+        self.audio_in_flight = false;
+        self.audio_visual_pending = None;
+        self.audio_next = Instant::now();
     }
 
     fn send(&self, event: Value, event_loop: &ActiveEventLoop) {
@@ -254,6 +367,56 @@ impl Application {
                 )),
                 event_loop,
             );
+        }
+        if self.audio_playing {
+            let decode_budget = if self.audio_output.is_some() { 4 } else { 1 };
+            for _ in 0..decode_budget {
+                let ready = self
+                    .audio_output
+                    .as_ref()
+                    .map_or(!self.audio_in_flight && now >= self.audio_next, |output| {
+                        output.queued_frames() < 4096
+                    });
+                if !ready {
+                    break;
+                }
+                let Some(audio) = self.audio.as_mut() else {
+                    break;
+                };
+                match audio.next_chunk() {
+                    Ok(Some(chunk)) => {
+                        if self.audio_output.is_none() {
+                            let frames = u32::try_from(chunk.left.len()).unwrap_or(u32::MAX);
+                            self.audio_next = now
+                                + std::time::Duration::from_secs_f64(
+                                    f64::from(frames) / f64::from(chunk.sample_rate_hz),
+                                );
+                        }
+                        if let Some(output) = self.audio_output.as_ref() {
+                            output.enqueue(&chunk);
+                        }
+                        self.audio_visual_pending = Some(chunk);
+                    }
+                    Ok(None) => {
+                        self.audio_playing = false;
+                        break;
+                    }
+                    Err(error) => {
+                        eprintln!("audio decode failed: {error}");
+                        self.audio_playing = false;
+                        break;
+                    }
+                }
+            }
+            if !self.audio_in_flight
+                && let Some(chunk) = self.audio_visual_pending.take()
+            {
+                self.audio_in_flight = true;
+                self.send(
+                    mlpl_native3d_window::live::audio_chunk_event(&chunk),
+                    event_loop,
+                );
+            }
         }
         self.angle += delta.as_secs_f32() * self.rotation_speed;
         self.last_frame = now;
@@ -436,6 +599,8 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
             "g" => Some("g"),
             "h" => Some("h"),
             "i" => Some("i"),
+            "j" => Some("j"),
+            "k" => Some("k"),
             "l" => Some("l"),
             "m" => Some("m"),
             "n" => Some("n"),
@@ -655,7 +820,9 @@ mod tests {
             normalize_key(&Key::Named(NamedKey::ArrowRight)),
             Some("arrow_right")
         );
-        for key in ["a", "b", "g", "h", "i", "l", "n", "p", "s", "t", "u"] {
+        for key in [
+            "a", "b", "g", "h", "i", "j", "k", "l", "n", "p", "s", "t", "u",
+        ] {
             assert_eq!(normalize_key(&Key::Character(key.into())), Some(key));
         }
     }

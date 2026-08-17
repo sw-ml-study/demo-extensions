@@ -11,6 +11,7 @@
 /artifacts/
 /reports/
 /tmp/
+/local-media/
 
 # Local environment and tool overrides
 .env

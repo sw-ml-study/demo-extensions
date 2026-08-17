@@ -1,0 +1,8 @@
+number = 12
+slug = "native3d-weight-distribution-explorer"
+status = "pending"
+description = "Build an interactive native 3D weight-distribution explorer over real bounded..."
+role = "production"
+context_files = []
+created_at = "2026-08-17T14:49:13"
+commits = []

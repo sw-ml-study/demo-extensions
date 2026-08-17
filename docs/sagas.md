@@ -197,7 +197,7 @@ range/pass/cache budget fails closed; metadata and heuristic inference remain
 visibly distinct; Rust contains no model semantics; and macOS/Linux use the
 same native winit/wgpu path.
 
-## Queued: native3d-audio-spectrum-player
+## Delivered: native3d-audio-spectrum-player
 
 Purpose: make compressed-audio processing visible as a native, normal-speed
 3D stereo spectrum rather than treating decoding as a silent batch task.
@@ -261,6 +261,31 @@ four-way keyboard navigation plus click selection, and stable-ID scene diffs.
 The scalar-shape limitation affecting recursive-total status formatting is
 recorded in `docs/sw-mlpl-blockers.md` rather than hidden by a correctness
 claim.
+
+## Delivered evidence: native3d-audio-spectrum-player
+
+The current slice supplies a confined bounded MP3/Ogg picker, incremental
+MP3/Ogg-Vorbis decoding, MLPL-owned stereo frequency analysis, a mirrored
+radial bass/mid/high display, retained 16-spoke patches, normal-speed
+coalesced visualization, independently bounded decode-ahead, and synchronized
+default-device audio. MP3 and Ogg/Vorbis playback were interactively confirmed
+on macOS after correcting chunk-boundary timing distortion. Linux uses the same
+CPAL/winit/wgpu source with ALSA development/runtime requirements documented.
+
+## Queued next: native3d-weight-distribution-explorer
+
+Purpose: inspect real model weight distributions through bounded reads and
+mergeable statistics, then render MLPL-owned histogram, surface, channel, and
+quantization-detail views without loading a tensor or model file wholesale.
+
+The first slice is intentionally limited to decoders already available through
+the downstream model utilities: supported byte-aligned Safetensors numeric
+types, GGUF I8/I16, and GGUF Q8_0. Unsupported F16/BF16/F32 paths and Q4/Q5/K
+quantizers must fail closed with a visible reason until their shared decoder
+contracts exist. The step will distinguish requirements owned by
+`demo-ml-utils` from genuine `sw-mlpl` host gaps in
+`docs/weight-distribution-blockers.md`; no language change is required for the
+initial supported-dtype slice.
 
 ## In progress: native3d-life-surfaces
 

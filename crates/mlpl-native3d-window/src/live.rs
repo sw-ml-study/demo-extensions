@@ -95,6 +95,9 @@ const FILE_ATLAS_APPLET: &str = include_str!("../../../demos/model-atlas-file/li
 const DISK_USAGE_MODEL: &str = include_str!("../../../demos/disk-usage/model.mlpl");
 const DISK_USAGE_SCENE: &str = include_str!("../../../demos/disk-usage/scene.mlpl");
 const DISK_USAGE_APPLET: &str = include_str!("../../../demos/disk-usage/live-applet.mlpl");
+const AUDIO_MODEL: &str = include_str!("../../../demos/audio-spectrum/model.mlpl");
+const AUDIO_SCENE: &str = include_str!("../../../demos/audio-spectrum/scene.mlpl");
+const AUDIO_APPLET: &str = include_str!("../../../demos/audio-spectrum/live-applet.mlpl");
 
 #[must_use]
 pub fn applet_source() -> String {
@@ -186,6 +189,23 @@ pub fn disk_usage_applet_source(snapshot: &crate::disk_usage::DiskUsageSnapshot)
         without_includes(DISK_USAGE_MODEL),
         without_includes(DISK_USAGE_SCENE),
         without_includes(DISK_USAGE_APPLET)
+    )
+}
+
+#[must_use]
+pub fn audio_spectrum_applet_source(paths: &[String]) -> String {
+    let files = paths
+        .iter()
+        .map(|path| format!("\"{}\"", path.replace('\\', "\\\\").replace('"', "\\\"")))
+        .collect::<Vec<_>>()
+        .join(",");
+    format!(
+        "audio_files=[{files}];\n{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}\n{}",
+        without_includes(ATLAS_MODEL),
+        without_includes(ATLAS_SCENE),
+        without_includes(AUDIO_MODEL),
+        without_includes(AUDIO_SCENE),
+        without_includes(AUDIO_APPLET)
     )
 }
 
@@ -303,6 +323,40 @@ pub enum LiveCommand {
     Patch(ScenePatchCommand),
     View(ViewCommand),
     FrameAck(u64),
+    AudioOpen(String),
+    AudioPlay(bool),
+    AudioSeek(f64),
+    AudioAck,
+}
+
+#[must_use]
+pub fn audio_chunk_event(chunk: &crate::audio::PcmChunk) -> Value {
+    record([
+        ("kind", Value::Str("audio_chunk".into())),
+        (
+            "left",
+            Value::Array(DenseArray::from_vec(chunk.left.clone())),
+        ),
+        (
+            "right",
+            Value::Array(DenseArray::from_vec(chunk.right.clone())),
+        ),
+        ("sample_rate_hz", scalar(f64::from(chunk.sample_rate_hz))),
+        (
+            "start_frame",
+            scalar(f64::from(
+                u32::try_from(chunk.start_frame).unwrap_or(u32::MAX),
+            )),
+        ),
+    ])
+}
+
+#[must_use]
+pub fn audio_error_event(message: impl Into<String>) -> Value {
+    record([
+        ("kind", Value::Str("audio_error".into())),
+        ("message", Value::Str(message.into())),
+    ])
 }
 
 #[must_use]
@@ -489,6 +543,18 @@ pub fn parse_live_command(value: Value) -> Result<LiveCommand, String> {
         "patch_scene" => parse_scene_patch_fields(&fields).map(LiveCommand::Patch),
         "set_view" => parse_view_fields(&fields).map(LiveCommand::View),
         "frame_ack" => parse_revision(&fields).map(LiveCommand::FrameAck),
+        "audio_open" => string_field(&fields, "path")
+            .map(ToOwned::to_owned)
+            .map(LiveCommand::AudioOpen),
+        "audio_play" => scalar_field(&fields, "playing")
+            .and_then(|value| match value {
+                0.0 => Ok(false),
+                1.0 => Ok(true),
+                _ => Err("audio playing must be zero or one".into()),
+            })
+            .map(LiveCommand::AudioPlay),
+        "audio_seek" => scalar_field(&fields, "seconds").map(LiveCommand::AudioSeek),
+        "audio_ack" => Ok(LiveCommand::AudioAck),
         _ => Err("unsupported live command".into()),
     }
 }

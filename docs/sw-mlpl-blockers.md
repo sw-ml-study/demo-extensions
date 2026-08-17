@@ -183,3 +183,18 @@ across conditionals, `to_json`, and function boundaries. Add a minimal
 regression that constructs a record containing an array and scalar count,
 extracts one element/reduction, and uses the result in arithmetic, a branch,
 and serialization. No change is required in `../demo-file-processing`.
+
+## String-list concatenation for multi-pattern discovery — open
+
+The audio picker needs to combine the deterministic results of
+`fs_walk(..., pattern: "*.mp3")` and `fs_walk(..., pattern: "*.ogg")`.
+`concat` is array-only, while `list_append`/`list_concat` remain documented
+future capabilities; attempting the array operation on string lists terminates
+the MLPL worker with `expected an array value, got a string`.
+
+This repository currently injects one bounded, sorted MP3/Ogg catalog from the
+confined Rust host. Required upstream contract: `list_concat(xs, ys) ->
+string-list`, preserving order and accepting empty lists, plus tests for two
+non-empty `fs_walk` results. This is a language collection primitive, not an
+audio-specific builtin. Once shipped, discovery can move entirely into the
+MLPL picker without changing decoder or renderer APIs.

@@ -1,6 +1,6 @@
 number = 11
 slug = "native3d-audio-spectrum-player"
-status = "pending"
+status = "in-progress"
 description = "Build a bounded native MP3/Ogg spectrum-player demo that starts with a confin..."
 role = "production"
 context_files = []

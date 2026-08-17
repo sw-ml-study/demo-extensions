@@ -1,0 +1,10 @@
+include "demos/audio-spectrum/model.mlpl";
+include "demos/audio-spectrum/scene.mlpl";
+
+@test {name:"Stereo spectrum keeps channels and highlights expected bins",tags:["audio","spectrum"]}
+def u:test_audio_bands() { n=256; left=sin(range(n)*6.283185307179586*80/1024); right=sin(range(n)*6.283185307179586*5000/1024); bands=u:audio_bands(left,right,1024); u:assert_eq(tally(bands),16,"eight bands per channel")?; u:assert_true(gt(take(bands,0,0),take(bands,0,6)),"left bass dominates left high")?; u:assert_true(gt(take(bands,0,14),take(bands,0,8)),"right high dominates right bass") }
+
+@test {name:"Audio equalizer is a bounded retained sixteen-line scene",tags:["audio","scene","retained"]}
+def u:test_audio_scene() { state=u:audio_defaults(["tone.mp3"]); scene=u:audio_scene(state)?; u:assert_eq(tally(scene.ids),16,"fixed retained bars")?; left_bass=take(scene.positions,0,0); left_high=take(scene.positions,0,14); right_bass=take(scene.positions,0,16); u:assert_true(1-equal(left_bass,left_high),"frequency spokes do not share parallel starts")?; u:assert_true(lt(take(left_bass,0,0),0)*gt(take(right_bass,0,0),0),"stereo fans mirror around center")?; next=u:audio_restate(state,0,"spectrum",1,fill([16],0.25),44100,1024,state.camera); patch=u:audio_patch(state,next)?; u:assert_eq(tally(patch.ids),16,"one bounded diff per bar")?; u:assert_true(u:atlas_text_contains(u:audio_help(next),"BASS BLUE INNER | MID GREEN | HIGH ORANGE OUTER"),"legend visible")?; u:assert_true(u:atlas_text_contains(u:audio_help(next),"RADIAL"),"radial mapping visible") }
+
+u:run_registered_tests()

@@ -59,6 +59,10 @@ model-atlas-file:
 disk-usage:
     ./scripts/run-disk-usage
 
+# Pick a confined MP3/Ogg file and visualize bounded stereo spectrum chunks.
+audio-spectrum:
+    ./scripts/run-audio-spectrum
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

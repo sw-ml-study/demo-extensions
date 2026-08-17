@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+if [ -d "$repo_root/local-media" ]; then
+    default_root=$repo_root/local-media
+else
+    default_root=$(CDPATH= cd -- "$repo_root/../demo-file-processing" 2>/dev/null && pwd || printf '%s' "$repo_root")
+fi
+audio_root=${AUDIO_SPECTRUM_ROOT:-$default_root}
+
+case "$audio_root" in
+    /*) ;;
+    *)
+        echo "AUDIO_SPECTRUM_ROOT must be an absolute directory path" >&2
+        exit 2
+        ;;
+esac
+
+cd "$repo_root"
+cargo run --release -p mlpl-native3d-window -- --audio-spectrum "$audio_root"
