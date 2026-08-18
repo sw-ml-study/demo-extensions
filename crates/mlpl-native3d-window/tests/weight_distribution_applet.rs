@@ -4,6 +4,54 @@ use mlpl_native3d_window::live::{
     run_applet_with_host_root, weight_distribution_applet_source,
 };
 
+fn orbit_then_select_bar(
+    commands: &std::sync::mpsc::Receiver<mlpl_eval::Value>,
+    events: &std::sync::mpsc::Sender<mlpl_eval::Value>,
+) -> bool {
+    for event in [
+        InputEvent::pointer_button(PointerButton::Left, true, [420.0, 320.0], Modifiers::NONE),
+        InputEvent::pointer_move(
+            [475.0, 350.0],
+            mlpl_native3d_window::interaction::PointerButtons::LEFT,
+            Modifiers::NONE,
+        ),
+        InputEvent::pointer_button(PointerButton::Left, false, [475.0, 350.0], Modifiers::NONE),
+    ] {
+        events.send(input_event(event)).unwrap();
+        parse_live_command(commands.recv().unwrap()).unwrap();
+    }
+    for y in (180..=620).step_by(40) {
+        for x in (120..=900).step_by(40) {
+            events
+                .send(input_event(InputEvent::pointer_button(
+                    PointerButton::Left,
+                    true,
+                    [f64::from(x), f64::from(y)],
+                    Modifiers::NONE,
+                )))
+                .unwrap();
+            parse_live_command(commands.recv().unwrap()).unwrap();
+            events
+                .send(input_event(InputEvent::pointer_button(
+                    PointerButton::Left,
+                    false,
+                    [f64::from(x), f64::from(y)],
+                    Modifiers::NONE,
+                )))
+                .unwrap();
+            let released = parse_live_command(commands.recv().unwrap()).unwrap();
+            if matches!(released, LiveCommand::Patch(_)) {
+                let Ok(view) = commands.recv() else {
+                    return false;
+                };
+                parse_live_command(view).unwrap();
+                return true;
+            }
+        }
+    }
+    false
+}
+
 #[test]
 fn bounded_real_safetensors_reaches_a_retained_histogram() {
     let root = std::env::temp_dir().join(format!("weight-distribution-{}", std::process::id()));
@@ -167,37 +215,7 @@ fn downloaded_real_q8_0_model_reaches_supported_tensor_menu() {
             ));
             parse_live_command(commands.recv().unwrap()).unwrap();
         }
-        let mut selected_a_bar = false;
-        'screen: for y in (180..=620).step_by(40) {
-            for x in (120..=900).step_by(40) {
-                events
-                    .send(input_event(InputEvent::pointer_button(
-                        PointerButton::Left,
-                        true,
-                        [f64::from(x), f64::from(y)],
-                        Modifiers::NONE,
-                    )))
-                    .unwrap();
-                parse_live_command(commands.recv().unwrap()).unwrap();
-                events
-                    .send(input_event(InputEvent::pointer_button(
-                        PointerButton::Left,
-                        false,
-                        [f64::from(x), f64::from(y)],
-                        Modifiers::NONE,
-                    )))
-                    .unwrap();
-                let released = parse_live_command(commands.recv().unwrap()).unwrap();
-                if matches!(released, LiveCommand::Patch(_)) {
-                    let Ok(view) = commands.recv() else {
-                        return;
-                    };
-                    parse_live_command(view).unwrap();
-                    selected_a_bar = true;
-                    break 'screen;
-                }
-            }
-        }
+        let selected_a_bar = orbit_then_select_bar(&commands, &events);
         assert!(
             selected_a_bar,
             "screen-space click scan must select a real bar"

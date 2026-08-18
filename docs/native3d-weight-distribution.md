@@ -44,7 +44,9 @@ input, port, and retained-line renderer. Decoder/catalog source is reused at
 build time from adjacent `demo-ml-utils`, so the demo exercises its public
 Safetensors/GGUF contracts rather than inventing another format implementation.
 For GGUF, the app retains published tensor-name offsets and lengths and performs
-one bounded lazy read only when a name is displayed or selected.
+one bounded lazy read when a tensor is selected. The analyzed tile caches that
+bounded name; pointer, camera, selection, and retained-view updates do not
+repeat filesystem reads or UTF-8 decoding.
 
 ## Bounds and evidence
 

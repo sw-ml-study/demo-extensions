@@ -162,6 +162,37 @@ Separate remaining applet gap: `run_applet_with_host` still cannot accept a
 configured filesystem root, so this repository's public-`Environment` adapter
 remains necessary even though `file_metadata` itself has shipped.
 
+## Applet terminal-error supervision and restart — open
+
+MLPL `err(...)` values can be handled inside an application, but evaluator-level
+`EvalError` failures currently terminate the parked-main worker. The host learns
+the error only after its event-loop callback returns, while a disconnected event
+sender causes the native window to exit. Consequently a type/evaluator failure
+cannot be displayed in the existing window and no registered MLPL recovery
+routine can run: its `Environment` has already failed.
+
+Owner: `../sw-mlpl`. The parked-main API needs a supervised worker contract that
+reports terminal evaluation failures to the still-running host as owned error
+records. It must keep the main-thread event loop alive and offer an explicit
+restart operation that constructs a fresh `Environment`, restores the configured
+filesystem root and provider/port registrations, and evaluates either the normal
+entry point or a registered recovery entry point. The old environment, handlers,
+ports, and native handles must be finalized before replacement. Restart must be
+user-directed; quit remains a separate explicit choice.
+
+Required acceptance: inject a deterministic evaluator-level failure after a
+valid scene, assert the host receives and renders its exact diagnostic without
+closing the window, then prove both choices: `R` starts a fresh worker and accepts
+new input, while `Esc` closes cleanly. Repeated failure/restart cycles must remain
+bounded and must not retain stale handles or event receivers. A panic crossing a
+native provider boundary remains forbidden and must first be converted to an
+owned diagnostic.
+
+Downstream mitigation: cache all bounded tensor strings needed by histogram
+interaction state so ordinary drag/click redraws do not repeat lazy GGUF reads or
+decoding. This removes the observed trigger but does not replace host supervision
+for other uncatchable evaluator failures.
+
 ## Derived scalar reuse from array/record computations — open
 
 The disk-usage MLPL implementation exposed an interpreter defect while
