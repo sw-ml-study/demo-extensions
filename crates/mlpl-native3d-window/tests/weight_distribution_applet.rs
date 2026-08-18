@@ -1,6 +1,7 @@
+use mlpl_native3d_window::interaction::{InputEvent, Modifiers, PointerButton};
 use mlpl_native3d_window::live::{
-    close_event, key_event, parse_scene_command, run_applet_with_host_root,
-    weight_distribution_applet_source,
+    LiveCommand, close_event, input_event, key_event, parse_live_command, parse_scene_command,
+    run_applet_with_host_root, weight_distribution_applet_source,
 };
 
 #[test]
@@ -14,6 +15,7 @@ fn bounded_real_safetensors_reaches_a_retained_histogram() {
     std::fs::write(root.join("weights.safetensors"), artifact).unwrap();
 
     let source = weight_distribution_applet_source(&["weights.safetensors".into()]);
+    let mut survived_click = false;
     let result = run_applet_with_host_root(&source, &root, |commands, events| {
         let Ok(menu_value) = commands.recv_timeout(std::time::Duration::from_secs(2)) else {
             return;
@@ -38,9 +40,45 @@ fn bounded_real_safetensors_reaches_a_retained_histogram() {
         assert!(histogram.help.contains("Y=LOG2 SAMPLE COUNT"));
         assert!(histogram.status.contains("SAMPLED 8 / 8"));
         assert!(histogram.objects.len() > 8 * 12 + 24);
+        events
+            .send(input_event(InputEvent::pointer_button(
+                PointerButton::Left,
+                true,
+                [400.0, 300.0],
+                Modifiers::NONE,
+            )))
+            .unwrap();
+        parse_live_command(commands.recv().unwrap()).unwrap();
+        events
+            .send(input_event(InputEvent::pointer_button(
+                PointerButton::Left,
+                false,
+                [400.0, 300.0],
+                Modifiers::NONE,
+            )))
+            .unwrap();
+        let released = parse_live_command(commands.recv().unwrap()).unwrap();
+        if matches!(released, LiveCommand::Patch(_)) {
+            parse_live_command(commands.recv().unwrap()).unwrap();
+        }
+        events
+            .send(input_event(InputEvent::pointer_move(
+                [401.0, 300.0],
+                mlpl_native3d_window::interaction::PointerButtons::NONE,
+                Modifiers::NONE,
+            )))
+            .unwrap();
+        if let Ok(command) = commands.recv_timeout(std::time::Duration::from_secs(2)) {
+            parse_live_command(command).unwrap();
+            survived_click = true;
+        }
         events.send(close_event()).unwrap();
     });
     assert!(result.is_ok(), "weight applet failed: {result:?}");
+    assert!(
+        survived_click,
+        "click must leave a state that accepts the next key"
+    );
     std::fs::remove_dir_all(root).ok();
 }
 

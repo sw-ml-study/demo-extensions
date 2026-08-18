@@ -14,6 +14,12 @@ MLPL worker. Stable IDs keep the eight histogram boxes, numeric count scale,
 and color legend retained; bin selection sends only changed scene lines and
 camera changes send view-only commands.
 
+Pointer reduction is pure MLPL state transformation; command emission happens
+afterward so `ok(...)` transport acknowledgements cannot become application
+state. Any interaction failure is converted into the existing red fail-closed
+scene while the window remains open, with the original message visible and
+`M` available to return to the model menu.
+
 ## What the view means
 
 X spans the sampled minimum through maximum weight value. Y is

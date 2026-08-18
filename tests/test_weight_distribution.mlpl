@@ -23,4 +23,7 @@ def u:test_weight_scene_patch() { before=u:wd_fixture_state([-2,-1,0,1,2]); afte
 @test {name:"Fail-closed model errors render an unmistakable red 3D X",tags:["native3d","weights","error"]}
 def u:test_weight_error_scene() { base=u:wd_defaults(["blocked.gguf"]); state=u:wd_restate(base,"error",0,0,base.tile,8,0,base.camera,"CATALOG REJECTED"); scene=u:wd_mode_scene(state)?; u:assert_eq(tally(scene.ids),3,"error glyph has three strokes")?; u:assert_eq(take(scene.colors,0,0),[1,0.15,0.1,1],"error glyph is red")?; u:assert_true(u:atlas_text_contains(u:wd_help(state),"NO UNSUPPORTED PAYLOAD WAS READ"),"error help explains fail closed") }
 
+@test {name:"Weight interaction failures retain a recoverable error state",tags:["native3d","weights","error","interaction"]}
+def u:test_weight_event_error() { state=u:wd_fixture_state([-1,0,1]); failed=u:wd_event_result(state,err("synthetic click failure")); u:assert_eq(failed.mode,"error","handler error becomes state instead of escaping run loop")?; u:assert_true(u:atlas_text_contains(failed.error,"WINDOW RETAINED"),"status explains retained window")?; u:assert_true(u:atlas_text_contains(failed.error,"synthetic click failure"),"original error remains visible") }
+
 u:run_registered_tests()
