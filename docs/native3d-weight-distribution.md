@@ -8,8 +8,10 @@ host-selected confined root. `MODEL_ROOT` may override the default
 Up/Down and Enter choose a model and then a tensor. Left or Backspace returns
 to tensor selection; M returns to model selection. In the histogram view,
 Up/Down selects a bin, left-drag orbits, Shift-left/middle-drag pans, the wheel
-zooms, and R resets the camera. Stable IDs keep the eight histogram boxes and
-24 axis/legend lines retained; bin selection sends only changed scene lines and
+zooms, and R resets the camera. Opening a model first publishes a rotating
+loading marker and names the file while the bounded catalog scan runs on the
+MLPL worker. Stable IDs keep the eight histogram boxes, numeric count scale,
+and color legend retained; bin selection sends only changed scene lines and
 camera changes send view-only commands.
 
 ## What the view means
@@ -17,8 +19,11 @@ camera changes send view-only commands.
 X spans the sampled minimum through maximum weight value. Y is
 `0.35 + log2(sample count)` so one dense bin does not flatten smaller bins. The
 status names the model, tensor, dtype, sampled/total values, bytes actually
-read, minimum, mean, maximum, and zero count. Blue covers the lower four value
-bins, orange the upper four, and yellow marks the selected bin. The current
+read, minimum, mean, maximum, and zero count. World-space count labels mark
+1, 4, 16, 64, 256, and 1,024 samples on the logarithmic Y axis. A matching
+world-space legend labels blue `-` bins, orange `+` bins, and yellow `SEL`.
+Blue covers the lower four value bins, orange the upper four, and yellow marks
+the selected bin. The current
 slice is a deterministic prefix sample, not a claim about the complete tensor
 distribution; the UI says `SAMPLED`, never `ALL`, when the tensor exceeds 2,048
 values.
@@ -40,7 +45,8 @@ Safetensors/GGUF contracts rather than inventing another format implementation.
   (4 KiB for I16/U16); GGUF reads at most 2,048 I8/I16 values or 64 complete
   Q8_0 blocks (2,176 bytes).
 - Runtime state retains only one catalog, one capped decoded sample, eight bins,
-  and 120 stable scene lines. Model-file size does not determine payload memory.
+  and a bounded stable line scene. Model-file size does not determine payload
+  memory.
 - Headless acceptance decodes eight real Safetensors I8 values and one real
   34-byte/32-value Q8_0 block from the shared deterministic fixtures. It also
   proves bounded sorted discovery and complete histogram conservation.
