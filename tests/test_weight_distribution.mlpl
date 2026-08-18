@@ -1,3 +1,4 @@
+# Native mlplunit coverage for tests test weight distribution.
 include "lib/native3d/camera.mlpl";
 include "lib/native3d/geometry.mlpl";
 include "demos/model-atlas/model.mlpl";
@@ -6,33 +7,112 @@ include "demos/weight-distribution/model.mlpl";
 include "demos/weight-distribution/scene.mlpl";
 
 @test {name:"Weight distributions bin bounded signed samples",tags:["native3d","weights","histogram"]}
-def u:test_weight_histogram() { tile=u:wd_tile([-4,-2,-1,0,0,1,2,4],8,8)?; u:assert_eq(tile.count,8,"sample count")?; u:assert_eq(reduce_add(tile.bin_counts),8,"bins conserve samples")?; u:assert_eq([tile.minimum,tile.maximum],[-4,4],"range retained")?; u:assert_eq(tile.zero_count,2,"zero count") }
+def u:test_weight_histogram() {
+  "Exercise test weight histogram behavior in this MLPL module.";
+  tile=u:wd_tile([-4,-2,-1,0,0,1,2,4],8,8)?;
+  u:assert_eq(tile.count,8,"sample count")?;
+  u:assert_eq(reduce_add(tile.bin_counts),8,"bins conserve samples")?;
+  u:assert_eq([tile.minimum,tile.maximum],[-4,4],"range retained")?;
+  u:assert_eq(tile.zero_count,2,"zero count")
+}
 
 @test {name:"Weight explorer fails closed for unsupported shared decoders",tags:["native3d","weights","dtype","adversarial"]}
-def u:test_weight_dtype_gate() { u:assert_true(u:wd_dtype_supported("safetensors","I16"),"Safetensors I16")?; u:assert_true(u:wd_dtype_supported("gguf",8),"GGUF Q8_0")?; u:assert_true(1-u:wd_dtype_supported("safetensors","F16"),"Safetensors F16 rejected")?; u:assert_true(u:atlas_text_contains(u:wd_dtype_reason("gguf",2),"DEMO-ML-UTILS"),"GGUF unsupported ownership is visible") }
+def u:test_weight_dtype_gate() {
+  "Exercise test weight dtype gate behavior in this MLPL module.";
+  u:assert_true(u:wd_dtype_supported("safetensors","I16"),"Safetensors I16")?;
+  u:assert_true(u:wd_dtype_supported("gguf",8),"GGUF Q8_0")?;
+  u:assert_true(1-u:wd_dtype_supported("safetensors","F16"),"Safetensors F16 rejected")?;
+  u:assert_true(u:atlas_text_contains(u:wd_dtype_reason("gguf",2),"DEMO-ML-UTILS"),"GGUF unsupported ownership is visible")
+}
 
 @test {name:"Weight histogram scene uses stable retained IDs and legends",tags:["native3d","weights","retained"]}
-def u:test_weight_scene() { state=u:wd_fixture_state([-2,-1,0,1,2]); scene=u:wd_scene(state)?; u:assert_true(gt(tally(scene.ids),8*12+24),"histogram includes world-space labels")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,1000)),"first stable histogram ID")?; help=u:wd_help(state); u:assert_true(u:atlas_text_contains(help,"X=WEIGHT VALUE"),"value axis legend")?; u:assert_true(u:atlas_text_contains(help,"Y=LOG2 SAMPLE COUNT"),"count scale legend") }
+def u:test_weight_scene() {
+  "Exercise test weight scene behavior in this MLPL module.";
+  state=u:wd_fixture_state([-2,-1,0,1,2]);
+  scene=u:wd_scene(state)?;
+  u:assert_true(gt(tally(scene.ids),8*12+24),"histogram includes world-space labels")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,1000)),"first stable histogram ID")?;
+  help=u:wd_help(state);
+  u:assert_true(u:atlas_text_contains(help,"X=WEIGHT VALUE"),"value axis legend")?;
+  u:assert_true(u:atlas_text_contains(help,"Y=LOG2 SAMPLE COUNT"),"count scale legend")
+}
 
 @test {name:"Weight explorer exposes loading feedback and world-space legends",tags:["native3d","weights","labels","loading"]}
-def u:test_weight_loading_and_legends() { base=u:wd_defaults(["real.gguf"]); loading=u:wd_loading(base); u:assert_eq(loading.mode,"loading","catalog scan has an explicit state")?; u:assert_true(u:atlas_text_contains(u:wd_help(loading),"LOADING"),"loading feedback is visible")?; loading_scene=u:wd_mode_scene(loading)?; u:assert_true(gt(tally(loading_scene.ids),3),"loading scene has a visible asymmetric spinner")?; histogram=u:wd_scene(u:wd_fixture_state([-2,-1,0,1,2]))?; u:assert_true(lt(-1,u:atlas_scene_line_index(histogram,2000)),"numeric count scale is world-space geometry")?; u:assert_true(lt(-1,u:atlas_scene_line_index(histogram,2200)),"negative color swatch has a world-space label")?; u:assert_true(lt(-1,u:atlas_scene_line_index(histogram,2240)),"selected color swatch has a world-space label") }
+def u:test_weight_loading_and_legends() {
+  "Exercise test weight loading and legends behavior in this MLPL module.";
+  base=u:wd_defaults(["real.gguf"]);
+  loading=u:wd_loading(base);
+  u:assert_eq(loading.mode,"loading","catalog scan has an explicit state")?;
+  u:assert_true(u:atlas_text_contains(u:wd_help(loading),"LOADING"),"loading feedback is visible")?;
+  loading_scene=u:wd_mode_scene(loading)?;
+  u:assert_true(gt(tally(loading_scene.ids),3),"loading scene has a visible asymmetric spinner")?;
+  histogram=u:wd_scene(u:wd_fixture_state([-2,-1,0,1,2]))?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(histogram,2000)),"numeric count scale is world-space geometry")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(histogram,2200)),"negative color swatch has a world-space label")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(histogram,2240)),"selected color swatch has a world-space label")
+}
 
 @test {name:"Weight histogram selection emits a retained-scene patch",tags:["weight-distribution","retained-scene"]}
-def u:test_weight_scene_patch() { before=u:wd_fixture_state([-2,-1,0,1,2]); after=u:wd_interaction(before,before.camera,1,before.press_x,before.press_y,0); patch=u:wd_scene_patch(before,after)?; u:assert_eq(shape(patch.ids),[24],"old and new selected bins update only their lines")?; u:assert_eq(shape(patch.remove_ids),[0],"fixed histogram topology removes no lines") }
+def u:test_weight_scene_patch() {
+  "Exercise test weight scene patch behavior in this MLPL module.";
+  before=u:wd_fixture_state([-2,-1,0,1,2]);
+  after=u:wd_interaction(before,before.camera,1,before.press_x,before.press_y,0);
+  patch=u:wd_scene_patch(before,after)?;
+  u:assert_eq(shape(patch.ids),[24],"old and new selected bins update only their lines")?;
+  u:assert_eq(shape(patch.remove_ids),[0],"fixed histogram topology removes no lines")
+}
 
 @test {name:"Fail-closed model errors render an unmistakable red 3D X",tags:["native3d","weights","error"]}
-def u:test_weight_error_scene() { base=u:wd_defaults(["blocked.gguf"]); state=u:wd_restate(base,"error",0,0,base.tile,8,0,base.camera,"CATALOG REJECTED"); scene=u:wd_mode_scene(state)?; u:assert_eq(tally(scene.ids),3,"error glyph has three strokes")?; u:assert_eq(take(scene.colors,0,0),[1,0.15,0.1,1],"error glyph is red")?; u:assert_true(u:atlas_text_contains(u:wd_help(state),"NO UNSUPPORTED PAYLOAD WAS READ"),"error help explains fail closed") }
+def u:test_weight_error_scene() {
+  "Exercise test weight error scene behavior in this MLPL module.";
+  base=u:wd_defaults(["blocked.gguf"]);
+  state=u:wd_restate(base,"error",0,0,base.tile,8,0,base.camera,"CATALOG REJECTED");
+  scene=u:wd_mode_scene(state)?;
+  u:assert_eq(tally(scene.ids),3,"error glyph has three strokes")?;
+  u:assert_eq(take(scene.colors,0,0),[1,0.15,0.1,1],"error glyph is red")?;
+  u:assert_true(u:atlas_text_contains(u:wd_help(state),"NO UNSUPPORTED PAYLOAD WAS READ"),"error help explains fail closed")
+}
 
 @test {name:"Weight interaction failures retain a recoverable error state",tags:["native3d","weights","error","interaction"]}
-def u:test_weight_event_error() { state=u:wd_fixture_state([-1,0,1]); failed=u:wd_event_result(state,err("synthetic click failure")); u:assert_eq(failed.mode,"error","handler error becomes state instead of escaping run loop")?; u:assert_true(u:atlas_text_contains(failed.error,"WINDOW RETAINED"),"status explains retained window")?; u:assert_true(u:atlas_text_contains(failed.error,"synthetic click failure"),"original error remains visible")?; help=u:wd_help(failed); u:assert_true(u:atlas_text_contains(help,"R RESTART"),"error offers restart")?; u:assert_true(u:atlas_text_contains(help,"M MODEL MENU"),"error offers model menu")?; u:assert_true(u:atlas_text_contains(help,"ESC QUIT"),"error offers explicit quit") }
+def u:test_weight_event_error() {
+  "Exercise test weight event error behavior in this MLPL module.";
+  state=u:wd_fixture_state([-1,0,1]);
+  failed=u:wd_event_result(state,err("synthetic click failure"));
+  u:assert_eq(failed.mode,"error","handler error becomes state instead of escaping run loop")?;
+  u:assert_true(u:atlas_text_contains(failed.error,"WINDOW RETAINED"),"status explains retained window")?;
+  u:assert_true(u:atlas_text_contains(failed.error,"synthetic click failure"),"original error remains visible")?;
+  help=u:wd_help(failed);
+  u:assert_true(u:atlas_text_contains(help,"R RESTART"),"error offers restart")?;
+  u:assert_true(u:atlas_text_contains(help,"M MODEL MENU"),"error offers model menu")?;
+  u:assert_true(u:atlas_text_contains(help,"ESC QUIT"),"error offers explicit quit")
+}
 
 @test {name:"Histogram interaction status uses its cached bounded tensor name",tags:["native3d","weights","interaction","bounded-io"]}
-def u:test_weight_cached_name() { state=u:wd_fixture_state([-1,0,1]); broken=u:wd_state(state.files,state.file_index,state.mode,state.path,{count: 1,format: "gguf",path: "missing.gguf",tensor_name_offsets: [0],tensor_name_lengths: [99],rows: [[0,3,8,34]]},state.tensor_index,state.tile,state.bins,state.selected_bin,state.camera,state.revision,state.viewport_width,state.viewport_height,state.press_x,state.press_y,state.dragged,state.error); status=u:wd_histogram_status(broken); u:assert_true(u:atlas_text_contains(status,"TENSOR weights"),"redraw uses cached name without lazy filesystem read") }
+def u:test_weight_cached_name() {
+  "Exercise test weight cached name behavior in this MLPL module.";
+  state=u:wd_fixture_state([-1,0,1]);
+  broken=u:wd_state(state.files,state.file_index,state.mode,state.path,{count: 1,format: "gguf",path: "missing.gguf",tensor_name_offsets: [0],tensor_name_lengths: [99],rows: [[0,3,8,34]]},state.tensor_index,state.tile,state.bins,state.selected_bin,state.camera,state.revision,state.viewport_width,state.viewport_height,state.press_x,state.press_y,state.dragged,state.error);
+  status=u:wd_histogram_status(broken);
+  u:assert_true(u:atlas_text_contains(status,"TENSOR weights"),"redraw uses cached name without lazy filesystem read")
+}
 
 @test {name:"Histogram redraw guards corrupted invariant strings",tags:["native3d","weights","interaction","adversarial"]}
-def u:test_weight_string_guards() { state=u:wd_fixture_state([-1,0,1]); tile={name: state.tile.name,label: [1],count: state.tile.count,minimum: state.tile.minimum,maximum: state.tile.maximum,mean: state.tile.mean,zero_count: state.tile.zero_count,bin_counts: state.tile.bin_counts,total: state.tile.total,bytes_read: state.tile.bytes_read,dtype: state.tile.dtype,method: state.tile.method}; broken=u:wd_state(state.files,state.file_index,state.mode,[2],state.catalog,state.tensor_index,tile,state.bins,state.selected_bin,state.camera,state.revision,state.viewport_width,state.viewport_height,state.press_x,state.press_y,state.dragged,state.error); u:assert_true(u:atlas_text_contains(u:wd_histogram_status(broken),"LABEL UNAVAILABLE"),"invalid cached label is rendered safely")?; u:assert_true(u:atlas_text_contains(u:wd_help(broken),"PATH UNAVAILABLE"),"invalid path is rendered safely") }
+def u:test_weight_string_guards() {
+  "Exercise test weight string guards behavior in this MLPL module.";
+  state=u:wd_fixture_state([-1,0,1]);
+  tile={name: state.tile.name,label: [1],count: state.tile.count,minimum: state.tile.minimum,maximum: state.tile.maximum,mean: state.tile.mean,zero_count: state.tile.zero_count,bin_counts: state.tile.bin_counts,total: state.tile.total,bytes_read: state.tile.bytes_read,dtype: state.tile.dtype,method: state.tile.method};
+  broken=u:wd_state(state.files,state.file_index,state.mode,[2],state.catalog,state.tensor_index,tile,state.bins,state.selected_bin,state.camera,state.revision,state.viewport_width,state.viewport_height,state.press_x,state.press_y,state.dragged,state.error);
+  u:assert_true(u:atlas_text_contains(u:wd_histogram_status(broken),"LABEL UNAVAILABLE"),"invalid cached label is rendered safely")?;
+  u:assert_true(u:atlas_text_contains(u:wd_help(broken),"PATH UNAVAILABLE"),"invalid path is rendered safely")
+}
 
 @test {name:"Weight picking tracks the live physical viewport",tags:["native3d","weights","interaction","resize"]}
-def u:test_weight_resize() { state=u:wd_fixture_state([-1,0,1]); resized=u:wd_pointer_reduce({kind:"resize",width:1800,height:1400},state); u:assert_eq([resized.viewport_width,resized.viewport_height],[1800,1400],"resize persists physical picking bounds")?; u:assert_eq(resized.tile.label,"TENSOR weights","resize preserves invariant label") }
+def u:test_weight_resize() {
+  "Exercise test weight resize behavior in this MLPL module.";
+  state=u:wd_fixture_state([-1,0,1]);
+  resized=u:wd_pointer_reduce({kind:"resize",width:1800,height:1400},state);
+  u:assert_eq([resized.viewport_width,resized.viewport_height],[1800,1400],"resize persists physical picking bounds")?;
+  u:assert_eq(resized.tile.label,"TENSOR weights","resize preserves invariant label")
+}
 
 u:run_registered_tests()

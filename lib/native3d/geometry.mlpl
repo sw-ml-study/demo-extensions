@@ -1,26 +1,58 @@
 # Generic bulk line, uniform-style, and XZ-plane grid helpers.
 
-def u:n3d_valid_color(color) { equal(shape(color),[4])*(1-lt(reduce(:min,color),0))*(1-gt(reduce(:max,color),1)) }
+def u:n3d_valid_color(color) {
+  "Provide n3d valid color behavior in this MLPL module.";
+  equal(shape(color),[4])*(1-lt(reduce(:min,color),0))*(1-gt(reduce(:max,color),1))
+}
 
 def u:n3d_uniform_line_style(edge_count,color,thickness) {
-  if (1-eq(edge_count,floor(edge_count)))+lt(edge_count,0)+(1-u:n3d_valid_color(color))+lt(thickness,0.5)+gt(thickness,20) { err({kind:"native3d_style",message:"invalid edge count, RGBA color, or thickness"}) } else {
+  "Provide n3d uniform line style behavior in this MLPL module.";
+  if (1-eq(edge_count,floor(edge_count)))+lt(edge_count,0)+(1-u:n3d_valid_color(color))+lt(thickness,0.5)+gt(thickness,20) {
+    err({kind:"native3d_style",message:"invalid edge count, RGBA color, or thickness"})
+  } else {
     ok({colors: matmul(ones([edge_count,1]),reshape(color,[1,4])),thicknesses: fill([edge_count],thickness),ids: range(edge_count)})
   }
 }
 
 def u:n3d_lines(positions,edges,style,rotation_y_speed) {
-  vertices=take(shape(positions),0,0); edge_count=take(shape(edges),0,0);
+  "Provide n3d lines behavior in this MLPL module.";
+  vertices=take(shape(positions),0,0);
+  edge_count=take(shape(edges),0,0);
   shapes_ok=eq(rank(positions),2)*eq(take(shape(positions),0,1),3)*eq(rank(edges),2)*eq(take(shape(edges),0,1),2)*equal(shape(style.colors),[edge_count,4])*equal(shape(style.thicknesses),[edge_count])*equal(shape(style.ids),[edge_count]);
-  indices_ok=if eq(edge_count,0) { 1 } else { (1-lt(reduce(:min,flatten(edges)),0))*lt(reduce(:max,flatten(edges)),vertices)*equal(flatten(edges),floor(flatten(edges))) };
-  if shapes_ok*indices_ok*eq(rotation_y_speed,rotation_y_speed) { ok({positions: positions,edges: edges,colors: style.colors,thicknesses: style.thicknesses,ids: style.ids,rotation_y_speed: rotation_y_speed}) } else { err({kind:"native3d_lines",message:"line arrays, indices, or rotation are invalid"}) }
+  indices_ok=if eq(edge_count,0) {
+    1
+  } else {
+    (1-lt(reduce(:min,flatten(edges)),0))*lt(reduce(:max,flatten(edges)),vertices)*equal(flatten(edges),floor(flatten(edges)))
+  };
+  if shapes_ok*indices_ok*eq(rotation_y_speed,rotation_y_speed) {
+    ok({positions: positions,edges: edges,colors: style.colors,thicknesses: style.thicknesses,ids: style.ids,rotation_y_speed: rotation_y_speed})
+  } else {
+    err({kind:"native3d_lines",message:"line arrays, indices, or rotation are invalid"})
+  }
 }
 
 def u:n3d_plane_grid(rows,columns,cell_size,color,thickness) {
-  if (1-eq(rows,floor(rows)))+(1-eq(columns,floor(columns)))+lt(rows,1)+lt(columns,1)+lt(rows,0)+lt(columns,0)+gt(rows,1000)+gt(columns,1000)+(1-gt(cell_size,0)) { err({kind:"native3d_grid",message:"grid dimensions or cell size are invalid"}) } else {
-    width=columns*cell_size; depth=rows*cell_size; values=[]; row=0;
-    while lt(row,rows+1) { z=row*cell_size-depth/2; values=concat(values,[-width/2,0,z,width/2,0,z]); row=row+1 };
-    column=0; while lt(column,columns+1) { x=column*cell_size-width/2; values=concat(values,[x,0,-depth/2,x,0,depth/2]); column=column+1 };
-    line_count=rows+columns+2; style=u:n3d_uniform_line_style(line_count,color,thickness)?;
+  "Provide n3d plane grid behavior in this MLPL module.";
+  if (1-eq(rows,floor(rows)))+(1-eq(columns,floor(columns)))+lt(rows,1)+lt(columns,1)+lt(rows,0)+lt(columns,0)+gt(rows,1000)+gt(columns,1000)+(1-gt(cell_size,0)) {
+    err({kind:"native3d_grid",message:"grid dimensions or cell size are invalid"})
+  } else {
+    width=columns*cell_size;
+    depth=rows*cell_size;
+    values=[];
+    row=0;
+    while lt(row,rows+1) {
+      z=row*cell_size-depth/2;
+      values=concat(values,[-width/2,0,z,width/2,0,z]);
+      row=row+1
+    };
+    column=0;
+    while lt(column,columns+1) {
+      x=column*cell_size-width/2;
+      values=concat(values,[x,0,-depth/2,x,0,depth/2]);
+      column=column+1
+    };
+    line_count=rows+columns+2;
+    style=u:n3d_uniform_line_style(line_count,color,thickness)?;
     u:n3d_lines(reshape(values,[line_count*2,3]),reshape(range(line_count*2),[line_count,2]),style,0)
   }
 }

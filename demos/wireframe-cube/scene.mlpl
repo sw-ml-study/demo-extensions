@@ -1,9 +1,21 @@
 # MLPL owns the cube geometry. Rust consumes only this generic line-scene schema.
-def u:wireframe_cube_defaults() { {width:2,height:2,length:2,rotation_speed:0.6,line_color:[0.2,0.8,1,1],line_thickness:2} }
+def u:wireframe_cube_defaults() {
+  "Provide wireframe cube defaults behavior in this MLPL module.";
+  {width:2,height:2,length:2,rotation_speed:0.6,line_color:[0.2,0.8,1,1],line_thickness:2}
+}
 
-def u:wireframe_cube_valid_color(color,index) { if eq(index,tally(color)) { 1 } else { value=take(color,0,index); (1-lt(value,0))* (1-gt(value,1)) * u:wireframe_cube_valid_color(color,index+1) } }
+def u:wireframe_cube_valid_color(color,index) {
+  "Provide wireframe cube valid color behavior in this MLPL module.";
+  if eq(index,tally(color)) {
+    1
+  } else {
+    value=take(color,0,index);
+    (1-lt(value,0))* (1-gt(value,1)) * u:wireframe_cube_valid_color(color,index+1)
+  }
+}
 
-def u:wireframe_cube_scene(value) { "Build an array-derived wireframe cube in the generic native line-scene format.";
+def u:wireframe_cube_scene(value) {
+  "Build an array-derived wireframe cube in the generic native line-scene format.";
   dimensions_ok=gt(value.width,0)*gt(value.height,0)*gt(value.length,0)*(1-gt(value.width,100))*(1-gt(value.height,100))*(1-gt(value.length,100));
   speed_ok=(1-lt(value.rotation_speed,-10))*(1-gt(value.rotation_speed,10));
   color_ok=eq(rank(value.line_color),1)*eq(tally(value.line_color),4)*u:wireframe_cube_valid_color(value.line_color,0);
@@ -14,7 +26,13 @@ def u:wireframe_cube_scene(value) { "Build an array-derived wireframe cube in th
     vertices=signs*scales;
     edges=[0,1,1,2,2,3,3,0,4,5,5,6,6,7,7,4,0,4,1,5,2,6,3,7];
     ok({schema:"sw-ml-study.native3d.line-scene",version:1,positions:{shape:[8,3],values: vertices},edges:{shape:[12,2],values: edges},controls:{rotation_speed: value.rotation_speed,line_color: value.line_color,line_thickness: value.line_thickness}})
-  } else { err({kind:"wireframe-cube",message:"dimensions, speed, RGBA color, or thickness are outside supported bounds"}) }
+  } else {
+    err({kind:"wireframe-cube",message:"dimensions, speed, RGBA color, or thickness are outside supported bounds"})
+  }
 }
 
-def u:wireframe_cube_json(value) { "Serialize the deterministic generic scene for the native viewer file bridge."; scene=u:wireframe_cube_scene(value)?; to_json(scene,{tagged:0}) }
+def u:wireframe_cube_json(value) {
+  "Serialize the deterministic generic scene for the native viewer file bridge.";
+  scene=u:wireframe_cube_scene(value)?;
+  to_json(scene,{tagged:0})
+}

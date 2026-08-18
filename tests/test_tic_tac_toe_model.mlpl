@@ -1,7 +1,9 @@
+# Native mlplunit coverage for tests test tic tac toe model.
 include "demos/tic-tac-toe/model.mlpl";
 
 @test {name: "tic tac toe validates boards and legal moves", tags: ["native3d", "tic-tac-toe", "model"]}
 def u:test_ttt_validation_and_moves() {
+  "Exercise test ttt validation and moves behavior in this MLPL module.";
   empty=u:ttt_empty_board();
   u:assert_true(u:ttt_valid_board(empty),"empty board is valid")?;
   u:assert_eq(u:ttt_legal_moves(empty),range(9),"all empty squares are legal")?;
@@ -15,6 +17,7 @@ def u:test_ttt_validation_and_moves() {
 
 @test {name: "tic tac toe detects wins draws and in progress", tags: ["native3d", "tic-tac-toe", "terminal"]}
 def u:test_ttt_outcomes() {
+  "Exercise test ttt outcomes behavior in this MLPL module.";
   u:assert_eq(u:ttt_outcome([1,1,1,0,-1,0,-1,0,0]),{status:"won",winner:1},"row win")?;
   u:assert_eq(u:ttt_outcome([1,-1,1,1,-1,0,0,-1,0]),{status:"won",winner: -1},"column win")?;
   u:assert_eq(u:ttt_outcome([1,-1,1,1,-1,-1,-1,1,1]),{status:"draw",winner:0},"full board draw")?;
@@ -23,7 +26,9 @@ def u:test_ttt_outcomes() {
 
 @test {name: "tic tac toe setup owns mark and turn choices", tags: ["native3d", "tic-tac-toe", "setup"]}
 def u:test_ttt_setup() {
-  first=unwrap(u:ttt_new_game("X",1)); second=unwrap(u:ttt_new_game("O",0));
+  "Exercise test ttt setup behavior in this MLPL module.";
+  first=unwrap(u:ttt_new_game("X",1));
+  second=unwrap(u:ttt_new_game("O",0));
   u:assert_eq([first.user_mark,first.ai_mark],[1,-1],"X user mark choice")?;
   u:assert_eq(first.turn,"user","X user can play first")?;
   u:assert_eq([second.user_mark,second.ai_mark],[-1,1],"O user mark choice")?;
@@ -33,6 +38,7 @@ def u:test_ttt_setup() {
 
 @test {name: "tic tac toe minimax wins blocks and is deterministic", tags: ["native3d", "tic-tac-toe", "minimax"]}
 def u:test_ttt_minimax() {
+  "Exercise test ttt minimax behavior in this MLPL module.";
   win=u:ttt_best_move([1,1,0,-1,-1,0,0,0,0],1)?;
   block=u:ttt_best_move([1,1,0,0,-1,0,0,0,0],-1)?;
   first=u:ttt_best_move(u:ttt_empty_board(),1)?;

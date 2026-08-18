@@ -1,5 +1,53 @@
+# MLPL application semantics for demos audio spectrum scene.
 include "../model-atlas/scene.mlpl";
-def u:audio_color(index) { band=index-floor(index/8)*8; if lt(band,3) { [0.2,0.55,1,1] } else { if lt(band,6) { [0.2,1,0.4,1] } else { [1,0.45,0.15,1] } } }
-def u:audio_lines(state) { lines=u:atlas_lines(); index=0; while lt(index,16) { channel=floor(index/8); band=index-channel*8; angle=if equal(channel,0) { 3.141592653589793-band*0.16 } else { band*0.16 }; direction=[cos(angle),0,sin(angle)]; inner=0.55+band*0.22; magnitude=take(state.bands,0,index); extension=0.45+if lt(magnitude*35,7) { magnitude*35 } else { 7 }; start=direction*inner; ending=direction*(inner+extension)+[0,0.2+extension*0.28,0]; lines=u:atlas_add(lines,start,ending,u:audio_color(index),12,7000+index); index=index+1 }; lines }
-def u:audio_scene(state) { lines=u:audio_lines(state); style={colors: reshape(lines.colors,[lines.count,4]),thicknesses: lines.thicknesses,ids: lines.ids}; u:n3d_lines(reshape(lines.positions,[lines.count*2,3]),reshape(lines.edges,[lines.count,2]),style,0) }
-def u:audio_patch(before,after) { lines=u:audio_lines(after); ok({op: "patch_scene",base_revision: before.revision,target_revision: after.revision,ids: lines.ids,starts: reshape(lines.starts,[lines.count,3]),ends: reshape(lines.ends,[lines.count,3]),colors: reshape(lines.colors,[lines.count,4]),thicknesses: lines.thicknesses,remove_ids: fill([0],0)}) }
+def u:audio_color(index) {
+  "Provide audio color behavior in this MLPL module.";
+  band=index-floor(index/8)*8;
+  if lt(band,3) {
+    [0.2,0.55,1,1]
+  } else {
+    if lt(band,6) {
+      [0.2,1,0.4,1]
+    } else {
+      [1,0.45,0.15,1]
+    }
+  }
+}
+def u:audio_lines(state) {
+  "Provide audio lines behavior in this MLPL module.";
+  lines=u:atlas_lines();
+  index=0;
+  while lt(index,16) {
+    channel=floor(index/8);
+    band=index-channel*8;
+    angle=if equal(channel,0) {
+      3.141592653589793-band*0.16
+    } else {
+      band*0.16
+    };
+    direction=[cos(angle),0,sin(angle)];
+    inner=0.55+band*0.22;
+    magnitude=take(state.bands,0,index);
+    extension=0.45+if lt(magnitude*35,7) {
+      magnitude*35
+    } else {
+      7
+    };
+    start=direction*inner;
+    ending=direction*(inner+extension)+[0,0.2+extension*0.28,0];
+    lines=u:atlas_add(lines,start,ending,u:audio_color(index),12,7000+index);
+    index=index+1
+  };
+  lines
+}
+def u:audio_scene(state) {
+  "Provide audio scene behavior in this MLPL module.";
+  lines=u:audio_lines(state);
+  style={colors: reshape(lines.colors,[lines.count,4]),thicknesses: lines.thicknesses,ids: lines.ids};
+  u:n3d_lines(reshape(lines.positions,[lines.count*2,3]),reshape(lines.edges,[lines.count,2]),style,0)
+}
+def u:audio_patch(before,after) {
+  "Provide audio patch behavior in this MLPL module.";
+  lines=u:audio_lines(after);
+  ok({op: "patch_scene",base_revision: before.revision,target_revision: after.revision,ids: lines.ids,starts: reshape(lines.starts,[lines.count,3]),ends: reshape(lines.ends,[lines.count,3]),colors: reshape(lines.colors,[lines.count,4]),thicknesses: lines.thicknesses,remove_ids: fill([0],0)})
+}

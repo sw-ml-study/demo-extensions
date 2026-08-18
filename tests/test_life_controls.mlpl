@@ -1,8 +1,11 @@
+# Native mlplunit coverage for tests test life controls.
 include "demos/life-plane/controls.mlpl";
 
 @test {name:"Life controls start empty and expose every binding",tags:["native3d","life","controls","help"]}
 def u:test_life_control_defaults() {
-  state=u:life_app_defaults(); help=u:life_help();
+  "Exercise test life control defaults behavior in this MLPL module.";
+  state=u:life_app_defaults();
+  help=u:life_help();
   u:assert_eq([state.grid.rows,state.grid.columns,reduce(:add,state.grid.cells),state.running,state.generation],[40,40,0,0,0],"editable grid starts empty")?;
   expected="MOUSE: CLICK TOGGLE   CTRL+LEFT DRAG PAINT\nLEFT DRAG ORBIT/TILT   SHIFT+LEFT OR MIDDLE DRAG PAN   WHEEL ZOOM\nSPACE RUN/PAUSE   N STEP   C CLEAR   +/- SPEED\nB BLOCK   H BEEHIVE   I BLINKER   T TOAD\nG GLIDER   U GUN   R RANDOM   ESC CLOSE";
   u:assert_eq(help,expected,"visible legend names editing, animation, presets, camera, and close bindings")
@@ -10,36 +13,58 @@ def u:test_life_control_defaults() {
 
 @test {name:"Life click and paint gestures edit cells without camera ambiguity",tags:["native3d","life","controls","picking"]}
 def u:test_life_edit_gestures() {
-  initial=u:life_app_defaults(); down=u:life_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0,control:0}); clicked=u:life_reduce(down,{kind:"pointer_up",button:"left",x:400,y:300,shift:0,control:0});
+  "Exercise test life edit gestures behavior in this MLPL module.";
+  initial=u:life_app_defaults();
+  down=u:life_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0,control:0});
+  clicked=u:life_reduce(down,{kind:"pointer_up",button:"left",x:400,y:300,shift:0,control:0});
   u:assert_eq(reduce(:add,clicked.grid.cells),1,"stationary click toggles one cell")?;
-  orbit_down=u:life_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0,control:0}); orbit=u:life_reduce(orbit_down,{kind:"pointer_move",x:430,y:280,left:1,shift:0,control:0}); released=u:life_reduce(orbit,{kind:"pointer_up",button:"left",x:430,y:280,shift:0,control:0});
+  orbit_down=u:life_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0,control:0});
+  orbit=u:life_reduce(orbit_down,{kind:"pointer_move",x:430,y:280,left:1,shift:0,control:0});
+  released=u:life_reduce(orbit,{kind:"pointer_up",button:"left",x:430,y:280,shift:0,control:0});
   u:assert_eq(reduce(:add,released.grid.cells),0,"camera drag never edits")?;
   u:assert_true(1-equal(released.camera.yaw,initial.camera.yaw),"plain left drag orbits")?;
-  paint=u:life_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0,control:1}); paint=u:life_reduce(paint,{kind:"pointer_move",x:410,y:300,left:1,shift:0,control:1});
+  paint=u:life_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0,control:1});
+  paint=u:life_reduce(paint,{kind:"pointer_move",x:410,y:300,left:1,shift:0,control:1});
   u:assert_true(gt(reduce(:add,paint.grid.cells),0),"control-left drag paints live cells")?;
   u:assert_eq(paint.camera,initial.camera,"painting does not move camera")
 }
 
 @test {name:"Life keyboard controls own animation presets and speed",tags:["native3d","life","controls","animation"]}
 def u:test_life_keyboard_and_frames() {
-  state=u:life_app_defaults(); state=u:life_reduce(state,{kind:"key",key:"b"});
+  "Exercise test life keyboard and frames behavior in this MLPL module.";
+  state=u:life_app_defaults();
+  state=u:life_reduce(state,{kind:"key",key:"b"});
   u:assert_eq(reduce(:add,state.grid.cells),4,"block replaces grid")?;
-  state=u:life_reduce(state,{kind:"key",key:"space"}); state=u:life_reduce(state,{kind:"frame",delta_ms:1000,elapsed_ms:1000});
+  state=u:life_reduce(state,{kind:"key",key:"space"});
+  state=u:life_reduce(state,{kind:"frame",delta_ms:1000,elapsed_ms:1000});
   u:assert_eq([state.running,state.generation,reduce(:add,state.grid.cells)],[1,1,4],"running frame advances stable block")?;
-  state=u:life_reduce(state,{kind:"key",key:"n"}); u:assert_eq(state.generation,2,"single step always advances")?;
-  faster=u:life_reduce(state,{kind:"key",key:"+"}); u:assert_true(gt(faster.speed,state.speed),"plus increases speed")?;
-  native_faster=u:life_reduce(state,{kind:"key",key:"equal"}); u:assert_true(gt(native_faster.speed,state.speed),"native equal key increases speed")?;
-  random=u:life_reduce(state,{kind:"key",key:"r"}); u:assert_eq(random.generation,0,"preset replacement resets generation")?;
-  cleared=u:life_reduce(random,{kind:"key",key:"c"}); u:assert_eq(reduce(:add,cleared.grid.cells),0,"clear replaces with empty grid")
+  state=u:life_reduce(state,{kind:"key",key:"n"});
+  u:assert_eq(state.generation,2,"single step always advances")?;
+  faster=u:life_reduce(state,{kind:"key",key:"+"});
+  u:assert_true(gt(faster.speed,state.speed),"plus increases speed")?;
+  native_faster=u:life_reduce(state,{kind:"key",key:"equal"});
+  u:assert_true(gt(native_faster.speed,state.speed),"native equal key increases speed")?;
+  random=u:life_reduce(state,{kind:"key",key:"r"});
+  u:assert_eq(random.generation,0,"preset replacement resets generation")?;
+  cleared=u:life_reduce(random,{kind:"key",key:"c"});
+  u:assert_eq(reduce(:add,cleared.grid.cells),0,"clear replaces with empty grid")
 }
 
 @test {name:"Life camera pan zoom resize and close remain generic",tags:["native3d","life","controls","camera"]}
 def u:test_life_camera_lifecycle() {
-  initial=u:life_app_defaults(); idle=u:life_reduce(initial,{kind:"pointer_move",x:400,y:300,left:0,shift:0,control:0}); u:assert_eq(idle,initial,"idle motion is a nonvisual no-op")?; pan=u:life_reduce(initial,{kind:"pointer_down",button:"middle",x:100,y:100,shift:0,control:0}); pan=u:life_reduce(pan,{kind:"pointer_move",x:120,y:130,left:0,shift:0,control:0});
+  "Exercise test life camera lifecycle behavior in this MLPL module.";
+  initial=u:life_app_defaults();
+  idle=u:life_reduce(initial,{kind:"pointer_move",x:400,y:300,left:0,shift:0,control:0});
+  u:assert_eq(idle,initial,"idle motion is a nonvisual no-op")?;
+  pan=u:life_reduce(initial,{kind:"pointer_down",button:"middle",x:100,y:100,shift:0,control:0});
+  pan=u:life_reduce(pan,{kind:"pointer_move",x:120,y:130,left:0,shift:0,control:0});
   u:assert_true(1-equal(pan.camera.target,initial.camera.target),"middle drag pans")?;
-  zoom=u:life_reduce(initial,{kind:"wheel",dx:0,dy:40,x:400,y:300,shift:0,control:0}); u:assert_true(lt(zoom.camera.distance,initial.camera.distance),"wheel zooms")?;
-  resized=u:life_reduce(initial,{kind:"resize",width:1024,height:768}); u:assert_eq([resized.viewport_width,resized.viewport_height],[1024,768],"resize updates picking viewport")?;
-  closed=u:life_reduce(initial,{kind:"close"}); u:assert_eq(closed.close_requested,1,"close requests teardown")
+  zoom=u:life_reduce(initial,{kind:"wheel",dx:0,dy:40,x:400,y:300,shift:0,control:0});
+  u:assert_true(lt(zoom.camera.distance,initial.camera.distance),"wheel zooms")?;
+  resized=u:life_reduce(initial,{kind:"resize",width:1024,height:768});
+  u:assert_eq([resized.viewport_width,resized.viewport_height],[1024,768],"resize updates picking viewport")?;
+  closed=u:life_reduce(initial,{kind:"close"});
+  u:assert_eq(closed.close_requested,1,"close requests teardown")
 }
 
 u:run_registered_tests()

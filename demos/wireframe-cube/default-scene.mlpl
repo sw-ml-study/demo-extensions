@@ -1,2 +1,3 @@
+# MLPL application semantics for demos wireframe cube default scene.
 include "scene.mlpl";
 unwrap(u:wireframe_cube_json(u:wireframe_cube_defaults()))

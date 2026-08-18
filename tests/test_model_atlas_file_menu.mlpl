@@ -1,17 +1,64 @@
+# Native mlplunit coverage for tests test model atlas file menu.
 include "demos/model-atlas-file/menu.mlpl";
 include "demos/model-atlas/scene.mlpl";
 include "demos/model-atlas-file/scene.mlpl";
 
 @test {name:"File Model Atlas menu selects and returns without losing discovery",tags:["model-atlas","file","menu"]}
-def u:test_file_atlas_menu() { paths=["qwen-small/model.safetensors","qwen-large/model.safetensors"]; state=u:file_atlas_menu(paths); u:assert_eq(state.mode,"menu","starts in menu")?; u:assert_eq(state.selected,0,"starts on first model")?; state=u:file_atlas_menu_key(state,"arrow_down"); u:assert_eq(state.selected,1,"down selects next")?; state=u:file_atlas_menu_key(state,"enter"); u:assert_eq(state.mode,"analyze","enter starts analysis")?; u:assert_eq(state.path,"qwen-large/model.safetensors","enter chooses selected real file")?; state=u:file_atlas_menu_key(state,"m"); u:assert_eq(state.mode,"menu","M returns to menu")?; u:assert_eq(state.selected,1,"selection is preserved")?; u:assert_eq(list_len(state.paths),2,"bounded discovery is preserved") }
+def u:test_file_atlas_menu() {
+  "Exercise test file atlas menu behavior in this MLPL module.";
+  paths=["qwen-small/model.safetensors","qwen-large/model.safetensors"];
+  state=u:file_atlas_menu(paths);
+  u:assert_eq(state.mode,"menu","starts in menu")?;
+  u:assert_eq(state.selected,0,"starts on first model")?;
+  state=u:file_atlas_menu_key(state,"arrow_down");
+  u:assert_eq(state.selected,1,"down selects next")?;
+  state=u:file_atlas_menu_key(state,"enter");
+  u:assert_eq(state.mode,"analyze","enter starts analysis")?;
+  u:assert_eq(state.path,"qwen-large/model.safetensors","enter chooses selected real file")?;
+  state=u:file_atlas_menu_key(state,"m");
+  u:assert_eq(state.mode,"menu","M returns to menu")?;
+  u:assert_eq(state.selected,1,"selection is preserved")?;
+  u:assert_eq(list_len(state.paths),2,"bounded discovery is preserved")
+}
 
 @test {name:"File Model Atlas menu handles bounds and empty discovery",tags:["model-atlas","file","menu","adversarial"]}
-def u:test_file_atlas_menu_bounds() { state=u:file_atlas_menu(["only.gguf"]); u:assert_eq(u:file_atlas_menu_key(state,"arrow_down").selected,0,"single entry stays selected")?; u:assert_eq(u:file_atlas_menu_key(state,"arrow_up").selected,0,"up is bounded")?; empty=u:file_atlas_menu([]); u:assert_eq(u:file_atlas_menu_key(empty,"enter").mode,"menu","empty menu cannot analyze a phantom path") }
+def u:test_file_atlas_menu_bounds() {
+  "Exercise test file atlas menu bounds behavior in this MLPL module.";
+  state=u:file_atlas_menu(["only.gguf"]);
+  u:assert_eq(u:file_atlas_menu_key(state,"arrow_down").selected,0,"single entry stays selected")?;
+  u:assert_eq(u:file_atlas_menu_key(state,"arrow_up").selected,0,"up is bounded")?;
+  empty=u:file_atlas_menu([]);
+  u:assert_eq(u:file_atlas_menu_key(empty,"enter").mode,"menu","empty menu cannot analyze a phantom path")
+}
 
 @test {name:"Real-file atlas explains its logarithmic tensor bars and highlights selection",tags:["model-atlas","file","legend","selection"]}
-def u:test_file_atlas_selected_tensor() { camera=u:n3d_camera_defaults(); header=parse_json("{\"tensor.weight\":{\"data_offsets\":[0,16],\"dtype\":\"I16\",\"shape\":[2,4]}}")?; catalog={header_keys: ["tensor.weight"],tensor_count: 1,tensor_bytes: 16,rows_by_name: reshape([0,16,8,2],[1,4]),header: header}; state=u:file_atlas_state([],0,"atlas","model.safetensors",catalog,camera,1,0,0,800,600,0,0,0); scene=u:file_atlas_scene(state)?; line=u:atlas_scene_line_index(scene,1000); u:assert_true(lt(-1,line),"tensor bar has stable pick geometry")?; u:assert_eq(take(scene.colors,0,line),[1,0.9,0.15,1],"selected tensor is yellow")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,210)),"world scale has a visible zero label")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,260)),"world scale has a visible thirty label")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,290)),"world legend has a blue tensor swatch")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,300)),"world legend has a yellow selection swatch")?; u:assert_true(u:atlas_text_contains(u:file_atlas_atlas_help(state),"WORLD AXIS=LOG2 BYTES: 0,10,20,30"),"visible help explains normalized logarithmic byte height")?; status=u:file_atlas_status(state); u:assert_true(u:atlas_text_contains(status,"tensor.weight"),"selected tensor name is visible")?; u:assert_true(u:atlas_text_contains(status,"STORED 16 B"),"selected tensor byte units are visible")?; u:assert_true(u:atlas_text_contains(status,"DTYPE I16 | SHAPE [2,4]"),"selected dtype and shape are visible") }
+def u:test_file_atlas_selected_tensor() {
+  "Exercise test file atlas selected tensor behavior in this MLPL module.";
+  camera=u:n3d_camera_defaults();
+  header=parse_json("{\"tensor.weight\":{\"data_offsets\":[0,16],\"dtype\":\"I16\",\"shape\":[2,4]}}")?;
+  catalog={header_keys: ["tensor.weight"],tensor_count: 1,tensor_bytes: 16,rows_by_name: reshape([0,16,8,2],[1,4]),header: header};
+  state=u:file_atlas_state([],0,"atlas","model.safetensors",catalog,camera,1,0,0,800,600,0,0,0);
+  scene=u:file_atlas_scene(state)?;
+  line=u:atlas_scene_line_index(scene,1000);
+  u:assert_true(lt(-1,line),"tensor bar has stable pick geometry")?;
+  u:assert_eq(take(scene.colors,0,line),[1,0.9,0.15,1],"selected tensor is yellow")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,210)),"world scale has a visible zero label")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,260)),"world scale has a visible thirty label")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,290)),"world legend has a blue tensor swatch")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,300)),"world legend has a yellow selection swatch")?;
+  u:assert_true(u:atlas_text_contains(u:file_atlas_atlas_help(state),"WORLD AXIS=LOG2 BYTES: 0,10,20,30"),"visible help explains normalized logarithmic byte height")?;
+  status=u:file_atlas_status(state);
+  u:assert_true(u:atlas_text_contains(status,"tensor.weight"),"selected tensor name is visible")?;
+  u:assert_true(u:atlas_text_contains(status,"STORED 16 B"),"selected tensor byte units are visible")?;
+  u:assert_true(u:atlas_text_contains(status,"DTYPE I16 | SHAPE [2,4]"),"selected dtype and shape are visible")
+}
 
 @test {name:"Real-file picker formats exact modification epochs as labeled UTC dates",tags:["model-atlas","file","date"]}
-def u:test_file_atlas_utc_date() { u:assert_eq(u:file_atlas_utc_date(0),"1970-01-01","Unix epoch date")?; u:assert_eq(u:file_atlas_utc_date(1600000000123),"2020-09-13","fixed non-current timestamp")?; u:assert_eq(u:file_atlas_utc_date(1709164800000),"2024-02-29","leap-day timestamp") }
+def u:test_file_atlas_utc_date() {
+  "Exercise test file atlas utc date behavior in this MLPL module.";
+  u:assert_eq(u:file_atlas_utc_date(0),"1970-01-01","Unix epoch date")?;
+  u:assert_eq(u:file_atlas_utc_date(1600000000123),"2020-09-13","fixed non-current timestamp")?;
+  u:assert_eq(u:file_atlas_utc_date(1709164800000),"2024-02-29","leap-day timestamp")
+}
 
 u:run_registered_tests()

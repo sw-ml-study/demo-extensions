@@ -1,22 +1,306 @@
+# MLPL application semantics for demos model atlas scene.
 include "./model.mlpl";
 include "../../lib/native3d/geometry.mlpl";
 
-def u:atlas_lines() { {positions: fill([0],0),starts: fill([0],0),ends: fill([0],0),edges: fill([0],0),colors: fill([0],0),thicknesses: fill([0],0),ids: fill([0],0),count: 0} }
-def u:atlas_add(state,start,end,color,thickness,id) { vertex=state.count*2; {positions: concat(state.positions,concat(start,end)),starts: concat(state.starts,start),ends: concat(state.ends,end),edges: concat(state.edges,[vertex,vertex+1]),colors: concat(state.colors,color),thicknesses: concat(state.thicknesses,thickness),ids: concat(state.ids,id),count: state.count+1} }
-def u:atlas_add_box(state,x,y,z,width,height,depth,color,thickness,id) { x0=x-width/2; x1=x+width/2; y0=y-height/2; y1=y+height/2; z0=z-depth/2; z1=z+depth/2; p0=[x0,y0,z0]; p1=[x1,y0,z0]; p2=[x1,y0,z1]; p3=[x0,y0,z1]; p4=[x0,y1,z0]; p5=[x1,y1,z0]; p6=[x1,y1,z1]; p7=[x0,y1,z1]; state=u:atlas_add(state,p0,p1,color,thickness,id); state=u:atlas_add(state,p1,p2,color,thickness,id+1); state=u:atlas_add(state,p2,p3,color,thickness,id+2); state=u:atlas_add(state,p3,p0,color,thickness,id+3); state=u:atlas_add(state,p4,p5,color,thickness,id+4); state=u:atlas_add(state,p5,p6,color,thickness,id+5); state=u:atlas_add(state,p6,p7,color,thickness,id+6); state=u:atlas_add(state,p7,p4,color,thickness,id+7); state=u:atlas_add(state,p0,p4,color,thickness,id+8); state=u:atlas_add(state,p1,p5,color,thickness,id+9); state=u:atlas_add(state,p2,p6,color,thickness,id+10); u:atlas_add(state,p3,p7,color,thickness,id+11) }
-def u:atlas_add_ground_rect(state,x,z,width,depth,color,id) { x0=x-width/2; x1=x+width/2; z0=z-depth/2; z1=z+depth/2; state=u:atlas_add(state,[x0,0,z0],[x1,0,z0],color,1,id); state=u:atlas_add(state,[x1,0,z0],[x1,0,z1],color,1,id+1); state=u:atlas_add(state,[x1,0,z1],[x0,0,z1],color,1,id+2); u:atlas_add(state,[x0,0,z1],[x0,0,z0],color,1,id+3) }
-def u:atlas_add_districts(state) { state=u:atlas_add_ground_rect(state,2,0,6,2,[0.2,0.55,1,1],0); u:atlas_add_ground_rect(state,3,4,8,2,[1,0.5,0.2,1],12) }
-def u:atlas_add_digit(state,digit,x,y,id) { color=[0.65,1,0.55,1]; w=0.18; h=0.18; a=eq(digit,0)+eq(digit,2)+eq(digit,3)+eq(digit,5)+eq(digit,6)+eq(digit,7)+eq(digit,8)+eq(digit,9); b=eq(digit,0)+eq(digit,1)+eq(digit,2)+eq(digit,3)+eq(digit,4)+eq(digit,7)+eq(digit,8)+eq(digit,9); c=eq(digit,0)+eq(digit,1)+eq(digit,3)+eq(digit,4)+eq(digit,5)+eq(digit,6)+eq(digit,7)+eq(digit,8)+eq(digit,9); d=eq(digit,0)+eq(digit,2)+eq(digit,3)+eq(digit,5)+eq(digit,6)+eq(digit,8)+eq(digit,9); e=eq(digit,0)+eq(digit,2)+eq(digit,6)+eq(digit,8); f=eq(digit,0)+eq(digit,4)+eq(digit,5)+eq(digit,6)+eq(digit,8)+eq(digit,9); g=eq(digit,2)+eq(digit,3)+eq(digit,4)+eq(digit,5)+eq(digit,6)+eq(digit,8)+eq(digit,9); if b { state=u:atlas_add(state,[x+w,y+h,0],[x+w,y,0],color,2,id) }; if a { state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,2,id+1) }; if c { state=u:atlas_add(state,[x+w,y,0],[x+w,y-h,0],color,2,id+2) }; if d { state=u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,2,id+3) }; if e { state=u:atlas_add(state,[x-w,y,0],[x-w,y-h,0],color,2,id+4) }; if f { state=u:atlas_add(state,[x-w,y+h,0],[x-w,y,0],color,2,id+5) }; if g { state=u:atlas_add(state,[x-w,y,0],[x+w,y,0],color,2,id+6) }; state }
-def u:atlas_add_s(state,x,y,color,id) { w=0.16; h=0.18; state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,3,id); state=u:atlas_add(state,[x-w,y+h,0],[x-w,y,0],color,3,id+1); state=u:atlas_add(state,[x-w,y,0],[x+w,y,0],color,3,id+2); state=u:atlas_add(state,[x+w,y,0],[x+w,y-h,0],color,3,id+3); u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,3,id+4) }
-def u:atlas_add_g(state,x,y,color,id) { w=0.16; h=0.18; state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,3,id); state=u:atlas_add(state,[x-w,y+h,0],[x-w,y-h,0],color,3,id+1); state=u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,3,id+2); state=u:atlas_add(state,[x+w,y-h,0],[x+w,y,0],color,3,id+3); u:atlas_add(state,[x,y,0],[x+w,y,0],color,3,id+4) }
-def u:atlas_add_e(state,x,y,color,id) { w=0.16; h=0.18; state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,3,id); state=u:atlas_add(state,[x-w,y+h,0],[x-w,y-h,0],color,3,id+1); state=u:atlas_add(state,[x-w,y,0],[x+w,y,0],color,3,id+2); u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,3,id+3) }
-def u:atlas_add_l(state,x,y,color,id) { w=0.16; h=0.18; state=u:atlas_add(state,[x-w,y+h,0],[x-w,y-h,0],color,3,id); u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,3,id+1) }
-def u:atlas_add_b(state,x,y,color,id) { w=0.18; h=0.22; state=u:atlas_add(state,[x-w,y+h,0],[x-w,y-h,0],color,3,id); state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,3,id+1); state=u:atlas_add(state,[x-w,y,0],[x+w,y,0],color,3,id+2); state=u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,3,id+3); state=u:atlas_add(state,[x+w,y+h,0],[x+w,y,0],color,3,id+4); u:atlas_add(state,[x+w,y,0],[x+w,y-h,0],color,3,id+5) }
-def u:atlas_add_t(state,x,y,color,id) { w=0.18; h=0.22; state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,3,id); u:atlas_add(state,[x,y+h,0],[x,y-h,0],color,3,id+1) }
-def u:atlas_add_log_axis(state) { color=[0.9,0.9,0.9,1]; labels=[0.65,1,0.55,1]; state=u:atlas_add(state,[-2,1,0],[-2,6,0],color,2,20); index=0; while lt(index,6) { y=index+1; state=u:atlas_add(state,[-2.35,y,0],[-1.65,y,0],color,2,21+index); index=index+1 }; state=u:atlas_add_digit(state,1,-2.7,1,30); state=u:atlas_add_digit(state,2,-2.7,2,37); state=u:atlas_add_digit(state,4,-2.7,3,44); state=u:atlas_add_digit(state,8,-2.7,4,51); state=u:atlas_add_digit(state,1,-3.05,5,58); state=u:atlas_add_digit(state,6,-2.5,5,65); state=u:atlas_add_digit(state,3,-3.05,6,72); state=u:atlas_add_digit(state,2,-2.5,6,79); state=u:atlas_add_b(state,-2,6.65,labels,114); blue=[0.2,0.65,1,1]; orange=[1,0.45,0.2,1]; yellow=[1,0.9,0.15,1]; state=u:atlas_add(state,[-6.4,6,0],[-5.5,6,0],blue,6,90); state=u:atlas_add(state,[-6.4,5.5,0],[-5.5,5.5,0],orange,6,91); state=u:atlas_add(state,[-6.4,5,0],[-5.5,5,0],yellow,6,92); state=u:atlas_add_s(state,-5.2,6,blue,93); state=u:atlas_add_g(state,-5.2,5.5,orange,98); state=u:atlas_add_s(state,-5.2,5,yellow,103); state=u:atlas_add_e(state,-4.75,5,yellow,108); u:atlas_add_l(state,-4.3,5,yellow,112) }
-def u:atlas_building_color(state,index) { if eq(index,state.selected) { [1,0.9,0.15,1] } else { if eq(take(state.city.scene_columns.format_codes,0,index),0) { [0.2,0.65,1,1] } else { [1,0.45,0.2,1] } } }
-def u:atlas_add_detail(lines,state) { detail=u:atlas_detail_checked(state.selected); if is_err(detail) { lines } else { value=unwrap(detail); tile=value.tile; cyan=[0.2,1,1,1]; green=[0.4,1,0.35,1]; red=[1,0.2,0.2,1]; index=0; while lt(index,tally(tile.bin_counts)) { count=take(tile.bin_counts,0,index); x=9+index*0.65; lines=u:atlas_add(lines,[x,0,0],[x,count*0.45,0],cyan,4,5000+index); index=index+1 }; index=0; while lt(index,tally(tile.sample_values)-1) { a=take(tile.sample_values,0,index); b=take(tile.sample_values,0,index+1); lines=u:atlas_add(lines,[9+index*0.65,2+a*0.08,1],[9+(index+1)*0.65,2+b*0.08,1],green,4,5100+index); index=index+1 }; if value.quantization.available { index=0; while lt(index,tally(value.quantization.errors)) { error=take(value.quantization.errors,0,index); x=9+index*0.65; lines=u:atlas_add(lines,[x,0,2],[x,abs(error)*4,2],red,4,5200+index); index=index+1 } }; lines } }
-def u:atlas_city_scene(state) { lines=u:atlas_add_log_axis(u:atlas_add_districts(u:atlas_lines())); index=0; while lt(index,state.city.tensor_count) { if u:atlas_city_visible(state,index) { x=take(state.city.scene_columns.x,0,index); z=take(state.city.scene_columns.z,0,index); width=take(state.city.scene_columns.widths,0,index); depth=take(state.city.scene_columns.depths,0,index); bytes=take(state.city.scene_columns.byte_counts,0,index); full_height=u:atlas_city_log_height(bytes); height=if state.lod { full_height } else { 0.2 }; y=height/2; thickness=if eq(index,state.selected) { 4 } else { 2 }; lines=u:atlas_add_box(lines,x,y,z,width,height,depth,u:atlas_building_color(state,index),thickness,200+index*12) }; index=index+1 }; lines=u:atlas_add_detail(lines,state); style={colors: reshape(lines.colors,[lines.count,4]),thicknesses: lines.thicknesses,ids: lines.ids}; u:n3d_lines(reshape(lines.positions,[lines.count*2,3]),reshape(lines.edges,[lines.count,2]),style,0) }
-def u:atlas_scene_line_index(scene,id) { found=-1; index=0; while lt(index,tally(scene.ids)) { if eq(take(scene.ids,0,index),id) { found=index }; index=index+1 }; found }
-def u:atlas_patch_add_line(patch,scene,index) { edge=take(scene.edges,0,index); start=take(scene.positions,0,take(edge,0,0)); end=take(scene.positions,0,take(edge,0,1)); {starts: concat(patch.starts,start),ends: concat(patch.ends,end),colors: concat(patch.colors,take(scene.colors,0,index)),thicknesses: concat(patch.thicknesses,take(scene.thicknesses,0,index)),ids: concat(patch.ids,take(scene.ids,0,index)),removes: patch.removes,count: patch.count+1} }
-def u:atlas_city_scene_patch(before,after) { old=u:atlas_city_scene(before)?; new=u:atlas_city_scene(after)?; patch={starts: fill([0],0),ends: fill([0],0),colors: fill([0],0),thicknesses: fill([0],0),ids: fill([0],0),removes: fill([0],0),count: 0}; index=0; while lt(index,tally(new.ids)) { id=take(new.ids,0,index); prior=u:atlas_scene_line_index(old,id); changed=lt(prior,0); if 1-changed { changed=(1-equal(take(new.colors,0,index),take(old.colors,0,prior)))+(1-eq(take(new.thicknesses,0,index),take(old.thicknesses,0,prior)))+(1-equal(take(new.positions,0,take(take(new.edges,0,index),0,0)),take(old.positions,0,take(take(old.edges,0,prior),0,0))))+(1-equal(take(new.positions,0,take(take(new.edges,0,index),0,1)),take(old.positions,0,take(take(old.edges,0,prior),0,1)))) }; if changed { patch=u:atlas_patch_add_line(patch,new,index) }; index=index+1 }; index=0; while lt(index,tally(old.ids)) { id=take(old.ids,0,index); if lt(u:atlas_scene_line_index(new,id),0) { patch={starts: patch.starts,ends: patch.ends,colors: patch.colors,thicknesses: patch.thicknesses,ids: patch.ids,removes: concat(patch.removes,id),count: patch.count} }; index=index+1 }; ok({op: "patch_scene",base_revision: before.revision,target_revision: after.revision,ids: patch.ids,starts: reshape(patch.starts,[patch.count,3]),ends: reshape(patch.ends,[patch.count,3]),colors: reshape(patch.colors,[patch.count,4]),thicknesses: patch.thicknesses,remove_ids: patch.removes}) }
+def u:atlas_lines() {
+  "Provide atlas lines behavior in this MLPL module.";
+  {positions: fill([0],0),starts: fill([0],0),ends: fill([0],0),edges: fill([0],0),colors: fill([0],0),thicknesses: fill([0],0),ids: fill([0],0),count: 0}
+}
+def u:atlas_add(state,start,end,color,thickness,id) {
+  "Provide atlas add behavior in this MLPL module.";
+  vertex=state.count*2;
+  {positions: concat(state.positions,concat(start,end)),starts: concat(state.starts,start),ends: concat(state.ends,end),edges: concat(state.edges,[vertex,vertex+1]),colors: concat(state.colors,color),thicknesses: concat(state.thicknesses,thickness),ids: concat(state.ids,id),count: state.count+1}
+}
+def u:atlas_add_box(state,x,y,z,width,height,depth,color,thickness,id) {
+  "Provide atlas add box behavior in this MLPL module.";
+  x0=x-width/2;
+  x1=x+width/2;
+  y0=y-height/2;
+  y1=y+height/2;
+  z0=z-depth/2;
+  z1=z+depth/2;
+  p0=[x0,y0,z0];
+  p1=[x1,y0,z0];
+  p2=[x1,y0,z1];
+  p3=[x0,y0,z1];
+  p4=[x0,y1,z0];
+  p5=[x1,y1,z0];
+  p6=[x1,y1,z1];
+  p7=[x0,y1,z1];
+  state=u:atlas_add(state,p0,p1,color,thickness,id);
+  state=u:atlas_add(state,p1,p2,color,thickness,id+1);
+  state=u:atlas_add(state,p2,p3,color,thickness,id+2);
+  state=u:atlas_add(state,p3,p0,color,thickness,id+3);
+  state=u:atlas_add(state,p4,p5,color,thickness,id+4);
+  state=u:atlas_add(state,p5,p6,color,thickness,id+5);
+  state=u:atlas_add(state,p6,p7,color,thickness,id+6);
+  state=u:atlas_add(state,p7,p4,color,thickness,id+7);
+  state=u:atlas_add(state,p0,p4,color,thickness,id+8);
+  state=u:atlas_add(state,p1,p5,color,thickness,id+9);
+  state=u:atlas_add(state,p2,p6,color,thickness,id+10);
+  u:atlas_add(state,p3,p7,color,thickness,id+11)
+}
+def u:atlas_add_ground_rect(state,x,z,width,depth,color,id) {
+  "Provide atlas add ground rect behavior in this MLPL module.";
+  x0=x-width/2;
+  x1=x+width/2;
+  z0=z-depth/2;
+  z1=z+depth/2;
+  state=u:atlas_add(state,[x0,0,z0],[x1,0,z0],color,1,id);
+  state=u:atlas_add(state,[x1,0,z0],[x1,0,z1],color,1,id+1);
+  state=u:atlas_add(state,[x1,0,z1],[x0,0,z1],color,1,id+2);
+  u:atlas_add(state,[x0,0,z1],[x0,0,z0],color,1,id+3)
+}
+def u:atlas_add_districts(state) {
+  "Provide atlas add districts behavior in this MLPL module.";
+  state=u:atlas_add_ground_rect(state,2,0,6,2,[0.2,0.55,1,1],0);
+  u:atlas_add_ground_rect(state,3,4,8,2,[1,0.5,0.2,1],12)
+}
+def u:atlas_add_digit(state,digit,x,y,id) {
+  "Provide atlas add digit behavior in this MLPL module.";
+  color=[0.65,1,0.55,1];
+  w=0.18;
+  h=0.18;
+  a=eq(digit,0)+eq(digit,2)+eq(digit,3)+eq(digit,5)+eq(digit,6)+eq(digit,7)+eq(digit,8)+eq(digit,9);
+  b=eq(digit,0)+eq(digit,1)+eq(digit,2)+eq(digit,3)+eq(digit,4)+eq(digit,7)+eq(digit,8)+eq(digit,9);
+  c=eq(digit,0)+eq(digit,1)+eq(digit,3)+eq(digit,4)+eq(digit,5)+eq(digit,6)+eq(digit,7)+eq(digit,8)+eq(digit,9);
+  d=eq(digit,0)+eq(digit,2)+eq(digit,3)+eq(digit,5)+eq(digit,6)+eq(digit,8)+eq(digit,9);
+  e=eq(digit,0)+eq(digit,2)+eq(digit,6)+eq(digit,8);
+  f=eq(digit,0)+eq(digit,4)+eq(digit,5)+eq(digit,6)+eq(digit,8)+eq(digit,9);
+  g=eq(digit,2)+eq(digit,3)+eq(digit,4)+eq(digit,5)+eq(digit,6)+eq(digit,8)+eq(digit,9);
+  if b {
+    state=u:atlas_add(state,[x+w,y+h,0],[x+w,y,0],color,2,id)
+  };
+  if a {
+    state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,2,id+1)
+  };
+  if c {
+    state=u:atlas_add(state,[x+w,y,0],[x+w,y-h,0],color,2,id+2)
+  };
+  if d {
+    state=u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,2,id+3)
+  };
+  if e {
+    state=u:atlas_add(state,[x-w,y,0],[x-w,y-h,0],color,2,id+4)
+  };
+  if f {
+    state=u:atlas_add(state,[x-w,y+h,0],[x-w,y,0],color,2,id+5)
+  };
+  if g {
+    state=u:atlas_add(state,[x-w,y,0],[x+w,y,0],color,2,id+6)
+  };
+  state
+}
+def u:atlas_add_s(state,x,y,color,id) {
+  "Provide atlas add s behavior in this MLPL module.";
+  w=0.16;
+  h=0.18;
+  state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,3,id);
+  state=u:atlas_add(state,[x-w,y+h,0],[x-w,y,0],color,3,id+1);
+  state=u:atlas_add(state,[x-w,y,0],[x+w,y,0],color,3,id+2);
+  state=u:atlas_add(state,[x+w,y,0],[x+w,y-h,0],color,3,id+3);
+  u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,3,id+4)
+}
+def u:atlas_add_g(state,x,y,color,id) {
+  "Provide atlas add g behavior in this MLPL module.";
+  w=0.16;
+  h=0.18;
+  state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,3,id);
+  state=u:atlas_add(state,[x-w,y+h,0],[x-w,y-h,0],color,3,id+1);
+  state=u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,3,id+2);
+  state=u:atlas_add(state,[x+w,y-h,0],[x+w,y,0],color,3,id+3);
+  u:atlas_add(state,[x,y,0],[x+w,y,0],color,3,id+4)
+}
+def u:atlas_add_e(state,x,y,color,id) {
+  "Provide atlas add e behavior in this MLPL module.";
+  w=0.16;
+  h=0.18;
+  state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,3,id);
+  state=u:atlas_add(state,[x-w,y+h,0],[x-w,y-h,0],color,3,id+1);
+  state=u:atlas_add(state,[x-w,y,0],[x+w,y,0],color,3,id+2);
+  u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,3,id+3)
+}
+def u:atlas_add_l(state,x,y,color,id) {
+  "Provide atlas add l behavior in this MLPL module.";
+  w=0.16;
+  h=0.18;
+  state=u:atlas_add(state,[x-w,y+h,0],[x-w,y-h,0],color,3,id);
+  u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,3,id+1)
+}
+def u:atlas_add_b(state,x,y,color,id) {
+  "Provide atlas add b behavior in this MLPL module.";
+  w=0.18;
+  h=0.22;
+  state=u:atlas_add(state,[x-w,y+h,0],[x-w,y-h,0],color,3,id);
+  state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,3,id+1);
+  state=u:atlas_add(state,[x-w,y,0],[x+w,y,0],color,3,id+2);
+  state=u:atlas_add(state,[x-w,y-h,0],[x+w,y-h,0],color,3,id+3);
+  state=u:atlas_add(state,[x+w,y+h,0],[x+w,y,0],color,3,id+4);
+  u:atlas_add(state,[x+w,y,0],[x+w,y-h,0],color,3,id+5)
+}
+def u:atlas_add_t(state,x,y,color,id) {
+  "Provide atlas add t behavior in this MLPL module.";
+  w=0.18;
+  h=0.22;
+  state=u:atlas_add(state,[x-w,y+h,0],[x+w,y+h,0],color,3,id);
+  u:atlas_add(state,[x,y+h,0],[x,y-h,0],color,3,id+1)
+}
+def u:atlas_add_log_axis(state) {
+  "Provide atlas add log axis behavior in this MLPL module.";
+  color=[0.9,0.9,0.9,1];
+  labels=[0.65,1,0.55,1];
+  state=u:atlas_add(state,[-2,1,0],[-2,6,0],color,2,20);
+  index=0;
+  while lt(index,6) {
+    y=index+1;
+    state=u:atlas_add(state,[-2.35,y,0],[-1.65,y,0],color,2,21+index);
+    index=index+1
+  };
+  state=u:atlas_add_digit(state,1,-2.7,1,30);
+  state=u:atlas_add_digit(state,2,-2.7,2,37);
+  state=u:atlas_add_digit(state,4,-2.7,3,44);
+  state=u:atlas_add_digit(state,8,-2.7,4,51);
+  state=u:atlas_add_digit(state,1,-3.05,5,58);
+  state=u:atlas_add_digit(state,6,-2.5,5,65);
+  state=u:atlas_add_digit(state,3,-3.05,6,72);
+  state=u:atlas_add_digit(state,2,-2.5,6,79);
+  state=u:atlas_add_b(state,-2,6.65,labels,114);
+  blue=[0.2,0.65,1,1];
+  orange=[1,0.45,0.2,1];
+  yellow=[1,0.9,0.15,1];
+  state=u:atlas_add(state,[-6.4,6,0],[-5.5,6,0],blue,6,90);
+  state=u:atlas_add(state,[-6.4,5.5,0],[-5.5,5.5,0],orange,6,91);
+  state=u:atlas_add(state,[-6.4,5,0],[-5.5,5,0],yellow,6,92);
+  state=u:atlas_add_s(state,-5.2,6,blue,93);
+  state=u:atlas_add_g(state,-5.2,5.5,orange,98);
+  state=u:atlas_add_s(state,-5.2,5,yellow,103);
+  state=u:atlas_add_e(state,-4.75,5,yellow,108);
+  u:atlas_add_l(state,-4.3,5,yellow,112)
+}
+def u:atlas_building_color(state,index) {
+  "Provide atlas building color behavior in this MLPL module.";
+  if eq(index,state.selected) {
+    [1,0.9,0.15,1]
+  } else {
+    if eq(take(state.city.scene_columns.format_codes,0,index),0) {
+      [0.2,0.65,1,1]
+    } else {
+      [1,0.45,0.2,1]
+    }
+  }
+}
+def u:atlas_add_detail(lines,state) {
+  "Provide atlas add detail behavior in this MLPL module.";
+  detail=u:atlas_detail_checked(state.selected);
+  if is_err(detail) {
+    lines
+  } else {
+    value=unwrap(detail);
+    tile=value.tile;
+    cyan=[0.2,1,1,1];
+    green=[0.4,1,0.35,1];
+    red=[1,0.2,0.2,1];
+    index=0;
+    while lt(index,tally(tile.bin_counts)) {
+      count=take(tile.bin_counts,0,index);
+      x=9+index*0.65;
+      lines=u:atlas_add(lines,[x,0,0],[x,count*0.45,0],cyan,4,5000+index);
+      index=index+1
+    };
+    index=0;
+    while lt(index,tally(tile.sample_values)-1) {
+      a=take(tile.sample_values,0,index);
+      b=take(tile.sample_values,0,index+1);
+      lines=u:atlas_add(lines,[9+index*0.65,2+a*0.08,1],[9+(index+1)*0.65,2+b*0.08,1],green,4,5100+index);
+      index=index+1
+    };
+    if value.quantization.available {
+      index=0;
+      while lt(index,tally(value.quantization.errors)) {
+        error=take(value.quantization.errors,0,index);
+        x=9+index*0.65;
+        lines=u:atlas_add(lines,[x,0,2],[x,abs(error)*4,2],red,4,5200+index);
+        index=index+1
+      }
+    };
+    lines
+  }
+}
+def u:atlas_city_scene(state) {
+  "Provide atlas city scene behavior in this MLPL module.";
+  lines=u:atlas_add_log_axis(u:atlas_add_districts(u:atlas_lines()));
+  index=0;
+  while lt(index,state.city.tensor_count) {
+    if u:atlas_city_visible(state,index) {
+      x=take(state.city.scene_columns.x,0,index);
+      z=take(state.city.scene_columns.z,0,index);
+      width=take(state.city.scene_columns.widths,0,index);
+      depth=take(state.city.scene_columns.depths,0,index);
+      bytes=take(state.city.scene_columns.byte_counts,0,index);
+      full_height=u:atlas_city_log_height(bytes);
+      height=if state.lod {
+        full_height
+      } else {
+        0.2
+      };
+      y=height/2;
+      thickness=if eq(index,state.selected) {
+        4
+      } else {
+        2
+      };
+      lines=u:atlas_add_box(lines,x,y,z,width,height,depth,u:atlas_building_color(state,index),thickness,200+index*12)
+    };
+    index=index+1
+  };
+  lines=u:atlas_add_detail(lines,state);
+  style={colors: reshape(lines.colors,[lines.count,4]),thicknesses: lines.thicknesses,ids: lines.ids};
+  u:n3d_lines(reshape(lines.positions,[lines.count*2,3]),reshape(lines.edges,[lines.count,2]),style,0)
+}
+def u:atlas_scene_line_index(scene,id) {
+  "Provide atlas scene line index behavior in this MLPL module.";
+  found=-1;
+  index=0;
+  while lt(index,tally(scene.ids)) {
+    if eq(take(scene.ids,0,index),id) {
+      found=index
+    };
+    index=index+1
+  };
+  found
+}
+def u:atlas_patch_add_line(patch,scene,index) {
+  "Provide atlas patch add line behavior in this MLPL module.";
+  edge=take(scene.edges,0,index);
+  start=take(scene.positions,0,take(edge,0,0));
+  end=take(scene.positions,0,take(edge,0,1));
+  {starts: concat(patch.starts,start),ends: concat(patch.ends,end),colors: concat(patch.colors,take(scene.colors,0,index)),thicknesses: concat(patch.thicknesses,take(scene.thicknesses,0,index)),ids: concat(patch.ids,take(scene.ids,0,index)),removes: patch.removes,count: patch.count+1}
+}
+def u:atlas_city_scene_patch(before,after) {
+  "Provide atlas city scene patch behavior in this MLPL module.";
+  old=u:atlas_city_scene(before)?;
+  new=u:atlas_city_scene(after)?;
+  patch={starts: fill([0],0),ends: fill([0],0),colors: fill([0],0),thicknesses: fill([0],0),ids: fill([0],0),removes: fill([0],0),count: 0};
+  index=0;
+  while lt(index,tally(new.ids)) {
+    id=take(new.ids,0,index);
+    prior=u:atlas_scene_line_index(old,id);
+    changed=lt(prior,0);
+    if 1-changed {
+      changed=(1-equal(take(new.colors,0,index),take(old.colors,0,prior)))+(1-eq(take(new.thicknesses,0,index),take(old.thicknesses,0,prior)))+(1-equal(take(new.positions,0,take(take(new.edges,0,index),0,0)),take(old.positions,0,take(take(old.edges,0,prior),0,0))))+(1-equal(take(new.positions,0,take(take(new.edges,0,index),0,1)),take(old.positions,0,take(take(old.edges,0,prior),0,1))))
+    };
+    if changed {
+      patch=u:atlas_patch_add_line(patch,new,index)
+    };
+    index=index+1
+  };
+  index=0;
+  while lt(index,tally(old.ids)) {
+    id=take(old.ids,0,index);
+    if lt(u:atlas_scene_line_index(new,id),0) {
+      patch={starts: patch.starts,ends: patch.ends,colors: patch.colors,thicknesses: patch.thicknesses,ids: patch.ids,removes: concat(patch.removes,id),count: patch.count}
+    };
+    index=index+1
+  };
+  ok({op: "patch_scene",base_revision: before.revision,target_revision: after.revision,ids: patch.ids,starts: reshape(patch.starts,[patch.count,3]),ends: reshape(patch.ends,[patch.count,3]),colors: reshape(patch.colors,[patch.count,4]),thicknesses: patch.thicknesses,remove_ids: patch.removes})
+}

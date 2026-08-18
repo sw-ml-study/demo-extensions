@@ -1,36 +1,156 @@
+# Native mlplunit coverage for tests test model atlas city.
 include "demos/model-atlas/scene.mlpl";
 
 @test {name:"Model Atlas renders bounded cross-format tensor buildings",tags:["model-atlas","native3d","scene"]}
-def u:test_atlas_city_scene() { state=u:atlas_city_defaults(); scene=u:atlas_city_scene(state)?; u:assert_eq(shape(scene.edges),[165,2],"districts, labeled log axis, labeled color swatches, and seven buildings")?; u:assert_eq(shape(scene.ids),[165],"every retained line has a stable ID")?; index=20; while lt(index,27) { u:assert_true(lt(-1,u:atlas_scene_line_index(scene,index)),"log axis and each tick have stable visible geometry")?; index=index+1 }; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,30)),"numeric labels are world-space line geometry")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,90)),"color swatches are world-space line geometry")?; help=u:atlas_city_help(state); u:assert_true(gt(tally(tokenize_bytes(help)),200),"visible UI explains source, state, encodings, colors, and controls")?; u:assert_true(u:atlas_text_contains(help,"DERIVED FIXTURE"),"source provenance is visible")?; u:assert_true(u:atlas_text_contains(help,"LOG2 BYTE HEIGHT"),"logarithmic height axis is explained")?; u:assert_true(u:atlas_text_contains(help,"SWATCH LABELS"),"world-space color legend is explained") }
+def u:test_atlas_city_scene() {
+  "Exercise test atlas city scene behavior in this MLPL module.";
+  state=u:atlas_city_defaults();
+  scene=u:atlas_city_scene(state)?;
+  u:assert_eq(shape(scene.edges),[165,2],"districts, labeled log axis, labeled color swatches, and seven buildings")?;
+  u:assert_eq(shape(scene.ids),[165],"every retained line has a stable ID")?;
+  index=20;
+  while lt(index,27) { u:assert_true(lt(-1,u:atlas_scene_line_index(scene,index)),"log axis and each tick have stable visible geometry")?; index=index+1 };
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,30)),"numeric labels are world-space line geometry")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,90)),"color swatches are world-space line geometry")?;
+  help=u:atlas_city_help(state);
+  u:assert_true(gt(tally(tokenize_bytes(help)),200),"visible UI explains source, state, encodings, colors, and controls")?;
+  u:assert_true(u:atlas_text_contains(help,"DERIVED FIXTURE"),"source provenance is visible")?;
+  u:assert_true(u:atlas_text_contains(help,"LOG2 BYTE HEIGHT"),"logarithmic height axis is explained")?;
+  u:assert_true(u:atlas_text_contains(help,"SWATCH LABELS"),"world-space color legend is explained")
+}
 
 @test {name:"Model Atlas filtering and LOD stay MLPL-owned",tags:["model-atlas","native3d","filter"]}
-def u:test_atlas_city_filter_lod() { state=u:atlas_city_defaults(); safe=u:atlas_city_key(state,"s"); scene=u:atlas_city_scene(safe)?; u:assert_eq(shape(scene.edges),[117,2],"Safetensors filter retains three buildings plus labeled legend geometry")?; all_again=u:atlas_city_key(safe,"s"); u:assert_eq(all_again.filter,0,"active format key toggles predictably back to all")?; gguf=u:atlas_city_key(all_again,"g"); u:assert_eq(gguf.filter,2,"GGUF key selects only GGUF")?; u:assert_eq(u:atlas_city_key(gguf,"g").filter,0,"active GGUF key toggles back to all")?; low=u:atlas_city_key(safe,"l"); u:assert_eq(low.lod,0,"LOD key selects footprints")?; u:assert_eq(u:atlas_city_key(low,"l").lod,1,"LOD toggles independently back to buildings")?; low_scene=u:atlas_city_scene(low)?; u:assert_eq(shape(low_scene.edges),[117,2],"LOD changes extents without changing stable IDs") }
+def u:test_atlas_city_filter_lod() {
+  "Exercise test atlas city filter lod behavior in this MLPL module.";
+  state=u:atlas_city_defaults();
+  safe=u:atlas_city_key(state,"s");
+  scene=u:atlas_city_scene(safe)?;
+  u:assert_eq(shape(scene.edges),[117,2],"Safetensors filter retains three buildings plus labeled legend geometry")?;
+  all_again=u:atlas_city_key(safe,"s");
+  u:assert_eq(all_again.filter,0,"active format key toggles predictably back to all")?;
+  gguf=u:atlas_city_key(all_again,"g");
+  u:assert_eq(gguf.filter,2,"GGUF key selects only GGUF")?;
+  u:assert_eq(u:atlas_city_key(gguf,"g").filter,0,"active GGUF key toggles back to all")?;
+  low=u:atlas_city_key(safe,"l");
+  u:assert_eq(low.lod,0,"LOD key selects footprints")?;
+  u:assert_eq(u:atlas_city_key(low,"l").lod,1,"LOD toggles independently back to buildings")?;
+  low_scene=u:atlas_city_scene(low)?;
+  u:assert_eq(shape(low_scene.edges),[117,2],"LOD changes extents without changing stable IDs")
+}
 
 @test {name:"Model Atlas building height uses a bounded logarithmic byte scale",tags:["model-atlas","native3d","scale"]}
-def u:test_atlas_city_log_height() { u:assert_eq(u:atlas_city_log_height(0),0.25,"zero-byte metadata uses a separate visible minimum")?; u:assert_eq(u:atlas_city_log_height(1),1,"one byte starts the log axis")?; u:assert_eq(u:atlas_city_log_height(2),2,"powers of two advance one world unit")?; u:assert_eq(u:atlas_city_log_height(4),3,"four bytes is the third evenly spaced tick")?; u:assert_eq(u:atlas_city_log_height(32),6,"32 bytes is the sixth evenly spaced tick")?; u:assert_true(lt(u:atlas_city_log_height(34),7),"log scale prevents a large tensor from dominating the city") }
+def u:test_atlas_city_log_height() {
+  "Exercise test atlas city log height behavior in this MLPL module.";
+  u:assert_eq(u:atlas_city_log_height(0),0.25,"zero-byte metadata uses a separate visible minimum")?;
+  u:assert_eq(u:atlas_city_log_height(1),1,"one byte starts the log axis")?;
+  u:assert_eq(u:atlas_city_log_height(2),2,"powers of two advance one world unit")?;
+  u:assert_eq(u:atlas_city_log_height(4),3,"four bytes is the third evenly spaced tick")?;
+  u:assert_eq(u:atlas_city_log_height(32),6,"32 bytes is the sixth evenly spaced tick")?;
+  u:assert_true(lt(u:atlas_city_log_height(34),7),"log scale prevents a large tensor from dominating the city")
+}
 
 @test {name:"Model Atlas physical height axis identifies byte units",tags:["model-atlas","native3d","units"]}
-def u:test_atlas_city_axis_units() { state=u:atlas_city_defaults(); scene=u:atlas_city_scene(state)?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,114)),"world axis carries a B unit glyph")?; u:assert_true(u:atlas_text_contains(u:atlas_city_help(state),"B=BYTES"),"overlay expands the physical unit abbreviation") }
+def u:test_atlas_city_axis_units() {
+  "Exercise test atlas city axis units behavior in this MLPL module.";
+  state=u:atlas_city_defaults();
+  scene=u:atlas_city_scene(state)?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,114)),"world axis carries a B unit glyph")?;
+  u:assert_true(u:atlas_text_contains(u:atlas_city_help(state),"B=BYTES"),"overlay expands the physical unit abbreviation")
+}
 
 @test {name:"Model Atlas world color swatches carry adjacent labels",tags:["model-atlas","native3d","legend"]}
-def u:test_atlas_city_world_legend_labels() { state=u:atlas_city_defaults(); scene=u:atlas_city_scene(state)?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,93)),"blue swatch has an S glyph")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,98)),"orange swatch has a G glyph")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,103)),"yellow swatch has an S glyph")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,108)),"yellow swatch has an E glyph")?; u:assert_true(lt(-1,u:atlas_scene_line_index(scene,112)),"yellow swatch has an L glyph")?; u:assert_true(u:atlas_text_contains(u:atlas_city_help(state),"SEL=SELECTED"),"legend avoids the cryptic X abbreviation") }
+def u:test_atlas_city_world_legend_labels() {
+  "Exercise test atlas city world legend labels behavior in this MLPL module.";
+  state=u:atlas_city_defaults();
+  scene=u:atlas_city_scene(state)?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,93)),"blue swatch has an S glyph")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,98)),"orange swatch has a G glyph")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,103)),"yellow swatch has an S glyph")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,108)),"yellow swatch has an E glyph")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(scene,112)),"yellow swatch has an L glyph")?;
+  u:assert_true(u:atlas_text_contains(u:atlas_city_help(state),"SEL=SELECTED"),"legend avoids the cryptic X abbreviation")
+}
 
 @test {name:"Model Atlas selection ray hits visible building volume rather than its ground projection",tags:["model-atlas","native3d","picking"]}
-def u:test_atlas_city_box_pick() { hit=u:atlas_ray_box_distance({origin:[0,1,10],direction:[0,0,-1]},[0,1,0],[2,2,2]); u:assert_true(hit.hit,"front face is selectable")?; u:assert_eq(hit.distance,9,"nearest face distance")?; miss=u:atlas_ray_box_distance({origin:[3,1,10],direction:[0,0,-1]},[0,1,0],[2,2,2]); u:assert_eq(miss.hit,0,"ray outside footprint misses volume") }
+def u:test_atlas_city_box_pick() {
+  "Exercise test atlas city box pick behavior in this MLPL module.";
+  hit=u:atlas_ray_box_distance({origin:[0,1,10],direction:[0,0,-1]},[0,1,0],[2,2,2]);
+  u:assert_true(hit.hit,"front face is selectable")?;
+  u:assert_eq(hit.distance,9,"nearest face distance")?;
+  miss=u:atlas_ray_box_distance({origin:[3,1,10],direction:[0,0,-1]},[0,1,0],[2,2,2]);
+  u:assert_eq(miss.hit,0,"ray outside footprint misses volume")
+}
 
 @test {name:"Model Atlas distinguishes authoritative architecture from inferred tensor roles",tags:["model-atlas","architecture","classification"]}
-def u:test_atlas_city_architecture_roles() { state=u:atlas_city_defaults(); u:assert_eq(u:atlas_authoritative_architecture(state.city),"mamba","GGUF general.architecture is authoritative metadata")?; u:assert_eq(u:atlas_inferred_role("model.embed_tokens.weight"),"EMBEDDING","embedding")?; u:assert_eq(u:atlas_inferred_role("x.self_attn.q_proj.weight"),"ATTENTION Q","attention Q")?; u:assert_eq(u:atlas_inferred_role("x.self_attn.k_proj.weight"),"ATTENTION K","attention K")?; u:assert_eq(u:atlas_inferred_role("x.self_attn.v_proj.weight"),"ATTENTION V","attention V")?; u:assert_eq(u:atlas_inferred_role("x.self_attn.o_proj.weight"),"ATTENTION OUTPUT","attention output")?; u:assert_eq(u:atlas_inferred_role("x.input_norm.weight"),"NORMALIZATION","normalization")?; u:assert_eq(u:atlas_inferred_role("x.mlp.down_proj.weight"),"FEED-FORWARD","feed-forward")?; u:assert_eq(u:atlas_inferred_role("x.block_sparse_moe.gate.weight"),"MOE GATE","MoE gate")?; u:assert_eq(u:atlas_inferred_role("x.experts.2.weight"),"MOE EXPERT","MoE expert")?; u:assert_eq(u:atlas_inferred_role("x.shared_expert.weight"),"MOE SHARED EXPERT","shared expert")?; u:assert_eq(u:atlas_inferred_role("x.ssm.in_proj.weight"),"MAMBA/SSM PROJECTION","SSM projection")?; u:assert_eq(u:atlas_inferred_role("x.ssm.conv1d.weight"),"MAMBA/SSM CONV","SSM convolution")?; u:assert_eq(u:atlas_inferred_role("x.ssm.A_log"),"MAMBA/SSM STATE","SSM state")?; u:assert_eq(u:atlas_inferred_role("lm_head.weight"),"OUTPUT HEAD","output head") }
+def u:test_atlas_city_architecture_roles() {
+  "Exercise test atlas city architecture roles behavior in this MLPL module.";
+  state=u:atlas_city_defaults();
+  u:assert_eq(u:atlas_authoritative_architecture(state.city),"mamba","GGUF general.architecture is authoritative metadata")?;
+  u:assert_eq(u:atlas_inferred_role("model.embed_tokens.weight"),"EMBEDDING","embedding")?;
+  u:assert_eq(u:atlas_inferred_role("x.self_attn.q_proj.weight"),"ATTENTION Q","attention Q")?;
+  u:assert_eq(u:atlas_inferred_role("x.self_attn.k_proj.weight"),"ATTENTION K","attention K")?;
+  u:assert_eq(u:atlas_inferred_role("x.self_attn.v_proj.weight"),"ATTENTION V","attention V")?;
+  u:assert_eq(u:atlas_inferred_role("x.self_attn.o_proj.weight"),"ATTENTION OUTPUT","attention output")?;
+  u:assert_eq(u:atlas_inferred_role("x.input_norm.weight"),"NORMALIZATION","normalization")?;
+  u:assert_eq(u:atlas_inferred_role("x.mlp.down_proj.weight"),"FEED-FORWARD","feed-forward")?;
+  u:assert_eq(u:atlas_inferred_role("x.block_sparse_moe.gate.weight"),"MOE GATE","MoE gate")?;
+  u:assert_eq(u:atlas_inferred_role("x.experts.2.weight"),"MOE EXPERT","MoE expert")?;
+  u:assert_eq(u:atlas_inferred_role("x.shared_expert.weight"),"MOE SHARED EXPERT","shared expert")?;
+  u:assert_eq(u:atlas_inferred_role("x.ssm.in_proj.weight"),"MAMBA/SSM PROJECTION","SSM projection")?;
+  u:assert_eq(u:atlas_inferred_role("x.ssm.conv1d.weight"),"MAMBA/SSM CONV","SSM convolution")?;
+  u:assert_eq(u:atlas_inferred_role("x.ssm.A_log"),"MAMBA/SSM STATE","SSM state")?;
+  u:assert_eq(u:atlas_inferred_role("lm_head.weight"),"OUTPUT HEAD","output head")
+}
 
 @test {name:"Model Atlas heuristic classifier fails ambiguous and adversarial names closed",tags:["model-atlas","architecture","adversarial"]}
-def u:test_atlas_city_role_ambiguity() { u:assert_eq(u:atlas_inferred_role("layers.0.self_attn.qk_proj.weight"),"UNKNOWN","ambiguous fused spelling is not invented as Q or K")?; u:assert_eq(u:atlas_inferred_role("not_an_expertise.weight"),"UNKNOWN","substring expert is not accepted")?; u:assert_eq(u:atlas_inferred_role("gate.weight"),"UNKNOWN","unqualified gate is ambiguous between MLP and MoE")?; u:assert_eq(u:atlas_inferred_role("totally.new.weight"),"UNKNOWN","unknown stays visible") }
+def u:test_atlas_city_role_ambiguity() {
+  "Exercise test atlas city role ambiguity behavior in this MLPL module.";
+  u:assert_eq(u:atlas_inferred_role("layers.0.self_attn.qk_proj.weight"),"UNKNOWN","ambiguous fused spelling is not invented as Q or K")?;
+  u:assert_eq(u:atlas_inferred_role("not_an_expertise.weight"),"UNKNOWN","substring expert is not accepted")?;
+  u:assert_eq(u:atlas_inferred_role("gate.weight"),"UNKNOWN","unqualified gate is ambiguous between MLP and MoE")?;
+  u:assert_eq(u:atlas_inferred_role("totally.new.weight"),"UNKNOWN","unknown stays visible")
+}
 
 @test {name:"Model Atlas selection emits a bounded retained-scene patch",tags:["model-atlas","native3d","patch"]}
-def u:test_atlas_city_selection_patch() { before=u:atlas_city_defaults(); after=u:atlas_city_select(before,4); patch=u:atlas_city_scene_patch(before,after)?; u:assert_eq(shape(patch.ids),[12],"one selected building updates twelve lines")?; u:assert_eq(shape(patch.remove_ids),[0],"selection removes no lines")?; u:assert_eq(u:atlas_city_selected_name(after),"model.layers.0.ssm.conv1d.weight","selected tensor name appears in status")?; u:assert_true(u:atlas_text_contains(u:atlas_city_status(after),"MAMBA/SSM CONV [HEURISTIC]"),"selected inferred role is visibly qualified in accent status") }
+def u:test_atlas_city_selection_patch() {
+  "Exercise test atlas city selection patch behavior in this MLPL module.";
+  before=u:atlas_city_defaults();
+  after=u:atlas_city_select(before,4);
+  patch=u:atlas_city_scene_patch(before,after)?;
+  u:assert_eq(shape(patch.ids),[12],"one selected building updates twelve lines")?;
+  u:assert_eq(shape(patch.remove_ids),[0],"selection removes no lines")?;
+  u:assert_eq(u:atlas_city_selected_name(after),"model.layers.0.ssm.conv1d.weight","selected tensor name appears in status")?;
+  u:assert_true(u:atlas_text_contains(u:atlas_city_status(after),"MAMBA/SSM CONV [HEURISTIC]"),"selected inferred role is visibly qualified in accent status")
+}
 
 @test {name:"Model Atlas detail IR is bounded, provenance-qualified, and demo-ml-utils compatible",tags:["model-atlas","detail","ir"]}
-def u:test_atlas_detail_ir() { safe=u:atlas_detail_checked(0)?; u:assert_eq(safe.schema,"sw-ml-study.distribution-surfaces","shared distribution surface schema")?; u:assert_eq(safe.tile.bin_counts,[1,2,1,1],"bounded histogram fixture")?; u:assert_eq(safe.tile.sample_values,[-2,-1,1,3],"bounded sampled surface fixture")?; u:assert_true(u:atlas_text_contains(safe.provenance.analyzer,"demo-ml-utils"),"provenance names compatibility source")?; gguf=u:atlas_detail_checked(3)?; u:assert_eq(gguf.quantization.schema,"sw-ml-study.q8-error-tile","shared quantization-error schema")?; u:assert_eq([gguf.quantization.rmse,gguf.quantization.max_error,gguf.quantization.cosine],[0.125,0.25,0.999],"bounded quantization metrics")?; u:assert_err(u:atlas_detail_checked(4),"unsupported payload decode stays explicit") }
+def u:test_atlas_detail_ir() {
+  "Exercise test atlas detail ir behavior in this MLPL module.";
+  safe=u:atlas_detail_checked(0)?;
+  u:assert_eq(safe.schema,"sw-ml-study.distribution-surfaces","shared distribution surface schema")?;
+  u:assert_eq(safe.tile.bin_counts,[1,2,1,1],"bounded histogram fixture")?;
+  u:assert_eq(safe.tile.sample_values,[-2,-1,1,3],"bounded sampled surface fixture")?;
+  u:assert_true(u:atlas_text_contains(safe.provenance.analyzer,"demo-ml-utils"),"provenance names compatibility source")?;
+  gguf=u:atlas_detail_checked(3)?;
+  u:assert_eq(gguf.quantization.schema,"sw-ml-study.q8-error-tile","shared quantization-error schema")?;
+  u:assert_eq([gguf.quantization.rmse,gguf.quantization.max_error,gguf.quantization.cosine],[0.125,0.25,0.999],"bounded quantization metrics")?;
+  u:assert_err(u:atlas_detail_checked(4),"unsupported payload decode stays explicit")
+}
 
 @test {name:"Model Atlas detail selection patches only selected and detail objects",tags:["model-atlas","detail","patch","performance"]}
-def u:test_atlas_detail_patch() { before=u:atlas_city_defaults(); safe=u:atlas_city_select(before,0); patch=u:atlas_city_scene_patch(before,safe)?; u:assert_eq(shape(patch.ids),[19],"selected building plus seven detail objects are upserted")?; u:assert_eq(shape(patch.remove_ids),[0],"initial detail adds without unrelated removals")?; u:assert_true(lt(-1,u:atlas_scene_line_index(u:atlas_city_scene(safe)?,5000)),"histogram has stable retained IDs")?; unsupported=u:atlas_city_select(safe,4); removal=u:atlas_city_scene_patch(safe,unsupported)?; u:assert_eq(shape(removal.ids),[24],"only old/new selected buildings change")?; u:assert_eq(shape(removal.remove_ids),[7],"unsupported selection removes only prior detail objects")?; u:assert_true(u:atlas_text_contains(u:atlas_city_status(unsupported),"PAYLOAD DETAIL UNSUPPORTED"),"UI explains unsupported payload decoding") }
+def u:test_atlas_detail_patch() {
+  "Exercise test atlas detail patch behavior in this MLPL module.";
+  before=u:atlas_city_defaults();
+  safe=u:atlas_city_select(before,0);
+  patch=u:atlas_city_scene_patch(before,safe)?;
+  u:assert_eq(shape(patch.ids),[19],"selected building plus seven detail objects are upserted")?;
+  u:assert_eq(shape(patch.remove_ids),[0],"initial detail adds without unrelated removals")?;
+  u:assert_true(lt(-1,u:atlas_scene_line_index(u:atlas_city_scene(safe)?,5000)),"histogram has stable retained IDs")?;
+  unsupported=u:atlas_city_select(safe,4);
+  removal=u:atlas_city_scene_patch(safe,unsupported)?;
+  u:assert_eq(shape(removal.ids),[24],"only old/new selected buildings change")?;
+  u:assert_eq(shape(removal.remove_ids),[7],"unsupported selection removes only prior detail objects")?;
+  u:assert_true(u:atlas_text_contains(u:atlas_city_status(unsupported),"PAYLOAD DETAIL UNSUPPORTED"),"UI explains unsupported payload decoding")
+}
 
 u:run_registered_tests()

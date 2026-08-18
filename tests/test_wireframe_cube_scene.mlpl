@@ -1,7 +1,9 @@
+# Native mlplunit coverage for tests test wireframe cube scene.
 include "demos/wireframe-cube/scene.mlpl";
 
 @test {name: "cube dimensions scale array-derived vertices", tags: ["native3d", "cube", "arrays"]}
-def u:test_cube_dimensions() { "Keep cube geometry in MLPL array operations.";
+def u:test_cube_dimensions() {
+  "Keep cube geometry in MLPL array operations.";
   scene = unwrap(u:wireframe_cube_scene({width: 2,height: 4,length: 6,rotation_speed: 0.75,line_color: [0.2,0.8,1,1],line_thickness: 2.5}));
   u:assert_eq(scene.positions.shape, [8,3], "eight xyz vertices");
   u:assert_eq(take(scene.positions.values, 0, 0), -1, "first x half-width");
@@ -12,7 +14,8 @@ def u:test_cube_dimensions() { "Keep cube geometry in MLPL array operations.";
 }
 
 @test {name: "cube controls and serialization are deterministic", tags: ["native3d", "cube", "serialization"]}
-def u:test_cube_serialization() { "Validate controls before producing portable scene JSON.";
+def u:test_cube_serialization() {
+  "Validate controls before producing portable scene JSON.";
   defaults = u:wireframe_cube_defaults();
   scene = unwrap(u:wireframe_cube_scene(defaults));
   encoded = unwrap(u:wireframe_cube_json(defaults));
@@ -23,7 +26,8 @@ def u:test_cube_serialization() { "Validate controls before producing portable s
 }
 
 @test {name: "invalid cube controls fail closed", tags: ["native3d", "cube", "validation"]}
-def u:test_cube_validation() { "Reject unsafe or nonsensical scene controls.";
+def u:test_cube_validation() {
+  "Reject unsafe or nonsensical scene controls.";
   value = u:wireframe_cube_defaults();
   u:assert_eq(is_err(u:wireframe_cube_scene({width:0,height: value.height,length: value.length,rotation_speed: value.rotation_speed,line_color: value.line_color,line_thickness: value.line_thickness})), 1, "zero width");
   u:assert_eq(is_err(u:wireframe_cube_scene({width: value.width,height: value.height,length: value.length,rotation_speed:11,line_color: value.line_color,line_thickness: value.line_thickness})), 1, "excessive speed");

@@ -1,61 +1,143 @@
 # Generic MLPL-owned orbit camera, pointer reduction, and picking math.
 
-def u:n3d_clamp(value,low,high) { if lt(value,low) { low } else { if gt(value,high) { high } else { value } } }
-def u:n3d_vector_length(value) { sqrt(reduce(:add,value*value)) }
-def u:n3d_normalize(value) { length=u:n3d_vector_length(value); if gt(length,0.0000001) { ok(value/length) } else { err({kind:"native3d_vector",message:"vector length must be positive"}) } }
+def u:n3d_clamp(value,low,high) {
+  "Provide n3d clamp behavior in this MLPL module.";
+  if lt(value,low) {
+    low
+  } else {
+    if gt(value,high) {
+      high
+    } else {
+      value
+    }
+  }
+}
+def u:n3d_vector_length(value) {
+  "Provide n3d vector length behavior in this MLPL module.";
+  sqrt(reduce(:add,value*value))
+}
+def u:n3d_normalize(value) {
+  "Provide n3d normalize behavior in this MLPL module.";
+  length=u:n3d_vector_length(value);
+  if gt(length,0.0000001) {
+    ok(value/length)
+  } else {
+    err({kind:"native3d_vector",message:"vector length must be positive"})
+  }
+}
 
 def u:n3d_camera_state(target,yaw,pitch,distance,fov,near,dragging,drag_mode,last_x,last_y) {
+  "Provide n3d camera state behavior in this MLPL module.";
   {target: target,yaw: yaw,pitch: pitch,distance: distance,fov: fov,near: near,dragging: dragging,drag_mode: drag_mode,last_x: last_x,last_y: last_y}
 }
 
-def u:n3d_camera_defaults() { u:n3d_camera_state([0,0,0],0,0,5,1.0471975511965976,0.1,0,"none",0,0) }
+def u:n3d_camera_defaults() {
+  "Provide n3d camera defaults behavior in this MLPL module.";
+  u:n3d_camera_state([0,0,0],0,0,5,1.0471975511965976,0.1,0,"none",0,0)
+}
 
 def u:n3d_camera_valid(camera) {
+  "Provide n3d camera valid behavior in this MLPL module.";
   equal(shape(camera.target),[3])*eq(camera.yaw,camera.yaw)*eq(camera.pitch,camera.pitch)*eq(camera.distance,camera.distance)*eq(camera.fov,camera.fov)*eq(camera.near,camera.near)*(1-lt(camera.pitch,-1.55))*(1-gt(camera.pitch,1.55))*gt(camera.near,0)*gt(camera.distance,camera.near)*gt(camera.fov,0.01)*lt(camera.fov,3.13)
 }
 
 def u:n3d_camera_record(camera) {
+  "Provide n3d camera record behavior in this MLPL module.";
   {target: camera.target,yaw: camera.yaw,pitch: camera.pitch,distance: camera.distance,fov: camera.fov,near: camera.near}
 }
 
 def u:n3d_camera_restate(camera,target,yaw,pitch,distance,dragging,drag_mode,last_x,last_y) {
+  "Provide n3d camera restate behavior in this MLPL module.";
   u:n3d_camera_state(target,u:n3d_clamp(yaw,-1000000,1000000),u:n3d_clamp(pitch,-1.55,1.55),u:n3d_clamp(distance,camera.near+0.01,10000),camera.fov,camera.near,dragging,drag_mode,last_x,last_y)
 }
 
 def u:n3d_camera_reduce(camera,event) {
+  "Provide n3d camera reduce behavior in this MLPL module.";
   if equal(event.kind,"pointer_down") {
-    mode=if equal(event.button,"middle")+event.shift { "pan" } else { if equal(event.button,"left") { "orbit" } else { "none" } };
+    mode=if equal(event.button,"middle")+event.shift {
+      "pan"
+    } else {
+      if equal(event.button,"left") {
+        "orbit"
+      } else {
+        "none"
+      }
+    };
     u:n3d_camera_restate(camera,camera.target,camera.yaw,camera.pitch,camera.distance,1,mode,event.x,event.y)
-  } else { if equal(event.kind,"pointer_up") {
-    u:n3d_camera_restate(camera,camera.target,camera.yaw,camera.pitch,camera.distance,0,"none",event.x,event.y)
-  } else { if equal(event.kind,"pointer_move")*camera.dragging {
-    dx=event.x-camera.last_x; dy=event.y-camera.last_y;
-    if equal(camera.drag_mode,"orbit") {
-      u:n3d_camera_restate(camera,camera.target,camera.yaw+dx*0.01,camera.pitch-dy*0.01,camera.distance,1,"orbit",event.x,event.y)
-    } else { if equal(camera.drag_mode,"pan") {
-      scale=camera.distance*0.001; right=[cos(camera.yaw),0,0-sin(camera.yaw)]; target=camera.target+right*(0-dx*scale)+[0,dy*scale,0];
-      u:n3d_camera_restate(camera,target,camera.yaw,camera.pitch,camera.distance,1,"pan",event.x,event.y)
-    } else { camera } }
-  } else { if equal(event.kind,"wheel") {
-    u:n3d_camera_restate(camera,camera.target,camera.yaw,camera.pitch,camera.distance*exp(0-event.dy*0.001),camera.dragging,camera.drag_mode,camera.last_x,camera.last_y)
-  } else { camera } } } }
+  } else {
+    if equal(event.kind,"pointer_up") {
+      u:n3d_camera_restate(camera,camera.target,camera.yaw,camera.pitch,camera.distance,0,"none",event.x,event.y)
+    } else {
+      if equal(event.kind,"pointer_move")*camera.dragging {
+        dx=event.x-camera.last_x;
+        dy=event.y-camera.last_y;
+        if equal(camera.drag_mode,"orbit") {
+          u:n3d_camera_restate(camera,camera.target,camera.yaw+dx*0.01,camera.pitch-dy*0.01,camera.distance,1,"orbit",event.x,event.y)
+        } else {
+          if equal(camera.drag_mode,"pan") {
+            scale=camera.distance*0.001;
+            right=[cos(camera.yaw),0,0-sin(camera.yaw)];
+            target=camera.target+right*(0-dx*scale)+[0,dy*scale,0];
+            u:n3d_camera_restate(camera,target,camera.yaw,camera.pitch,camera.distance,1,"pan",event.x,event.y)
+          } else {
+            camera
+          }
+        }
+      } else {
+        if equal(event.kind,"wheel") {
+          u:n3d_camera_restate(camera,camera.target,camera.yaw,camera.pitch,camera.distance*exp(0-event.dy*0.001),camera.dragging,camera.drag_mode,camera.last_x,camera.last_y)
+        } else {
+          camera
+        }
+      }
+    }
+  }
 }
 
 def u:n3d_pick_ray(cam,request) {
+  "Provide n3d pick ray behavior in this MLPL module.";
   view_size=record_get(request,"viewport")?;
   lookup_value=record_get(request,"xy");
   screen_coordinates=unwrap(lookup_value);
-  mouse_x=take(screen_coordinates,0,0); mouse_y=take(screen_coordinates,0,1);
-  if (1-u:n3d_camera_valid(cam))+(1-equal(shape(screen_coordinates),[2]))+lt(mouse_x,0)+lt(mouse_y,0)+gt(mouse_x,view_size.width)+gt(mouse_y,view_size.height)+(1-gt(view_size.width,0))+(1-gt(view_size.height,0)) { err({kind:"native3d_pick",message:"invalid camera, viewport, or pointer"}) } else {
-    sy=sin(cam.yaw); cy=cos(cam.yaw); sp=sin(cam.pitch); cp=cos(cam.pitch);
-    origin=cam.target+cam.distance*[cp*sy,sp,cp*cy]; forward=unwrap(u:n3d_normalize(cam.target-origin)); fx=take(forward,0,0); fy=take(forward,0,1); fz=take(forward,0,2); right=unwrap(u:n3d_normalize([0-fz,0,fx])); rx=take(right,0,0); ry=take(right,0,1); rz=take(right,0,2); up=[ry*fz-rz*fy,rz*fx-rx*fz,rx*fy-ry*fx];
-    nx=mouse_x*2/view_size.width-1; ny=1-mouse_y*2/view_size.height; half=sin(cam.fov/2)/cos(cam.fov/2);
+  mouse_x=take(screen_coordinates,0,0);
+  mouse_y=take(screen_coordinates,0,1);
+  if (1-u:n3d_camera_valid(cam))+(1-equal(shape(screen_coordinates),[2]))+lt(mouse_x,0)+lt(mouse_y,0)+gt(mouse_x,view_size.width)+gt(mouse_y,view_size.height)+(1-gt(view_size.width,0))+(1-gt(view_size.height,0)) {
+    err({kind:"native3d_pick",message:"invalid camera, viewport, or pointer"})
+  } else {
+    sy=sin(cam.yaw);
+    cy=cos(cam.yaw);
+    sp=sin(cam.pitch);
+    cp=cos(cam.pitch);
+    origin=cam.target+cam.distance*[cp*sy,sp,cp*cy];
+    forward=unwrap(u:n3d_normalize(cam.target-origin));
+    fx=take(forward,0,0);
+    fy=take(forward,0,1);
+    fz=take(forward,0,2);
+    right=unwrap(u:n3d_normalize([0-fz,0,fx]));
+    rx=take(right,0,0);
+    ry=take(right,0,1);
+    rz=take(right,0,2);
+    up=[ry*fz-rz*fy,rz*fx-rx*fz,rx*fy-ry*fx];
+    nx=mouse_x*2/view_size.width-1;
+    ny=1-mouse_y*2/view_size.height;
+    half=sin(cam.fov/2)/cos(cam.fov/2);
     direction=unwrap(u:n3d_normalize(forward+right*(nx*view_size.width/view_size.height*half)+up*(ny*half)));
     ok({origin: origin,direction: direction})
   }
 }
 
 def u:n3d_ray_plane_hit(ray,plane_point,plane_normal) {
-  normal=u:n3d_normalize(plane_normal)?; denominator=dot(ray.direction,normal);
-  if lt(abs(denominator),0.0000001) { ok({hit:0,point:[0,0,0],distance:0}) } else { distance=dot(plane_point-ray.origin,normal)/denominator; if lt(distance,0) { ok({hit:0,point:[0,0,0],distance: distance}) } else { ok({hit:1,point: ray.origin+ray.direction*distance,distance: distance}) } }
+  "Provide n3d ray plane hit behavior in this MLPL module.";
+  normal=u:n3d_normalize(plane_normal)?;
+  denominator=dot(ray.direction,normal);
+  if lt(abs(denominator),0.0000001) {
+    ok({hit:0,point:[0,0,0],distance:0})
+  } else {
+    distance=dot(plane_point-ray.origin,normal)/denominator;
+    if lt(distance,0) {
+      ok({hit:0,point:[0,0,0],distance: distance})
+    } else {
+      ok({hit:1,point: ray.origin+ray.direction*distance,distance: distance})
+    }
+  }
 }

@@ -1,30 +1,343 @@
-def u:wd_text(left,right) { u:atlas_city_text(left,right) }
-def u:wd_string(value,fallback) { if equal(type_of(value),"string") { value } else { fallback } }
-def u:wd_ends_with(text,suffix) { bytes=tokenize_bytes(text); ending=tokenize_bytes(suffix); if lt(tally(bytes),tally(ending)) { 0 } else { equal(compress(gt(range(tally(bytes)),tally(bytes)-tally(ending)-1),bytes),ending) } }
-def u:wd_format(path) { if u:wd_ends_with(path,".gguf") { "gguf" } else { "safetensors" } }
-def u:wd_dtype_supported(format,dtype) { if equal(format,"safetensors") { equal(dtype,"U8")+equal(dtype,"I8")+equal(dtype,"U16")+equal(dtype,"I16") } else { eq(dtype,8)+eq(dtype,24)+eq(dtype,25) } }
-def u:wd_dtype_reason(format,dtype) { if u:wd_dtype_supported(format,dtype) { "SUPPORTED" } else { if equal(format,"safetensors") { "BLOCKED IN DEMO-ML-UTILS: SELECTIVE DECODER SUPPORTS U8/I8/U16/I16; F16/BF16/F32 NEED SHARED DECODERS" } else { "BLOCKED IN DEMO-ML-UTILS: STATISTICS SUPPORT Q8_0/I8/I16; F16/F32 AND Q4/Q5/K NEED SHARED QUANTIZER DECODERS" } } }
-def u:wd_gguf_name(catalog,index) { length=take(catalog.tensor_name_lengths,0,index); decode_bytes(read_bytes(catalog.path,take(catalog.tensor_name_offsets,0,index),length)?) }
-def u:wd_safe_catalog(path) { catalog=u:catalog_safetensors(path,1048576,200000,9007199254740991)?; raw=u:read_safetensors_header(path,1048576)?; header=parse_json(decode_bytes(raw.header_bytes),{max_depth: 8,max_bytes: 1048576,max_elements: 200000})?; ok({format: "safetensors",header_keys: catalog.header_keys,header: header,rows: catalog.rows_by_name,count: catalog.tensor_count}) }
-def u:wd_gguf_catalog(path) { catalog=u:catalog_gguf(path,4194304,4096,4096,1024,8,9007199254740991)?; ok({format: "gguf",path: catalog.path,tensor_name_offsets: catalog.tensor_name_offsets,tensor_name_lengths: catalog.tensor_name_lengths,rows: catalog.tensor_rows,count: catalog.tensor_count,catalog_bytes: catalog.catalog_bytes}) }
-def u:wd_catalog(path) { if equal(u:wd_format(path),"gguf") { u:wd_gguf_catalog(path) } else { u:wd_safe_catalog(path) } }
-def u:wd_safe_sample(path,name,max_values) { descriptor=u:safetensors_tensor_descriptor(path,name,1048576,200000,9007199254740991)?; parameters=descriptor.byte_count/descriptor.width; wanted=if lt(parameters,max_values) { parameters } else { max_values }; bytes=read_bytes(path,descriptor.file_offset,wanted*descriptor.width)?; values=u:decode_slice_values(bytes,descriptor.dtype,descriptor.width,0,fill([0],0)); ok({values: values,dtype: descriptor.dtype,total: parameters,bytes_read: tally(bytes),method: "BOUNDED PREFIX SAMPLE"}) }
-def u:wd_gguf_sample(path,name,max_values) { catalog=u:catalog_gguf(path,4194304,4096,4096,1024,8,9007199254740991)?; index=u:gguf_find_tensor(catalog,name)?; row=take(catalog.tensor_rows,0,index); dtype=take(row,0,2); total=take(row,0,1); unit_bytes=if eq(dtype,8) { 34 } else { if eq(dtype,25) { 2 } else { 1 } }; units=if eq(dtype,8) { floor((if lt(total,max_values) { total } else { max_values })/32) } else { if lt(total,max_values) { total } else { max_values } }; if eq(units,0) { units=if eq(total,0) { 0 } else { 1 } }; length=units*unit_bytes; bytes=read_bytes(path,catalog.catalog_bytes+take(row,0,0),length)?; values=if eq(dtype,8) { u:gguf_decode_q8_0(bytes,units,units*32)?.values } else { u:gguf_decode_signed(bytes,unit_bytes) }; ok({values: values,dtype: dtype,total: total,bytes_read: length,method: "BOUNDED PREFIX SAMPLE"}) }
-def u:wd_sample(path,name,max_values) { if equal(u:wd_format(path),"gguf") { u:wd_gguf_sample(path,name,max_values) } else { u:wd_safe_sample(path,name,max_values) } }
-def u:wd_histogram(values,bins,minimum,maximum) { counts=fill([bins],0); index=0; while lt(index,tally(values)) { value=take(values,0,index); bin=if eq(minimum,maximum) { 0 } else { if eq(value,maximum) { bins-1 } else { floor((value-minimum)*bins/(maximum-minimum)) } }; counts=scatter(counts,bin,take(counts,0,bin)+1); index=index+1 }; counts }
-def u:wd_tile(values,bins,max_samples) { if gt(tally(values),max_samples)+lt(bins,1)+gt(bins,16) { err("weight tile budget exceeded") } else { minimum=if eq(tally(values),0) { 0 } else { reduce(:min,values) }; maximum=if eq(tally(values),0) { 0 } else { reduce(:max,values) }; zero=reduce_add(eq(values,0)); mean=if eq(tally(values),0) { 0 } else { reduce_add(values)/tally(values) }; counts=u:wd_histogram(values,bins,minimum,maximum); ok({count: tally(values),minimum: minimum,maximum: maximum,mean: mean,zero_count: zero,bin_counts: counts}) } }
-def u:wd_state(files,file_index,mode,path,catalog,tensor_index,tile,bins,selected_bin,camera,revision,viewport_width,viewport_height,press_x,press_y,dragged,error) { {files: files,file_index: file_index,mode: mode,path: path,catalog: catalog,tensor_index: tensor_index,tile: tile,bins: bins,selected_bin: selected_bin,camera: camera,revision: revision,viewport_width: viewport_width,viewport_height: viewport_height,press_x: press_x,press_y: press_y,dragged: dragged,error: error} }
-def u:wd_defaults(files) { u:wd_state(files,0,"files","",{count: 0},0,{count: 0,minimum: 0,maximum: 0,mean: 0,zero_count: 0,bin_counts: fill([8],0)},8,0,u:n3d_camera_state([7,2,4],-0.55,0.45,25,1.0471975511965976,0.1,0,"none",0,0),0,800,600,0,0,0,"") }
-def u:wd_loading(state) { path=list_get(state.files,state.file_index)?; u:wd_state(state.files,state.file_index,"loading",path,{count: 0},0,state.tile,state.bins,0,state.camera,state.revision+1,state.viewport_width,state.viewport_height,0,0,0,"") }
-def u:wd_fixture_state(values) { state=u:wd_defaults(["fixture.safetensors"]); measured=u:wd_tile(values,8,2048)?; tile={name: "weights",label: "TENSOR weights",count: measured.count,minimum: measured.minimum,maximum: measured.maximum,mean: measured.mean,zero_count: measured.zero_count,bin_counts: measured.bin_counts,total: measured.count,bytes_read: measured.count,dtype: "I8",method: "FIXTURE"}; u:wd_state(state.files,0,"histogram","fixture.safetensors",{count: 1,format: "safetensors",header_keys: ["weights"],header: {weights: {dtype: "I8"}}},0,tile,8,0,state.camera,0,800,600,0,0,0,"") }
-def u:wd_safe_name(catalog,wanted) { key=0; tensor=0; found=""; while lt(key,list_len(catalog.header_keys)) { candidate=list_get(catalog.header_keys,key)?; if 1-equal(candidate,"__metadata__") { if eq(tensor,wanted) { found=candidate }; tensor=tensor+1 }; key=key+1 }; found }
-def u:wd_selected_name(state) { if equal(state.catalog.format,"gguf") { u:wd_gguf_name(state.catalog,state.tensor_index) } else { u:wd_safe_name(state.catalog,state.tensor_index) } }
-def u:wd_selected_dtype(state) { if equal(state.catalog.format,"gguf") { take(take(state.catalog.rows,0,state.tensor_index),0,2) } else { info=record_get(state.catalog.header,u:wd_selected_name(state))?; record_get(info,"dtype")? } }
-def u:wd_restate(state,mode,file_index,tensor_index,tile,bins,selected_bin,camera,error) { path=if eq(list_len(state.files),0) { "" } else { list_get(state.files,file_index)? }; u:wd_state(state.files,file_index,mode,path,state.catalog,tensor_index,tile,bins,selected_bin,camera,state.revision+1,state.viewport_width,state.viewport_height,state.press_x,state.press_y,state.dragged,error) }
-def u:wd_open_file(state) { path=list_get(state.files,state.file_index)?; attempted=u:wd_catalog(path); if is_err(attempted) { u:wd_restate(state,"error",state.file_index,0,state.tile,state.bins,0,state.camera,u:wd_text("CATALOG REJECTED BEFORE PAYLOAD READ: ",err_message(attempted))) } else { catalog=unwrap(attempted); next=u:wd_restate(state,"tensors",state.file_index,0,state.tile,state.bins,0,state.camera,""); u:wd_state(next.files,next.file_index,next.mode,path,catalog,0,next.tile,next.bins,0,next.camera,next.revision,next.viewport_width,next.viewport_height,0,0,0,"") } }
-def u:wd_analyze(state) { dtype=u:wd_selected_dtype(state); if 1-u:wd_dtype_supported(state.catalog.format,dtype) { u:wd_restate(state,"error",state.file_index,state.tensor_index,state.tile,state.bins,0,state.camera,u:wd_dtype_reason(state.catalog.format,dtype)) } else { name_attempt=u:wd_selected_name(state); name=if equal(type_of(name_attempt),"result") { name_attempt? } else { name_attempt }; attempted=u:wd_sample(state.path,name,2048); if is_err(attempted) { u:wd_restate(state,"error",state.file_index,state.tensor_index,state.tile,state.bins,0,state.camera,u:wd_text("SAMPLE REJECTED: ",err_message(attempted))) } else { sample=unwrap(attempted); measured=u:wd_tile(sample.values,state.bins,2048)?; tile={name: name,label: u:wd_text("TENSOR ",name),count: measured.count,minimum: measured.minimum,maximum: measured.maximum,mean: measured.mean,zero_count: measured.zero_count,bin_counts: measured.bin_counts,total: sample.total,bytes_read: sample.bytes_read,dtype: sample.dtype,method: sample.method}; u:wd_restate(state,"histogram",state.file_index,state.tensor_index,tile,state.bins,0,state.camera,"") } } }
-def u:wd_interaction(state,camera,selected,press_x,press_y,dragged) { u:wd_state(state.files,state.file_index,state.mode,state.path,state.catalog,state.tensor_index,state.tile,state.bins,selected,camera,state.revision+1,state.viewport_width,state.viewport_height,press_x,press_y,dragged,state.error) }
-def u:wd_resize(state,event) { u:wd_state(state.files,state.file_index,state.mode,state.path,state.catalog,state.tensor_index,state.tile,state.bins,state.selected_bin,state.camera,state.revision+1,event.width,event.height,state.press_x,state.press_y,state.dragged,state.error) }
-def u:wd_event_result(state,attempted) { if equal(type_of(attempted),"result") { if is_err(attempted) { u:wd_restate(state,"error",state.file_index,state.tensor_index,state.tile,state.bins,state.selected_bin,state.camera,u:wd_text("ERROR — WINDOW RETAINED; R RESTART | M MODEL MENU | ESC QUIT: ",err_message(attempted))) } else { unwrap(attempted) } } else { attempted } }
-def u:wd_pick(state,event) { ray=u:n3d_pick_ray(state.camera,{viewport: {width: state.viewport_width,height: state.viewport_height},xy: [event.x,event.y]})?; found=-1; nearest=1000000000; index=0; while lt(index,8) { count=take(state.tile.bin_counts,0,index); height=if eq(count,0) { 0.15 } else { 0.35+log(count)/log(2) }; hit=u:atlas_ray_box_distance(ray,[-4.375+index*1.25,height/2,0],[1.2,height+0.4,1.4]); if hit.hit*lt(hit.distance,nearest) { found=index; nearest=hit.distance }; index=index+1 }; ok(found) }
-def u:wd_pointer_reduce(event,state) { if equal(event.kind,"resize") { u:wd_resize(state,event) } else { if 1-equal(state.mode,"histogram") { state } else { if equal(event.kind,"pointer_down") { u:wd_interaction(state,u:n3d_camera_reduce(state.camera,event),state.selected_bin,event.x,event.y,0) } else { if equal(event.kind,"pointer_move")*state.camera.dragging { distance2=(event.x-state.press_x)*(event.x-state.press_x)+(event.y-state.press_y)*(event.y-state.press_y); dragged=if state.dragged+gt(distance2,16) { 1 } else { 0 }; camera=if dragged { u:n3d_camera_reduce(state.camera,event) } else { state.camera }; u:wd_interaction(state,camera,state.selected_bin,state.press_x,state.press_y,dragged) } else { if equal(event.kind,"pointer_up") { camera=u:n3d_camera_reduce(state.camera,event); picked=if state.dragged { -1 } else { u:wd_pick(state,event)? }; selected=if lt(picked,0) { state.selected_bin } else { picked }; u:wd_interaction(state,camera,selected,state.press_x,state.press_y,0) } else { if equal(event.kind,"wheel") { u:wd_interaction(state,u:n3d_camera_reduce(state.camera,event),state.selected_bin,state.press_x,state.press_y,state.dragged) } else { state } } } } } } }
+# MLPL application semantics for demos weight distribution model.
+def u:wd_text(left,right) {
+  "Provide wd text behavior in this MLPL module.";
+  u:atlas_city_text(left,right)
+}
+def u:wd_string(value,fallback) {
+  "Provide wd string behavior in this MLPL module.";
+  if equal(type_of(value),"string") {
+    value
+  } else {
+    fallback
+  }
+}
+def u:wd_ends_with(text,suffix) {
+  "Provide wd ends with behavior in this MLPL module.";
+  bytes=tokenize_bytes(text);
+  ending=tokenize_bytes(suffix);
+  if lt(tally(bytes),tally(ending)) {
+    0
+  } else {
+    equal(compress(gt(range(tally(bytes)),tally(bytes)-tally(ending)-1),bytes),ending)
+  }
+}
+def u:wd_format(path) {
+  "Provide wd format behavior in this MLPL module.";
+  if u:wd_ends_with(path,".gguf") {
+    "gguf"
+  } else {
+    "safetensors"
+  }
+}
+def u:wd_dtype_supported(format,dtype) {
+  "Provide wd dtype supported behavior in this MLPL module.";
+  if equal(format,"safetensors") {
+    equal(dtype,"U8")+equal(dtype,"I8")+equal(dtype,"U16")+equal(dtype,"I16")
+  } else {
+    eq(dtype,8)+eq(dtype,24)+eq(dtype,25)
+  }
+}
+def u:wd_dtype_reason(format,dtype) {
+  "Provide wd dtype reason behavior in this MLPL module.";
+  if u:wd_dtype_supported(format,dtype) {
+    "SUPPORTED"
+  } else {
+    if equal(format,"safetensors") {
+      "BLOCKED IN DEMO-ML-UTILS: SELECTIVE DECODER SUPPORTS U8/I8/U16/I16; F16/BF16/F32 NEED SHARED DECODERS"
+    } else {
+      "BLOCKED IN DEMO-ML-UTILS: STATISTICS SUPPORT Q8_0/I8/I16; F16/F32 AND Q4/Q5/K NEED SHARED QUANTIZER DECODERS"
+    }
+  }
+}
+def u:wd_gguf_name(catalog,index) {
+  "Provide wd gguf name behavior in this MLPL module.";
+  length=take(catalog.tensor_name_lengths,0,index);
+  decode_bytes(read_bytes(catalog.path,take(catalog.tensor_name_offsets,0,index),length)?)
+}
+def u:wd_safe_catalog(path) {
+  "Provide wd safe catalog behavior in this MLPL module.";
+  catalog=u:catalog_safetensors(path,1048576,200000,9007199254740991)?;
+  raw=u:read_safetensors_header(path,1048576)?;
+  header=parse_json(decode_bytes(raw.header_bytes),{max_depth: 8,max_bytes: 1048576,max_elements: 200000})?;
+  ok({format: "safetensors",header_keys: catalog.header_keys,header: header,rows: catalog.rows_by_name,count: catalog.tensor_count})
+}
+def u:wd_gguf_catalog(path) {
+  "Provide wd gguf catalog behavior in this MLPL module.";
+  catalog=u:catalog_gguf(path,4194304,4096,4096,1024,8,9007199254740991)?;
+  ok({format: "gguf",path: catalog.path,tensor_name_offsets: catalog.tensor_name_offsets,tensor_name_lengths: catalog.tensor_name_lengths,rows: catalog.tensor_rows,count: catalog.tensor_count,catalog_bytes: catalog.catalog_bytes})
+}
+def u:wd_catalog(path) {
+  "Provide wd catalog behavior in this MLPL module.";
+  if equal(u:wd_format(path),"gguf") { u:wd_gguf_catalog(path) } else { u:wd_safe_catalog(path) }
+}
+def u:wd_safe_sample(path,name,max_values) {
+  "Provide wd safe sample behavior in this MLPL module.";
+  descriptor=u:safetensors_tensor_descriptor(path,name,1048576,200000,9007199254740991)?;
+  parameters=descriptor.byte_count/descriptor.width;
+  wanted=if lt(parameters,max_values) {
+    parameters
+  } else {
+    max_values
+  };
+  bytes=read_bytes(path,descriptor.file_offset,wanted*descriptor.width)?;
+  values=u:decode_slice_values(bytes,descriptor.dtype,descriptor.width,0,fill([0],0));
+  ok({values: values,dtype: descriptor.dtype,total: parameters,bytes_read: tally(bytes),method: "BOUNDED PREFIX SAMPLE"})
+}
+def u:wd_gguf_sample(path,name,max_values) {
+  "Provide wd gguf sample behavior in this MLPL module.";
+  catalog=u:catalog_gguf(path,4194304,4096,4096,1024,8,9007199254740991)?;
+  index=u:gguf_find_tensor(catalog,name)?;
+  row=take(catalog.tensor_rows,0,index);
+  dtype=take(row,0,2);
+  total=take(row,0,1);
+  unit_bytes=if eq(dtype,8) {
+    34
+  } else {
+    if eq(dtype,25) {
+      2
+    } else {
+      1
+    }
+  };
+  units=if eq(dtype,8) {
+    floor((if lt(total,max_values) {
+          total
+        } else {
+          max_values
+        })/32)
+  } else {
+    if lt(total,max_values) {
+      total
+    } else {
+      max_values
+    }
+  };
+  if eq(units,0) {
+    units=if eq(total,0) {
+      0
+    } else {
+      1
+    }
+  };
+  length=units*unit_bytes;
+  bytes=read_bytes(path,catalog.catalog_bytes+take(row,0,0),length)?;
+  values=if eq(dtype,8) { u:gguf_decode_q8_0(bytes,units,units*32)?.values } else { u:gguf_decode_signed(bytes,unit_bytes) };
+  ok({values: values,dtype: dtype,total: total,bytes_read: length,method: "BOUNDED PREFIX SAMPLE"})
+}
+def u:wd_sample(path,name,max_values) {
+  "Provide wd sample behavior in this MLPL module.";
+  if equal(u:wd_format(path),"gguf") { u:wd_gguf_sample(path,name,max_values) } else { u:wd_safe_sample(path,name,max_values) }
+}
+def u:wd_histogram(values,bins,minimum,maximum) {
+  "Provide wd histogram behavior in this MLPL module.";
+  counts=fill([bins],0);
+  index=0;
+  while lt(index,tally(values)) {
+    value=take(values,0,index);
+    bin=if eq(minimum,maximum) {
+      0
+    } else {
+      if eq(value,maximum) {
+        bins-1
+      } else {
+        floor((value-minimum)*bins/(maximum-minimum))
+      }
+    };
+    counts=scatter(counts,bin,take(counts,0,bin)+1);
+    index=index+1
+  };
+  counts
+}
+def u:wd_tile(values,bins,max_samples) {
+  "Provide wd tile behavior in this MLPL module.";
+  if gt(tally(values),max_samples)+lt(bins,1)+gt(bins,16) {
+    err("weight tile budget exceeded")
+  } else {
+    minimum=if eq(tally(values),0) {
+      0
+    } else {
+      reduce(:min,values)
+    };
+    maximum=if eq(tally(values),0) {
+      0
+    } else {
+      reduce(:max,values)
+    };
+    zero=reduce_add(eq(values,0));
+    mean=if eq(tally(values),0) {
+      0
+    } else {
+      reduce_add(values)/tally(values)
+    };
+    counts=u:wd_histogram(values,bins,minimum,maximum);
+    ok({count: tally(values),minimum: minimum,maximum: maximum,mean: mean,zero_count: zero,bin_counts: counts})
+  }
+}
+def u:wd_state(files,file_index,mode,path,catalog,tensor_index,tile,bins,selected_bin,camera,revision,viewport_width,viewport_height,press_x,press_y,dragged,error) {
+  "Provide wd state behavior in this MLPL module.";
+  {files: files,file_index: file_index,mode: mode,path: path,catalog: catalog,tensor_index: tensor_index,tile: tile,bins: bins,selected_bin: selected_bin,camera: camera,revision: revision,viewport_width: viewport_width,viewport_height: viewport_height,press_x: press_x,press_y: press_y,dragged: dragged,error: error}
+}
+def u:wd_defaults(files) {
+  "Provide wd defaults behavior in this MLPL module.";
+  u:wd_state(files,0,"files","",{count: 0},0,{count: 0,minimum: 0,maximum: 0,mean: 0,zero_count: 0,bin_counts: fill([8],0)},8,0,u:n3d_camera_state([7,2,4],-0.55,0.45,25,1.0471975511965976,0.1,0,"none",0,0),0,800,600,0,0,0,"")
+}
+def u:wd_loading(state) {
+  "Provide wd loading behavior in this MLPL module.";
+  path=list_get(state.files,state.file_index)?;
+  u:wd_state(state.files,state.file_index,"loading",path,{count: 0},0,state.tile,state.bins,0,state.camera,state.revision+1,state.viewport_width,state.viewport_height,0,0,0,"")
+}
+def u:wd_fixture_state(values) {
+  "Provide wd fixture state behavior in this MLPL module.";
+  state=u:wd_defaults(["fixture.safetensors"]);
+  measured=u:wd_tile(values,8,2048)?;
+  tile={name: "weights",label: "TENSOR weights",count: measured.count,minimum: measured.minimum,maximum: measured.maximum,mean: measured.mean,zero_count: measured.zero_count,bin_counts: measured.bin_counts,total: measured.count,bytes_read: measured.count,dtype: "I8",method: "FIXTURE"};
+  u:wd_state(state.files,0,"histogram","fixture.safetensors",{count: 1,format: "safetensors",header_keys: ["weights"],header: {weights: {dtype: "I8"}}},0,tile,8,0,state.camera,0,800,600,0,0,0,"")
+}
+def u:wd_safe_name(catalog,wanted) {
+  "Provide wd safe name behavior in this MLPL module.";
+  key=0;
+  tensor=0;
+  found="";
+  while lt(key,list_len(catalog.header_keys)) {
+    candidate=list_get(catalog.header_keys,key)?;
+    if 1-equal(candidate,"__metadata__") {
+      if eq(tensor,wanted) {
+        found=candidate
+      };
+      tensor=tensor+1
+    };
+    key=key+1
+  };
+  found
+}
+def u:wd_selected_name(state) {
+  "Provide wd selected name behavior in this MLPL module.";
+  if equal(state.catalog.format,"gguf") { u:wd_gguf_name(state.catalog,state.tensor_index) } else { u:wd_safe_name(state.catalog,state.tensor_index) }
+}
+def u:wd_selected_dtype(state) {
+  "Provide wd selected dtype behavior in this MLPL module.";
+  if equal(state.catalog.format,"gguf") {
+    take(take(state.catalog.rows,0,state.tensor_index),0,2)
+  } else {
+    info=record_get(state.catalog.header,u:wd_selected_name(state))?;
+    record_get(info,"dtype")?
+  }
+}
+def u:wd_restate(state,mode,file_index,tensor_index,tile,bins,selected_bin,camera,error) {
+  "Provide wd restate behavior in this MLPL module.";
+  path=if eq(list_len(state.files),0) {
+    ""
+  } else {
+    list_get(state.files,file_index)?
+  };
+  u:wd_state(state.files,file_index,mode,path,state.catalog,tensor_index,tile,bins,selected_bin,camera,state.revision+1,state.viewport_width,state.viewport_height,state.press_x,state.press_y,state.dragged,error)
+}
+def u:wd_open_file(state) {
+  "Provide wd open file behavior in this MLPL module.";
+  path=list_get(state.files,state.file_index)?;
+  attempted=u:wd_catalog(path);
+  if is_err(attempted) { u:wd_restate(state,"error",state.file_index,0,state.tile,state.bins,0,state.camera,u:wd_text("CATALOG REJECTED BEFORE PAYLOAD READ: ",err_message(attempted))) } else {
+    catalog=unwrap(attempted);
+    next=u:wd_restate(state,"tensors",state.file_index,0,state.tile,state.bins,0,state.camera,"");
+    u:wd_state(next.files,next.file_index,next.mode,path,catalog,0,next.tile,next.bins,0,next.camera,next.revision,next.viewport_width,next.viewport_height,0,0,0,"")
+  }
+}
+def u:wd_analyze(state) {
+  "Provide wd analyze behavior in this MLPL module.";
+  dtype=u:wd_selected_dtype(state);
+  if 1-u:wd_dtype_supported(state.catalog.format,dtype) { u:wd_restate(state,"error",state.file_index,state.tensor_index,state.tile,state.bins,0,state.camera,u:wd_dtype_reason(state.catalog.format,dtype)) } else {
+    name_attempt=u:wd_selected_name(state);
+    name=if equal(type_of(name_attempt),"result") {
+      name_attempt?
+    } else {
+      name_attempt
+    };
+    attempted=u:wd_sample(state.path,name,2048);
+    if is_err(attempted) { u:wd_restate(state,"error",state.file_index,state.tensor_index,state.tile,state.bins,0,state.camera,u:wd_text("SAMPLE REJECTED: ",err_message(attempted))) } else {
+      sample=unwrap(attempted);
+      measured=u:wd_tile(sample.values,state.bins,2048)?;
+      tile={name: name,label: u:wd_text("TENSOR ",name),count: measured.count,minimum: measured.minimum,maximum: measured.maximum,mean: measured.mean,zero_count: measured.zero_count,bin_counts: measured.bin_counts,total: sample.total,bytes_read: sample.bytes_read,dtype: sample.dtype,method: sample.method};
+      u:wd_restate(state,"histogram",state.file_index,state.tensor_index,tile,state.bins,0,state.camera,"")
+    }
+  }
+}
+def u:wd_interaction(state,camera,selected,press_x,press_y,dragged) {
+  "Provide wd interaction behavior in this MLPL module.";
+  u:wd_state(state.files,state.file_index,state.mode,state.path,state.catalog,state.tensor_index,state.tile,state.bins,selected,camera,state.revision+1,state.viewport_width,state.viewport_height,press_x,press_y,dragged,state.error)
+}
+def u:wd_resize(state,event) {
+  "Provide wd resize behavior in this MLPL module.";
+  u:wd_state(state.files,state.file_index,state.mode,state.path,state.catalog,state.tensor_index,state.tile,state.bins,state.selected_bin,state.camera,state.revision+1,event.width,event.height,state.press_x,state.press_y,state.dragged,state.error)
+}
+def u:wd_event_result(state,attempted) {
+  "Provide wd event result behavior in this MLPL module.";
+  if equal(type_of(attempted),"result") {
+    if is_err(attempted) { u:wd_restate(state,"error",state.file_index,state.tensor_index,state.tile,state.bins,state.selected_bin,state.camera,u:wd_text("ERROR — WINDOW RETAINED; R RESTART | M MODEL MENU | ESC QUIT: ",err_message(attempted))) } else {
+      unwrap(attempted)
+    }
+  } else {
+    attempted
+  }
+}
+def u:wd_pick(state,event) {
+  "Provide wd pick behavior in this MLPL module.";
+  ray=u:n3d_pick_ray(state.camera,{viewport: {width: state.viewport_width,height: state.viewport_height},xy: [event.x,event.y]})?;
+  found=-1;
+  nearest=1000000000;
+  index=0;
+  while lt(index,8) {
+    count=take(state.tile.bin_counts,0,index);
+    height=if eq(count,0) {
+      0.15
+    } else {
+      0.35+log(count)/log(2)
+    };
+    hit=u:atlas_ray_box_distance(ray,[-4.375+index*1.25,height/2,0],[1.2,height+0.4,1.4]);
+    if hit.hit*lt(hit.distance,nearest) {
+      found=index;
+      nearest=hit.distance
+    };
+    index=index+1
+  };
+  ok(found)
+}
+def u:wd_pointer_reduce(event,state) {
+  "Provide wd pointer reduce behavior in this MLPL module.";
+  if equal(event.kind,"resize") { u:wd_resize(state,event) } else {
+    if 1-equal(state.mode,"histogram") {
+      state
+    } else {
+      if equal(event.kind,"pointer_down") { u:wd_interaction(state,u:n3d_camera_reduce(state.camera,event),state.selected_bin,event.x,event.y,0) } else {
+        if equal(event.kind,"pointer_move")*state.camera.dragging {
+          distance2=(event.x-state.press_x)*(event.x-state.press_x)+(event.y-state.press_y)*(event.y-state.press_y);
+          dragged=if state.dragged+gt(distance2,16) {
+            1
+          } else {
+            0
+          };
+          camera=if dragged { u:n3d_camera_reduce(state.camera,event) } else {
+            state.camera
+          };
+          u:wd_interaction(state,camera,state.selected_bin,state.press_x,state.press_y,dragged)
+        } else {
+          if equal(event.kind,"pointer_up") {
+            camera=u:n3d_camera_reduce(state.camera,event);
+            picked=if state.dragged {
+              -1
+            } else { u:wd_pick(state,event)? };
+            selected=if lt(picked,0) {
+              state.selected_bin
+            } else {
+              picked
+            };
+            u:wd_interaction(state,camera,selected,state.press_x,state.press_y,0)
+          } else {
+            if equal(event.kind,"wheel") { u:wd_interaction(state,u:n3d_camera_reduce(state.camera,event),state.selected_bin,state.press_x,state.press_y,state.dragged) } else {
+              state
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,12 +1,27 @@
+# Native mlplunit coverage for tests test model atlas scan.
 include "lib/model-atlas/bounded_scan.mlpl";
 
-def u:atlas_test_budgets() { {max_catalog_bytes: 8,max_tensors: 4,max_rank: 4,max_name_bytes: 32,max_detail_bytes: 4,max_iterations: 32,max_cache_bytes: 8,max_cache_entries: 2} }
-def u:atlas_name_row(name,width) { bytes=tokenize_bytes(name); concat(bytes,fill([width-tally(bytes)],0)) }
-def u:atlas_test_adapter(size) { names=concat(u:atlas_name_row("embed.weight",32),u:atlas_name_row("layers.0.weight",32)); {schema: "sw-ml-study.model-atlas.scan-adapter",version: 1,format: "safetensors",file_size: size,catalog_ranges: [[0,4],[8,4]],tensor_columns: {count: 2,offsets: [16,24],lengths: [8,8],ranks: [2,2],shapes: [[2,2,0,0],[2,4,0,0]],dtype_codes: [0,1],name_lengths: [12,15],name_bytes: reshape(names,[2,32])}} }
+def u:atlas_test_budgets() {
+  "Provide atlas test budgets behavior in this MLPL module.";
+  {max_catalog_bytes: 8,max_tensors: 4,max_rank: 4,max_name_bytes: 32,max_detail_bytes: 4,max_iterations: 32,max_cache_bytes: 8,max_cache_entries: 2}
+}
+def u:atlas_name_row(name,width) {
+  "Provide atlas name row behavior in this MLPL module.";
+  bytes=tokenize_bytes(name);
+  concat(bytes,fill([width-tally(bytes)],0))
+}
+def u:atlas_test_adapter(size) {
+  "Provide atlas test adapter behavior in this MLPL module.";
+  names=concat(u:atlas_name_row("embed.weight",32),u:atlas_name_row("layers.0.weight",32));
+  {schema: "sw-ml-study.model-atlas.scan-adapter",version: 1,format: "safetensors",file_size: size,catalog_ranges: [[0,4],[8,4]],tensor_columns: {count: 2,offsets: [16,24],lengths: [8,8],ranks: [2,2],shapes: [[2,2,0,0],[2,4,0,0]],dtype_codes: [0,1],name_lengths: [12,15],name_bytes: reshape(names,[2,32])}}
+}
 
 @test {name:"Model Atlas scan retains compact metadata and rereads bounded catalog ranges",tags:["model-atlas","scan","bounded-io"]}
 def u:test_atlas_scan_contract() {
-  path="fixtures/model-atlas/sample.bin"; size=file_size(path)?; result=u:atlas_scan(path,u:atlas_test_adapter(size),u:atlas_test_budgets())?;
+  "Exercise test atlas scan contract behavior in this MLPL module.";
+  path="fixtures/model-atlas/sample.bin";
+  size=file_size(path)?;
+  result=u:atlas_scan(path,u:atlas_test_adapter(size),u:atlas_test_budgets())?;
   u:assert_eq(result.schema,"sw-ml-study.model-atlas.scan", "versioned compact result")?;
   u:assert_eq([result.file_size,result.tensor_count,result.catalog_bytes,result.passes],[size,2,8,2],"only catalog bytes are scanned twice")?;
   u:assert_eq(result.tensor_columns.name_lengths,[12,15],"names remain bounded compact metadata")?;
@@ -16,7 +31,9 @@ def u:test_atlas_scan_contract() {
 
 @test {name:"Selected tensor detail is range-read and cache-budgeted on demand",tags:["model-atlas","scan","detail"]}
 def u:test_atlas_selected_detail() {
-  path="fixtures/model-atlas/sample.bin"; scan=u:atlas_scan(path,u:atlas_test_adapter(file_size(path)?),u:atlas_test_budgets())?;
+  "Exercise test atlas selected detail behavior in this MLPL module.";
+  path="fixtures/model-atlas/sample.bin";
+  scan=u:atlas_scan(path,u:atlas_test_adapter(file_size(path)?),u:atlas_test_budgets())?;
   detail=u:atlas_read_detail(path,scan,1,2,4,u:atlas_test_budgets())?;
   u:assert_eq(detail.bytes,[113,114,115,116],"only requested bytes are retained")?;
   u:assert_eq([detail.tensor_id,detail.absolute_offset,detail.length],[1,26,4],"detail provenance pins its bounded range")?;
@@ -25,15 +42,24 @@ def u:test_atlas_selected_detail() {
 
 @test {name:"Model Atlas scan rejects malformed budgets ranges overlap and overflow",tags:["model-atlas","scan","adversarial"]}
 def u:test_atlas_scan_rejections() {
-  path="fixtures/model-atlas/sample.bin"; size=file_size(path)?; b=u:atlas_test_budgets(); adapter=u:atlas_test_adapter(size);
+  "Exercise test atlas scan rejections behavior in this MLPL module.";
+  path="fixtures/model-atlas/sample.bin";
+  size=file_size(path)?;
+  b=u:atlas_test_budgets();
+  adapter=u:atlas_test_adapter(size);
   u:assert_err(u:atlas_scan(path,{schema: adapter.schema,version: 1,format: "safetensors",file_size: size+1,catalog_ranges: adapter.catalog_ranges,tensor_columns: adapter.tensor_columns},b),"declared size mismatch")?;
-  overlap_columns={count: 2,offsets: [16,20],lengths: [8,8],ranks: adapter.tensor_columns.ranks,shapes: adapter.tensor_columns.shapes,dtype_codes: adapter.tensor_columns.dtype_codes,name_lengths: adapter.tensor_columns.name_lengths,name_bytes: adapter.tensor_columns.name_bytes}; overlap={schema: adapter.schema,version: 1,format: "gguf",file_size: size,catalog_ranges: adapter.catalog_ranges,tensor_columns: overlap_columns};
+  overlap_columns={count: 2,offsets: [16,20],lengths: [8,8],ranks: adapter.tensor_columns.ranks,shapes: adapter.tensor_columns.shapes,dtype_codes: adapter.tensor_columns.dtype_codes,name_lengths: adapter.tensor_columns.name_lengths,name_bytes: adapter.tensor_columns.name_bytes};
+  overlap={schema: adapter.schema,version: 1,format: "gguf",file_size: size,catalog_ranges: adapter.catalog_ranges,tensor_columns: overlap_columns};
   u:assert_err(u:atlas_scan(path,overlap,b),"overlapping tensor ranges")?;
-  catalog_overlap={schema: adapter.schema,version: 1,format: adapter.format,file_size: size,catalog_ranges: [[0,6],[4,4]],tensor_columns: adapter.tensor_columns}; u:assert_err(u:atlas_scan(path,catalog_overlap,b),"overlapping catalog ranges")?;
-  overflow_columns={count: 2,offsets: adapter.tensor_columns.offsets,lengths: adapter.tensor_columns.lengths,ranks: [2,2],shapes: [[9007199254740991,2,0,0],[2,4,0,0]],dtype_codes: adapter.tensor_columns.dtype_codes,name_lengths: adapter.tensor_columns.name_lengths,name_bytes: adapter.tensor_columns.name_bytes}; overflow={schema: adapter.schema,version: 1,format: adapter.format,file_size: size,catalog_ranges: adapter.catalog_ranges,tensor_columns: overflow_columns}; u:assert_err(u:atlas_scan(path,overflow,b),"parameter product overflow")?;
+  catalog_overlap={schema: adapter.schema,version: 1,format: adapter.format,file_size: size,catalog_ranges: [[0,6],[4,4]],tensor_columns: adapter.tensor_columns};
+  u:assert_err(u:atlas_scan(path,catalog_overlap,b),"overlapping catalog ranges")?;
+  overflow_columns={count: 2,offsets: adapter.tensor_columns.offsets,lengths: adapter.tensor_columns.lengths,ranks: [2,2],shapes: [[9007199254740991,2,0,0],[2,4,0,0]],dtype_codes: adapter.tensor_columns.dtype_codes,name_lengths: adapter.tensor_columns.name_lengths,name_bytes: adapter.tensor_columns.name_bytes};
+  overflow={schema: adapter.schema,version: 1,format: adapter.format,file_size: size,catalog_ranges: adapter.catalog_ranges,tensor_columns: overflow_columns};
+  u:assert_err(u:atlas_scan(path,overflow,b),"parameter product overflow")?;
   u:assert_err(u:atlas_read_detail(path,unwrap(u:atlas_scan(path,adapter,b)),0,7,2,b),"detail escapes tensor")?;
   u:assert_err(u:atlas_read_detail(path,unwrap(u:atlas_scan(path,adapter,b)),0,0,5,b),"detail exceeds byte budget")?;
-  detail=unwrap(u:atlas_read_detail(path,unwrap(u:atlas_scan(path,adapter,b)),0,0,4,b)); u:assert_err(u:atlas_cache_admit(8,2,detail,b),"detail cache overflow")
+  detail=unwrap(u:atlas_read_detail(path,unwrap(u:atlas_scan(path,adapter,b)),0,0,4,b));
+  u:assert_err(u:atlas_cache_admit(8,2,detail,b),"detail cache overflow")
 }
 
 u:run_registered_tests()

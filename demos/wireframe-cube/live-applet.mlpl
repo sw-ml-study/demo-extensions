@@ -1,12 +1,15 @@
+# MLPL application semantics for demos wireframe cube live applet.
 include "controls.mlpl";
 
 def u:wireframe_cube_submit(state) {
+  "Provide wireframe cube submit behavior in this MLPL module.";
   bulk=u:wireframe_cube_bulk_update(state)?;
   port_send(port,{op: "set_scene",positions: bulk.positions,edges: bulk.edges,colors: bulk.colors,thicknesses: bulk.thicknesses,ids: bulk.ids,rotation_y_speed: bulk.rotation_y_speed,revision: bulk.revision,camera: bulk.camera,help: "MOUSE: LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN\nW/S WIDTH   UP/DOWN HEIGHT   A/D LENGTH\n+/- SPEED   SPACE PAUSE   C COLOR   [/] LINE\nR RESET   ESC CLOSE"});
   ok(state)
 }
 
 def u:wireframe_cube_on_event(event,state) {
+  "Provide wireframe cube on event behavior in this MLPL module.";
   next=u:wireframe_cube_reduce(state,event);
   u:wireframe_cube_submit(next)?;
   next

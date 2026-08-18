@@ -1,0 +1,43 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+if [ -n "${MLPL_FMT:-}" ]; then
+    case "$MLPL_FMT" in
+        /*) formatter=$MLPL_FMT ;;
+        *) echo "MLPL_FMT must be an absolute path" >&2; exit 2 ;;
+    esac
+elif command -v mlpl-fmt >/dev/null 2>&1; then
+    formatter=$(command -v mlpl-fmt)
+elif [ -x "$repo_root/../sw-mlpl/scripts/mlpl-fmt.sh" ]; then
+    formatter=$repo_root/../sw-mlpl/scripts/mlpl-fmt.sh
+else
+    echo "mlpl formatter not found; set MLPL_FMT or provide ../sw-mlpl" >&2
+    exit 1
+fi
+
+files=$(git -C "$repo_root" ls-files '*.mlpl')
+# shellcheck disable=SC2086
+"$formatter" --check $files
+
+failed=0
+for relative in $files; do
+    file=$repo_root/$relative
+    if ! sed -n '1p' "$file" | grep -q '^#'; then
+        echo "missing MLPL module comment: $relative" >&2
+        failed=1
+    fi
+    if ! awk '
+        /^def u:[A-Za-z0-9_]+\([^)]*\) \{/ {
+            if ($0 ~ /\{ "/) next
+            if ((getline next_line) <= 0 || next_line !~ /^  "/) exit 1
+        }
+    ' "$file"; then
+        echo "missing MLPL function docstring: $relative" >&2
+        failed=1
+    fi
+done
+
+[ "$failed" -eq 0 ]
+echo "PASS MLPL format, module comments, and function docstrings"

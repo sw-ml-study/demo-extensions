@@ -1,7 +1,9 @@
+# Native mlplunit coverage for tests test tic tac toe scene.
 include "demos/tic-tac-toe/scene.mlpl";
 
 @test {name: "tic tac toe empty board is a generic bulk line grid", tags: ["native3d", "tic-tac-toe", "scene"]}
 def u:test_ttt_empty_scene() {
+  "Exercise test ttt empty scene behavior in this MLPL module.";
   scene=unwrap(u:ttt_scene(u:ttt_empty_board(),-1));
   u:assert_eq(shape(scene.positions),[8,3],"four grid segments duplicate eight endpoints")?;
   u:assert_eq(shape(scene.edges),[4,2],"grid has four generic edges")?;
@@ -12,7 +14,9 @@ def u:test_ttt_empty_scene() {
 
 @test {name: "tic tac toe renders polygonal marks without native game primitives", tags: ["native3d", "tic-tac-toe", "marks"]}
 def u:test_ttt_marks_scene() {
-  board=[1,-1,0,0,0,0,0,0,0]; scene=unwrap(u:ttt_scene(board,-1));
+  "Exercise test ttt marks scene behavior in this MLPL module.";
+  board=[1,-1,0,0,0,0,0,0,0];
+  scene=unwrap(u:ttt_scene(board,-1));
   u:assert_eq(shape(scene.edges),[14,2],"grid plus two X and eight O segments")?;
   u:assert_eq(shape(scene.positions),[28,3],"every line owns two xyz endpoints")?;
   u:assert_eq(shape(scene.thicknesses),[14],"thickness is parallel")?;
@@ -21,6 +25,7 @@ def u:test_ttt_marks_scene() {
 
 @test {name: "tic tac toe hover and winner feedback remain MLPL geometry", tags: ["native3d", "tic-tac-toe", "feedback"]}
 def u:test_ttt_feedback_scene() {
+  "Exercise test ttt feedback scene behavior in this MLPL module.";
   hovered=unwrap(u:ttt_scene(u:ttt_empty_board(),4));
   occupied=unwrap(u:ttt_scene([1,0,0,0,0,0,0,0,0],0));
   won=unwrap(u:ttt_scene([1,1,1,-1,-1,0,0,0,0],8));

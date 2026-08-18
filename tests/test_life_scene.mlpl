@@ -1,8 +1,11 @@
+# Native mlplunit coverage for tests test life scene.
 include "demos/life-plane/scene.mlpl";
 
 @test {name:"Life empty plane is generic bulk line geometry",tags:["native3d","life","scene"]}
 def u:test_life_empty_scene() {
-  state=u:life_app_defaults(); scene=unwrap(u:life_scene(state));
+  "Exercise test life empty scene behavior in this MLPL module.";
+  state=u:life_app_defaults();
+  scene=unwrap(u:life_scene(state));
   u:assert_eq(shape(scene.positions),[164,3],"40x40 grid has 82 line endpoints")?;
   u:assert_eq(shape(scene.edges),[82,2],"empty plane has 41 row and 41 column lines")?;
   u:assert_eq(shape(scene.colors),[82,4],"parallel colors match")?;
@@ -12,7 +15,9 @@ def u:test_life_empty_scene() {
 
 @test {name:"Life cells and hover are MLPL-generated line overlays",tags:["native3d","life","scene","cells"]}
 def u:test_life_cell_scene() {
-  block=u:life_reduce(u:life_app_defaults(),{kind:"key",key:"b"}); scene=unwrap(u:life_scene(block));
+  "Exercise test life cell scene behavior in this MLPL module.";
+  block=u:life_reduce(u:life_app_defaults(),{kind:"key",key:"b"});
+  scene=unwrap(u:life_scene(block));
   u:assert_eq(shape(scene.edges),[98,2],"four live cells add four edges each")?;
   hovered=u:life_app_state(block.grid,block.running,block.generation,block.speed,block.accumulator_ms,block.camera,block.viewport_width,block.viewport_height,0,block.revision,block.close_requested,block.random_seed,block.press_x,block.press_y,block.gesture_dragged,block.painting);
   hover_scene=unwrap(u:life_scene(hovered));
@@ -22,12 +27,16 @@ def u:test_life_cell_scene() {
 
 @test {name:"Life scene patches address only changed cells by stable ID",tags:["native3d","life","scene","patch"]}
 def u:test_life_scene_patch() {
-  before=u:life_app_defaults(); after=u:life_reduce(before,{kind:"key",key:"g"}); patch=u:life_scene_patch(before,after);
+  "Exercise test life scene patch behavior in this MLPL module.";
+  before=u:life_app_defaults();
+  after=u:life_reduce(before,{kind:"key",key:"g"});
+  patch=u:life_scene_patch(before,after);
   u:assert_eq(shape(patch.ids),[20],"five born cells upsert twenty lines")?;
   u:assert_eq(shape(patch.starts),[20,3],"patch carries independent line starts")?;
   u:assert_eq(shape(patch.remove_ids),[0],"birth-only patch removes nothing")?;
   u:assert_eq([patch.base_revision,patch.target_revision],[0,1],"visual revision advances atomically")?;
-  evolved=u:life_reduce(after,{kind:"key",key:"n"}); next_patch=u:life_scene_patch(after,evolved);
+  evolved=u:life_reduce(after,{kind:"key",key:"n"});
+  next_patch=u:life_scene_patch(after,evolved);
   u:assert_true(lt(tally(next_patch.ids)+tally(next_patch.remove_ids),82),"one generation is smaller than the static grid scene")
 }
 

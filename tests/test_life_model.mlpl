@@ -1,7 +1,9 @@
+# Native mlplunit coverage for tests test life model.
 include "demos/life-plane/model.mlpl";
 
 @test {name:"Life validates finite grids and owns updates",tags:["native3d","life","model"]}
 def u:test_life_grid_contract() {
+  "Exercise test life grid contract behavior in this MLPL module.";
   grid=unwrap(u:life_empty(5,6));
   u:assert_eq([grid.rows,grid.columns,reduce(:add,grid.cells)],[5,6,0],"empty finite grid")?;
   changed=unwrap(u:life_set(grid,2,3,1));
@@ -15,16 +17,26 @@ def u:test_life_grid_contract() {
 
 @test {name:"Life still lifes and oscillators evolve deterministically",tags:["native3d","life","evolution"]}
 def u:test_life_evolution() {
+  "Exercise test life evolution behavior in this MLPL module.";
   block=unwrap(u:life_preset("block",8,8,0));
   u:assert_eq(unwrap(u:life_step(block)),block,"block is stable")?;
-  blinker=unwrap(u:life_preset("blinker",9,9,0)); one=unwrap(u:life_step(blinker)); two=unwrap(u:life_step(one));
+  blinker=unwrap(u:life_preset("blinker",9,9,0));
+  one=unwrap(u:life_step(blinker));
+  two=unwrap(u:life_step(one));
   u:assert_eq(two,blinker,"blinker has period two")?;
   u:assert_eq(reduce(:add,one.cells),3,"blinker population stays three")
 }
 
 @test {name:"Life glider moves and large presets enforce bounds",tags:["native3d","life","presets"]}
 def u:test_life_moving_presets() {
-  glider=unwrap(u:life_preset("glider",12,12,0)); moved=glider; count=0; while lt(count,4) { moved=unwrap(u:life_step(moved)); count=count+1 };
+  "Exercise test life moving presets behavior in this MLPL module.";
+  glider=unwrap(u:life_preset("glider",12,12,0));
+  moved=glider;
+  count=0;
+  while lt(count,4) {
+    moved=unwrap(u:life_step(moved));
+    count=count+1
+  };
   u:assert_eq(moved.cells,u:life_translate_cells(glider,1,1),"glider moves one diagonal cell in four steps")?;
   gun=unwrap(u:life_preset("glider-gun",20,40,0));
   u:assert_eq(reduce(:add,gun.cells),36,"Gosper gun has 36 live cells")?;
@@ -33,8 +45,13 @@ def u:test_life_moving_presets() {
 
 @test {name:"Life presets replace grids and seeded random is repeatable",tags:["native3d","life","presets","random"]}
 def u:test_life_preset_replacement() {
-  empty=unwrap(u:life_preset("empty",10,10,7)); still=unwrap(u:life_preset("beehive",10,10,7)); spinner=unwrap(u:life_preset("toad",10,10,7));
-  a=unwrap(u:life_preset("random",10,10,77)); b=unwrap(u:life_preset("random",10,10,77)); c=unwrap(u:life_preset("random",10,10,78));
+  "Exercise test life preset replacement behavior in this MLPL module.";
+  empty=unwrap(u:life_preset("empty",10,10,7));
+  still=unwrap(u:life_preset("beehive",10,10,7));
+  spinner=unwrap(u:life_preset("toad",10,10,7));
+  a=unwrap(u:life_preset("random",10,10,77));
+  b=unwrap(u:life_preset("random",10,10,77));
+  c=unwrap(u:life_preset("random",10,10,78));
   u:assert_eq(reduce(:add,empty.cells),0,"empty clears the whole grid")?;
   u:assert_eq(reduce(:add,still.cells),6,"beehive still life is available")?;
   u:assert_eq(reduce(:add,spinner.cells),6,"toad oscillator is available")?;

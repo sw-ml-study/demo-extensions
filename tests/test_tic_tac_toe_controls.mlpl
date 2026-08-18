@@ -1,11 +1,18 @@
+# Native mlplunit coverage for tests test tic tac toe controls.
 include "demos/tic-tac-toe/controls.mlpl";
 
 @test {name:"tic tac toe center pointer maps to center cell",tags:["native3d","tic-tac-toe","picking"]}
-def u:test_ttt_pointer_cell() { state=u:ttt_app_defaults(); u:assert_eq(u:ttt_pointer_cell(state,{x:400,y:300})?,4,"center ray hits center board cell") }
+def u:test_ttt_pointer_cell() {
+  "Exercise test ttt pointer cell behavior in this MLPL module.";
+  state=u:ttt_app_defaults();
+  u:assert_eq(u:ttt_pointer_cell(state,{x:400,y:300})?,4,"center ray hits center board cell")
+}
 
 @test {name:"tic tac toe user move and AI response are MLPL owned",tags:["native3d","tic-tac-toe","interaction"]}
 def u:test_ttt_user_and_ai_move() {
-  state=u:ttt_app_defaults(); state=u:ttt_user_move(state,4);
+  "Exercise test ttt user and ai move behavior in this MLPL module.";
+  state=u:ttt_app_defaults();
+  state=u:ttt_user_move(state,4);
   u:assert_eq(take(state.board,0,4),1,"user places X")?;
   u:assert_eq(reduce(:add,eq(state.board,-1)),1,"AI places exactly one O")?;
   u:assert_eq(state.turn,"user","turn returns to user")?;
@@ -14,6 +21,7 @@ def u:test_ttt_user_and_ai_move() {
 
 @test {name:"tic tac toe choices and restart are explicit",tags:["native3d","tic-tac-toe","choices"]}
 def u:test_ttt_choices() {
+  "Exercise test ttt choices behavior in this MLPL module.";
   state=u:ttt_reduce(u:ttt_app_defaults(),{kind:"key",key:"o"});
   u:assert_eq([state.user_mark,state.ai_mark],[-1,1],"O choice swaps marks")?;
   moved=u:ttt_user_move(state,4);
@@ -27,7 +35,10 @@ def u:test_ttt_choices() {
 
 @test {name:"terminal and off-board pointer releases are harmless",tags:["native3d","tic-tac-toe","regression"]}
 def u:test_ttt_terminal_drag_release() {
-  base=u:ttt_app_defaults(); board=[1,-1,1,1,-1,-1,-1,1,1]; terminal=u:ttt_app_state(board,1,-1,1,"done",base.camera,800,600,-1,20,0);
+  "Exercise test ttt terminal drag release behavior in this MLPL module.";
+  base=u:ttt_app_defaults();
+  board=[1,-1,1,1,-1,-1,-1,1,1];
+  terminal=u:ttt_app_state(board,1,-1,1,"done",base.camera,800,600,-1,20,0);
   u:assert_eq(u:ttt_user_move(terminal,-1),terminal,"terminal off-board release is a no-op")?;
   moved=u:ttt_reduce(terminal,{kind:"pointer_move",x:0,y:0,left:1,shift:0});
   released=u:ttt_reduce(moved,{kind:"pointer_up",button:"left",x:0,y:0,shift:0});
@@ -37,12 +48,18 @@ def u:test_ttt_terminal_drag_release() {
 
 @test {name:"tic tac toe arbitrates click orbit pan and zoom",tags:["native3d","tic-tac-toe","camera"]}
 def u:test_ttt_camera_gestures() {
-  initial=u:ttt_app_defaults(); down=u:ttt_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0}); clicked=u:ttt_reduce(down,{kind:"pointer_up",button:"left",x:400,y:300,shift:0});
+  "Exercise test ttt camera gestures behavior in this MLPL module.";
+  initial=u:ttt_app_defaults();
+  down=u:ttt_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0});
+  clicked=u:ttt_reduce(down,{kind:"pointer_up",button:"left",x:400,y:300,shift:0});
   u:assert_eq(reduce(:add,abs(clicked.board)),2,"stationary click places user and AI marks")?;
-  down=u:ttt_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0}); dragged=u:ttt_reduce(down,{kind:"pointer_move",x:430,y:280,left:1,shift:0}); released=u:ttt_reduce(dragged,{kind:"pointer_up",button:"left",x:430,y:280,shift:0});
+  down=u:ttt_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:0});
+  dragged=u:ttt_reduce(down,{kind:"pointer_move",x:430,y:280,left:1,shift:0});
+  released=u:ttt_reduce(dragged,{kind:"pointer_up",button:"left",x:430,y:280,shift:0});
   u:assert_eq(released.board,initial.board,"camera drag suppresses mark placement")?;
   u:assert_true(1-equal(released.camera.yaw,initial.camera.yaw),"left drag orbits")?;
-  pdown=u:ttt_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:1}); pdrag=u:ttt_reduce(pdown,{kind:"pointer_move",x:430,y:320,left:1,shift:1});
+  pdown=u:ttt_reduce(initial,{kind:"pointer_down",button:"left",x:400,y:300,shift:1});
+  pdrag=u:ttt_reduce(pdown,{kind:"pointer_move",x:430,y:320,left:1,shift:1});
   u:assert_true(1-equal(pdrag.camera.target,initial.camera.target),"shift-left drag pans")?;
   zoom=u:ttt_reduce(initial,{kind:"wheel",dx:0,dy:40,x:400,y:300,shift:0});
   u:assert_true(lt(zoom.camera.distance,initial.camera.distance),"wheel zooms")

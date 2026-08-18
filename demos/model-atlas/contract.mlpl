@@ -1,5 +1,12 @@
+# MLPL application semantics for demos model atlas contract.
 include "../../fixtures/model-atlas/tensor_city_derived.mlpl";
 include "../../lib/model-atlas/interchange.mlpl";
 
-b={max_objects: 12,max_tensors: 7,max_label_bytes: 64,max_id_bytes: 128,max_hierarchy_depth: 4,max_coordinate: 40,max_parameters: 1000000,max_elements: 4096,max_iterations: 64,max_output_bytes: 32768,max_json_depth: 8,max_json_elements: 4096}; city=u:atlas_tensor_city_fixture(); transport=u:atlas_interchange_transport(city,b)?;
-print("MODEL ATLAS INTERCHANGE"); print("Derived inputs: demo-ml-utils valid Safetensors and GGUF catalog fixtures; payload bytes are not present or read."); print({schema: transport.schema,version: transport.version,tensors: city.tensor_columns.count,formats: city.tensor_columns.format_codes,districts: city.tensor_columns.group_ids,heights: city.tensor_columns.heights,transport_utf8_bytes: transport.utf8_bytes}); print("Ownership: demo-ml-utils parses formats and emits tensor-city IR; demo-extensions validates transport and will render generic native geometry."); ok(1)
+b={max_objects: 12,max_tensors: 7,max_label_bytes: 64,max_id_bytes: 128,max_hierarchy_depth: 4,max_coordinate: 40,max_parameters: 1000000,max_elements: 4096,max_iterations: 64,max_output_bytes: 32768,max_json_depth: 8,max_json_elements: 4096};
+city=u:atlas_tensor_city_fixture();
+transport=u:atlas_interchange_transport(city,b)?;
+print("MODEL ATLAS INTERCHANGE");
+print("Derived inputs: demo-ml-utils valid Safetensors and GGUF catalog fixtures; payload bytes are not present or read.");
+print({schema: transport.schema,version: transport.version,tensors: city.tensor_columns.count,formats: city.tensor_columns.format_codes,districts: city.tensor_columns.group_ids,heights: city.tensor_columns.heights,transport_utf8_bytes: transport.utf8_bytes});
+print("Ownership: demo-ml-utils parses formats and emits tensor-city IR; demo-extensions validates transport and will render generic native geometry.");
+ok(1)

@@ -1,68 +1,163 @@
+# MLPL application semantics for demos tic tac toe controls.
 include "scene.mlpl";
 include "../../lib/native3d/camera.mlpl";
 
 def u:ttt_app_state(board,user_mark,ai_mark,user_first,turn,camera,viewport_width,viewport_height,hover_cell,revision,close_requested) {
+  "Provide ttt app state behavior in this MLPL module.";
   u:ttt_app_state_gesture(board,user_mark,ai_mark,user_first,turn,camera,viewport_width,viewport_height,hover_cell,revision,close_requested,0,0,0)
 }
 
 def u:ttt_app_state_gesture(board,user_mark,ai_mark,user_first,turn,camera,viewport_width,viewport_height,hover_cell,revision,close_requested,press_x,press_y,gesture_dragged) {
+  "Provide ttt app state gesture behavior in this MLPL module.";
   outcome=u:ttt_outcome(board);
   {board: board,user_mark: user_mark,ai_mark: ai_mark,user_first: user_first,turn: turn,status: outcome.status,winner: outcome.winner,camera: camera,viewport_width: viewport_width,viewport_height: viewport_height,hover_cell: hover_cell,revision: revision,close_requested: close_requested,press_x: press_x,press_y: press_y,gesture_dragged: gesture_dragged}
 }
 
 def u:ttt_app_defaults() {
+  "Provide ttt app defaults behavior in this MLPL module.";
   camera=u:n3d_camera_state([0,0,0],0,0.75,5,1.0471975511965976,0.1,0,"none",0,0);
   u:ttt_app_state(u:ttt_empty_board(),1,-1,1,"user",camera,800,600,-1,0,0)
 }
 
-def u:ttt_with_board(state,board,turn) { u:ttt_app_state(board,state.user_mark,state.ai_mark,state.user_first,turn,state.camera,state.viewport_width,state.viewport_height,-1,state.revision+1,state.close_requested) }
+def u:ttt_with_board(state,board,turn) {
+  "Provide ttt with board behavior in this MLPL module.";
+  u:ttt_app_state(board,state.user_mark,state.ai_mark,state.user_first,turn,state.camera,state.viewport_width,state.viewport_height,-1,state.revision+1,state.close_requested)
+}
 
 def u:ttt_apply_ai(state) {
-  if (1-equal(state.turn,"ai"))+(1-equal(state.status,"playing")) { state } else {
-    move=u:ttt_live_move(state.board,state.ai_mark)?; board=u:ttt_place(state.board,move,state.ai_mark)?; outcome=u:ttt_outcome(board); turn=if equal(outcome.status,"playing") { "user" } else { "done" };
+  "Provide ttt apply ai behavior in this MLPL module.";
+  if (1-equal(state.turn,"ai"))+(1-equal(state.status,"playing")) {
+    state
+  } else {
+    move=u:ttt_live_move(state.board,state.ai_mark)?;
+    board=u:ttt_place(state.board,move,state.ai_mark)?;
+    outcome=u:ttt_outcome(board);
+    turn=if equal(outcome.status,"playing") {
+      "user"
+    } else {
+      "done"
+    };
     u:ttt_with_board(state,board,turn)
   }
 }
 
 def u:ttt_restart(state,user_mark,user_first) {
-  ai_mark=0-user_mark; turn=if user_first { "user" } else { "ai" };
+  "Provide ttt restart behavior in this MLPL module.";
+  ai_mark=0-user_mark;
+  turn=if user_first {
+    "user"
+  } else {
+    "ai"
+  };
   fresh=u:ttt_app_state(u:ttt_empty_board(),user_mark,ai_mark,user_first,turn,state.camera,state.viewport_width,state.viewport_height,-1,state.revision+1,0);
   u:ttt_apply_ai(fresh)
 }
 
 def u:ttt_pointer_cell(state,event) {
+  "Provide ttt pointer cell behavior in this MLPL module.";
   ray=u:n3d_pick_ray(state.camera,{viewport:{width: state.viewport_width,height: state.viewport_height},xy:[event.x,event.y]})?;
   hit=u:n3d_ray_plane_hit(ray,[0,0,0],[0,1,0])?;
-  if 1-hit.hit { ok(-1) } else {
-    x=take(hit.point,0,0); z=take(hit.point,0,2);
-    if lt(x,-1.5)+gt(x,1.5)+lt(z,-1.5)+gt(z,1.5) { ok(-1) } else { row=floor(z+1.5); column=floor(x+1.5); ok(row*3+column) }
+  if 1-hit.hit {
+    ok(-1)
+  } else {
+    x=take(hit.point,0,0);
+    z=take(hit.point,0,2);
+    if lt(x,-1.5)+gt(x,1.5)+lt(z,-1.5)+gt(z,1.5) {
+      ok(-1)
+    } else {
+      row=floor(z+1.5);
+      column=floor(x+1.5);
+      ok(row*3+column)
+    }
   }
 }
 
 def u:ttt_user_move(state,cell) {
-  if (1-equal(state.turn,"user"))+(1-equal(state.status,"playing"))+lt(cell,0)+gt(cell,8) { state } else { if 1-eq(take(state.board,0,cell),0) { state } else {
-    board=u:ttt_place(state.board,cell,state.user_mark)?; outcome=u:ttt_outcome(board); turn=if equal(outcome.status,"playing") { "ai" } else { "done" };
-    u:ttt_apply_ai(u:ttt_with_board(state,board,turn))
-  } }
+  "Provide ttt user move behavior in this MLPL module.";
+  if (1-equal(state.turn,"user"))+(1-equal(state.status,"playing"))+lt(cell,0)+gt(cell,8) {
+    state
+  } else {
+    if 1-eq(take(state.board,0,cell),0) {
+      state
+    } else {
+      board=u:ttt_place(state.board,cell,state.user_mark)?;
+      outcome=u:ttt_outcome(board);
+      turn=if equal(outcome.status,"playing") {
+        "ai"
+      } else {
+        "done"
+      };
+      u:ttt_apply_ai(u:ttt_with_board(state,board,turn))
+    }
+  }
 }
 
-def u:ttt_gesture_state(state,camera,hover,press_x,press_y,dragged) { u:ttt_app_state_gesture(state.board,state.user_mark,state.ai_mark,state.user_first,state.turn,camera,state.viewport_width,state.viewport_height,hover,state.revision+1,state.close_requested,press_x,press_y,dragged) }
+def u:ttt_gesture_state(state,camera,hover,press_x,press_y,dragged) {
+  "Provide ttt gesture state behavior in this MLPL module.";
+  u:ttt_app_state_gesture(state.board,state.user_mark,state.ai_mark,state.user_first,state.turn,camera,state.viewport_width,state.viewport_height,hover,state.revision+1,state.close_requested,press_x,press_y,dragged)
+}
 
 def u:ttt_reduce(state,event) {
+  "Provide ttt reduce behavior in this MLPL module.";
   if equal(event.kind,"key") {
-    if equal(event.key,"x") { u:ttt_restart(state,1,state.user_first) } else { if equal(event.key,"o") { u:ttt_restart(state,-1,state.user_first) } else { if equal(event.key,"1") { u:ttt_restart(state,state.user_mark,1) } else { if equal(event.key,"2") { u:ttt_restart(state,state.user_mark,0) } else { if equal(event.key,"r") { u:ttt_restart(state,state.user_mark,state.user_first) } else { state } } } } }
-  } else { if equal(event.kind,"pointer_down") {
-    camera=u:n3d_camera_reduce(state.camera,event); u:ttt_gesture_state(state,camera,-1,event.x,event.y,0)
-  } else { if equal(event.kind,"pointer_move") {
-    if state.camera.dragging {
-      distance2=(event.x-state.press_x)*(event.x-state.press_x)+(event.y-state.press_y)*(event.y-state.press_y); dragged=state.gesture_dragged+gt(distance2,16); dragged=if dragged { 1 } else { 0 }; camera=if dragged { u:n3d_camera_reduce(state.camera,event) } else { state.camera }; u:ttt_gesture_state(state,camera,-1,state.press_x,state.press_y,dragged)
-    } else { cell=u:ttt_pointer_cell(state,event)?; u:ttt_gesture_state(state,state.camera,cell,state.press_x,state.press_y,0) }
-  } else { if equal(event.kind,"pointer_up") {
-    camera=u:n3d_camera_reduce(state.camera,event); released=u:ttt_gesture_state(state,camera,-1,state.press_x,state.press_y,0);
-    if equal(event.button,"left")*(1-state.gesture_dragged) { cell=u:ttt_pointer_cell(released,event)?; u:ttt_user_move(released,cell) } else { released }
-  } else { if equal(event.kind,"wheel") {
-    camera=u:n3d_camera_reduce(state.camera,event); u:ttt_gesture_state(state,camera,state.hover_cell,state.press_x,state.press_y,state.gesture_dragged)
-  } else { if equal(event.kind,"resize") {
-    u:ttt_app_state(state.board,state.user_mark,state.ai_mark,state.user_first,state.turn,state.camera,u:n3d_clamp(event.width,1,8192),u:n3d_clamp(event.height,1,8192),-1,state.revision+1,state.close_requested)
-  } else { if equal(event.kind,"close") { u:ttt_app_state(state.board,state.user_mark,state.ai_mark,state.user_first,"done",state.camera,state.viewport_width,state.viewport_height,-1,state.revision+1,1) } else { state } } } } } } }
+    if equal(event.key,"x") { u:ttt_restart(state,1,state.user_first) } else {
+      if equal(event.key,"o") { u:ttt_restart(state,-1,state.user_first) } else {
+        if equal(event.key,"1") { u:ttt_restart(state,state.user_mark,1) } else {
+          if equal(event.key,"2") { u:ttt_restart(state,state.user_mark,0) } else {
+            if equal(event.key,"r") { u:ttt_restart(state,state.user_mark,state.user_first) } else {
+              state
+            }
+          }
+        }
+      }
+    }
+  } else {
+    if equal(event.kind,"pointer_down") {
+      camera=u:n3d_camera_reduce(state.camera,event);
+      u:ttt_gesture_state(state,camera,-1,event.x,event.y,0)
+    } else {
+      if equal(event.kind,"pointer_move") {
+        if state.camera.dragging {
+          distance2=(event.x-state.press_x)*(event.x-state.press_x)+(event.y-state.press_y)*(event.y-state.press_y);
+          dragged=state.gesture_dragged+gt(distance2,16);
+          dragged=if dragged {
+            1
+          } else {
+            0
+          };
+          camera=if dragged { u:n3d_camera_reduce(state.camera,event) } else {
+            state.camera
+          };
+          u:ttt_gesture_state(state,camera,-1,state.press_x,state.press_y,dragged)
+        } else {
+          cell=u:ttt_pointer_cell(state,event)?;
+          u:ttt_gesture_state(state,state.camera,cell,state.press_x,state.press_y,0)
+        }
+      } else {
+        if equal(event.kind,"pointer_up") {
+          camera=u:n3d_camera_reduce(state.camera,event);
+          released=u:ttt_gesture_state(state,camera,-1,state.press_x,state.press_y,0);
+          if equal(event.button,"left")*(1-state.gesture_dragged) {
+            cell=u:ttt_pointer_cell(released,event)?;
+            u:ttt_user_move(released,cell)
+          } else {
+            released
+          }
+        } else {
+          if equal(event.kind,"wheel") {
+            camera=u:n3d_camera_reduce(state.camera,event);
+            u:ttt_gesture_state(state,camera,state.hover_cell,state.press_x,state.press_y,state.gesture_dragged)
+          } else {
+            if equal(event.kind,"resize") {
+              u:ttt_app_state(state.board,state.user_mark,state.ai_mark,state.user_first,state.turn,state.camera,u:n3d_clamp(event.width,1,8192),u:n3d_clamp(event.height,1,8192),-1,state.revision+1,state.close_requested)
+            } else {
+              if equal(event.kind,"close") { u:ttt_app_state(state.board,state.user_mark,state.ai_mark,state.user_first,"done",state.camera,state.viewport_width,state.viewport_height,-1,state.revision+1,1) } else {
+                state
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

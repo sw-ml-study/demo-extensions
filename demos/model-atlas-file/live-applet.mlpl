@@ -1,7 +1,58 @@
+# MLPL application semantics for demos model atlas file live applet.
 include "./scene.mlpl";
 
-def u:file_atlas_help(state) { if equal(state.mode,"atlas") { u:file_atlas_atlas_help(state) } else { if equal(state.mode,"scanning") { u:atlas_city_text("MODEL ATLAS — ANALYZING BOUNDED SAFETENSORS HEADER\nNO TENSOR PAYLOAD WILL BE READ\nFILE: ",state.path) } else { u:file_atlas_menu_help(state) } } }
-def u:file_atlas_submit(state) { scene=if equal(state.mode,"atlas") { u:file_atlas_scene(state)? } else { u:file_atlas_empty_scene()? }; port_send(port,{op: "set_scene",positions: scene.positions,edges: scene.edges,colors: scene.colors,thicknesses: scene.thicknesses,ids: scene.ids,rotation_y_speed: 0,revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:file_atlas_help(state),status: u:file_atlas_status(state)}); ok(state) }
-def u:file_atlas_submit_view(state) { port_send(port,{op: "set_view",revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:file_atlas_help(state),status: u:file_atlas_status(state)}); ok(state) }
-def u:file_atlas_event(event,state) { if equal(event.kind,"key") { next=u:file_atlas_key(state,event.key); if equal(next.mode,"scanning") { u:file_atlas_submit(next)?; analyzed=u:file_atlas_analyze(next); u:file_atlas_submit(analyzed)?; analyzed } else { u:file_atlas_submit(next)?; next } } else { if equal(event.kind,"pointer_down")+equal(event.kind,"pointer_up")+equal(event.kind,"pointer_move")+equal(event.kind,"wheel") { if equal(state.mode,"atlas") { next=u:file_atlas_pointer_event(state,event); geometry=1-eq(next.tensor_selected,state.tensor_selected); view=1-equal(u:n3d_camera_record(next.camera),u:n3d_camera_record(state.camera)); if geometry { u:file_atlas_submit(next)? } else { if view { u:file_atlas_submit_view(next)? } }; next } else { state } } else { if equal(event.kind,"resize") { u:file_atlas_state(state.paths,state.selected,state.mode,state.path,state.catalog,state.camera,state.revision,state.close_requested,state.tensor_selected,u:n3d_clamp(event.width,1,8192),u:n3d_clamp(event.height,1,8192),state.press_x,state.press_y,state.gesture_dragged) } else { if equal(event.kind,"close") { u:file_atlas_state(state.paths,state.selected,state.mode,state.path,state.catalog,state.camera,state.revision,1,state.tensor_selected,state.viewport_width,state.viewport_height,state.press_x,state.press_y,0) } else { state } } } } }
-paths=u:file_atlas_discover(12); state=u:file_atlas_defaults(paths); u:file_atlas_submit(state)?; on(port,"key",:u:file_atlas_event); on(port,"pointer_move",:u:file_atlas_event); on(port,"pointer_down",:u:file_atlas_event); on(port,"pointer_up",:u:file_atlas_event); on(port,"wheel",:u:file_atlas_event); on(port,"resize",:u:file_atlas_event); on(port,"close",:u:file_atlas_event); run(port,state)
+def u:file_atlas_help(state) {
+  "Provide file atlas help behavior in this MLPL module.";
+  if equal(state.mode,"atlas") { u:file_atlas_atlas_help(state) } else {
+    if equal(state.mode,"scanning") { u:atlas_city_text("MODEL ATLAS — ANALYZING BOUNDED SAFETENSORS HEADER\nNO TENSOR PAYLOAD WILL BE READ\nFILE: ",state.path) } else { u:file_atlas_menu_help(state) }
+  }
+}
+def u:file_atlas_submit(state) {
+  "Provide file atlas submit behavior in this MLPL module.";
+  scene=if equal(state.mode,"atlas") { u:file_atlas_scene(state)? } else { u:file_atlas_empty_scene()? };
+  port_send(port,{op: "set_scene",positions: scene.positions,edges: scene.edges,colors: scene.colors,thicknesses: scene.thicknesses,ids: scene.ids,rotation_y_speed: 0,revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:file_atlas_help(state),status: u:file_atlas_status(state)});
+  ok(state)
+}
+def u:file_atlas_submit_view(state) {
+  "Provide file atlas submit view behavior in this MLPL module.";
+  port_send(port,{op: "set_view",revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:file_atlas_help(state),status: u:file_atlas_status(state)});
+  ok(state)
+}
+def u:file_atlas_event(event,state) {
+  "Provide file atlas event behavior in this MLPL module.";
+  if equal(event.kind,"key") {
+    next=u:file_atlas_key(state,event.key);
+    if equal(next.mode,"scanning") { u:file_atlas_submit(next)?; analyzed=u:file_atlas_analyze(next); u:file_atlas_submit(analyzed)?; analyzed } else { u:file_atlas_submit(next)?; next }
+  } else {
+    if equal(event.kind,"pointer_down")+equal(event.kind,"pointer_up")+equal(event.kind,"pointer_move")+equal(event.kind,"wheel") {
+      if equal(state.mode,"atlas") {
+        next=u:file_atlas_pointer_event(state,event);
+        geometry=1-eq(next.tensor_selected,state.tensor_selected);
+        view=1-equal(u:n3d_camera_record(next.camera),u:n3d_camera_record(state.camera));
+        if geometry { u:file_atlas_submit(next)? } else {
+          if view { u:file_atlas_submit_view(next)? }
+        };
+        next
+      } else {
+        state
+      }
+    } else {
+      if equal(event.kind,"resize") { u:file_atlas_state(state.paths,state.selected,state.mode,state.path,state.catalog,state.camera,state.revision,state.close_requested,state.tensor_selected,u:n3d_clamp(event.width,1,8192),u:n3d_clamp(event.height,1,8192),state.press_x,state.press_y,state.gesture_dragged) } else {
+        if equal(event.kind,"close") { u:file_atlas_state(state.paths,state.selected,state.mode,state.path,state.catalog,state.camera,state.revision,1,state.tensor_selected,state.viewport_width,state.viewport_height,state.press_x,state.press_y,0) } else {
+          state
+        }
+      }
+    }
+  }
+}
+paths=u:file_atlas_discover(12);
+state=u:file_atlas_defaults(paths);
+u:file_atlas_submit(state)?;
+on(port,"key",:u:file_atlas_event);
+on(port,"pointer_move",:u:file_atlas_event);
+on(port,"pointer_down",:u:file_atlas_event);
+on(port,"pointer_up",:u:file_atlas_event);
+on(port,"wheel",:u:file_atlas_event);
+on(port,"resize",:u:file_atlas_event);
+on(port,"close",:u:file_atlas_event);
+run(port,state)

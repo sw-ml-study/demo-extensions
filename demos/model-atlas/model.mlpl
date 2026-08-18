@@ -1,22 +1,208 @@
+# MLPL application semantics for demos model atlas model.
 include "../../fixtures/model-atlas/tensor_city_derived.mlpl";
 include "../../lib/model-atlas/interchange.mlpl";
 include "../../lib/native3d/camera.mlpl";
 include "../../fixtures/model-atlas/detail_derived.mlpl";
 
-def u:atlas_city_budgets() { {max_objects: 12,max_tensors: 7,max_label_bytes: 64,max_id_bytes: 128,max_hierarchy_depth: 4,max_coordinate: 40,max_parameters: 1000000,max_elements: 4096,max_iterations: 64,max_output_bytes: 32768,max_json_depth: 8,max_json_elements: 4096} }
-def u:atlas_city_state(city,camera,viewport_width,viewport_height,selected,filter,lod,revision,close_requested,press_x,press_y,gesture_dragged) { {city: city,camera: camera,viewport_width: viewport_width,viewport_height: viewport_height,selected: selected,filter: filter,lod: lod,revision: revision,close_requested: close_requested,press_x: press_x,press_y: press_y,gesture_dragged: gesture_dragged} }
-def u:atlas_city_defaults() { city=u:atlas_interchange(u:atlas_tensor_city_fixture(),u:atlas_city_budgets())?; camera=u:n3d_camera_state([3,5,2],-0.65,0.45,38,1.0471975511965976,0.1,0,"none",0,0); u:atlas_city_state(city,camera,800,600,-1,0,1,0,0,0,0,0) }
-def u:atlas_city_restate(state,camera,selected,filter,lod,close_requested,press_x,press_y,dragged) { visual=(1-equal(camera,state.camera))+(1-eq(selected,state.selected))+(1-eq(filter,state.filter))+(1-eq(lod,state.lod)); visual=if visual { 1 } else { 0 }; u:atlas_city_state(state.city,camera,state.viewport_width,state.viewport_height,selected,filter,lod,state.revision+visual,close_requested,press_x,press_y,dragged) }
-def u:atlas_city_text(a,b) { decode_bytes(concat(tokenize_bytes(a),tokenize_bytes(b))) }
-def u:atlas_text_contains(text,needle) { hay=tokenize_bytes(text); wanted=tokenize_bytes(needle); found=0; start=0; while lt(start,tally(hay)-tally(wanted)+1) { matches=1; offset=0; while lt(offset,tally(wanted)) { matches=matches*eq(take(hay,0,start+offset),take(wanted,0,offset)); offset=offset+1 }; if matches { found=1 }; start=start+1 }; found }
+def u:atlas_city_budgets() {
+  "Provide atlas city budgets behavior in this MLPL module.";
+  {max_objects: 12,max_tensors: 7,max_label_bytes: 64,max_id_bytes: 128,max_hierarchy_depth: 4,max_coordinate: 40,max_parameters: 1000000,max_elements: 4096,max_iterations: 64,max_output_bytes: 32768,max_json_depth: 8,max_json_elements: 4096}
+}
+def u:atlas_city_state(city,camera,viewport_width,viewport_height,selected,filter,lod,revision,close_requested,press_x,press_y,gesture_dragged) {
+  "Provide atlas city state behavior in this MLPL module.";
+  {city: city,camera: camera,viewport_width: viewport_width,viewport_height: viewport_height,selected: selected,filter: filter,lod: lod,revision: revision,close_requested: close_requested,press_x: press_x,press_y: press_y,gesture_dragged: gesture_dragged}
+}
+def u:atlas_city_defaults() {
+  "Provide atlas city defaults behavior in this MLPL module.";
+  city=u:atlas_interchange(u:atlas_tensor_city_fixture(),u:atlas_city_budgets())?;
+  camera=u:n3d_camera_state([3,5,2],-0.65,0.45,38,1.0471975511965976,0.1,0,"none",0,0);
+  u:atlas_city_state(city,camera,800,600,-1,0,1,0,0,0,0,0)
+}
+def u:atlas_city_restate(state,camera,selected,filter,lod,close_requested,press_x,press_y,dragged) {
+  "Provide atlas city restate behavior in this MLPL module.";
+  visual=(1-equal(camera,state.camera))+(1-eq(selected,state.selected))+(1-eq(filter,state.filter))+(1-eq(lod,state.lod));
+  visual=if visual {
+    1
+  } else {
+    0
+  };
+  u:atlas_city_state(state.city,camera,state.viewport_width,state.viewport_height,selected,filter,lod,state.revision+visual,close_requested,press_x,press_y,dragged)
+}
+def u:atlas_city_text(a,b) {
+  "Provide atlas city text behavior in this MLPL module.";
+  decode_bytes(concat(tokenize_bytes(a),tokenize_bytes(b)))
+}
+def u:atlas_text_contains(text,needle) {
+  "Provide atlas text contains behavior in this MLPL module.";
+  hay=tokenize_bytes(text);
+  wanted=tokenize_bytes(needle);
+  found=0;
+  start=0;
+  while lt(start,tally(hay)-tally(wanted)+1) {
+    matches=1;
+    offset=0;
+    while lt(offset,tally(wanted)) {
+      matches=matches*eq(take(hay,0,start+offset),take(wanted,0,offset));
+      offset=offset+1
+    };
+    if matches {
+      found=1
+    };
+    start=start+1
+  };
+  found
+}
 include "./architecture.mlpl";
-def u:atlas_city_log_height(bytes) { if lt(bytes,1) { 0.25 } else { 1+log(bytes)/log(2) } }
-def u:atlas_ray_box_distance(ray,center,size) { near=0; far=1000000000; valid=1; axis=0; while lt(axis,3) { origin=take(ray.origin,0,axis); direction=take(ray.direction,0,axis); half=take(size,0,axis)/2; low=take(center,0,axis)-half; high=take(center,0,axis)+half; if lt(abs(direction),0.000000001) { if lt(origin,low)+gt(origin,high) { valid=0 } } else { first=(low-origin)/direction; second=(high-origin)/direction; axis_near=if lt(first,second) { first } else { second }; axis_far=if lt(first,second) { second } else { first }; if gt(axis_near,near) { near=axis_near }; if lt(axis_far,far) { far=axis_far }; if gt(near,far) { valid=0 } }; axis=axis+1 }; distance=if gt(near,0) { near } else { far }; {hit: valid*gt(distance,0),distance: distance} }
-def u:atlas_city_selected_name(state) { if lt(state.selected,0) { "none" } else { u:atlas_text_row(state.city.scene_columns.name_bytes,state.city.scene_columns.name_lengths,state.selected,state.city.bounds.max_label_bytes) } }
-def u:atlas_city_selected_role(state) { if lt(state.selected,0) { "none" } else { u:atlas_inferred_role(u:atlas_city_selected_name(state)) } }
-def u:atlas_city_status(state) { if lt(state.selected,0) { "" } else { status=u:atlas_city_text("SELECTED: ",u:atlas_city_selected_name(state)); status=u:atlas_city_text(status,u:atlas_city_text(" | ROLE ",u:atlas_city_selected_role(state))); status=u:atlas_city_text(status," [HEURISTIC]"); detail=u:atlas_detail_checked(state.selected); if is_ok(detail) { tile=unwrap(detail).tile; status=u:atlas_city_text(status,u:atlas_city_text("\nDETAIL FIXTURE: MIN ",to_json(tile.minimum)?)); status=u:atlas_city_text(status,u:atlas_city_text(" MAX ",to_json(tile.maximum)?)); status=u:atlas_city_text(status,u:atlas_city_text(" MEAN ",to_json(tile.mean)?)); u:atlas_city_text(status,u:atlas_city_text(" RMS ",to_json(tile.rms)?)) } else { u:atlas_city_text(status,u:atlas_city_text("\n",err_message(detail))) } } }
-def u:atlas_city_filter_name(filter) { if eq(filter,1) { "SAFETENSORS" } else { if eq(filter,2) { "GGUF" } else { "ALL" } } }
-def u:atlas_city_help(state) { first=u:atlas_city_text("MODEL ATLAS | DERIVED FIXTURE | 7 TENSORS | FILTER ",u:atlas_city_filter_name(state.filter)); first=u:atlas_city_text(first,if state.lod { " | LOD BUILDINGS" } else { " | LOD FOOTPRINTS" }); scale="\nLOG2 BYTE HEIGHT: LIGHT-GREEN LABELS 1 2 4 8 16 32 | B=BYTES | WHITE AXIS | ZERO BYTES=.25"; sources=u:atlas_city_text("\nSOURCES derived/valid-catalog.safetensors + derived/valid-catalog.gguf | 48 PARAMS | 68 BYTES\nGGUF ARCH ",u:atlas_authoritative_architecture(state.city)); sources=u:atlas_city_text(sources," [METADATA]"); legend="\nWORLD SWATCH LABELS: S=SAFETENSORS | G=GGUF | SEL=SELECTED ACTIVE TENSOR (YELLOW)\nDETAIL: CYAN=4-BIN HISTOGRAM | GREEN=SAMPLED SURFACE | RED=Q8 ERROR\nDETAIL VALUES ARE BOUNDED DERIVED FIXTURES, NEVER USER MODEL PAYLOAD"; controls="\nCLICK BUILDING=SELECT/CHANGE | LEFT DRAG=ORBIT | SHIFT+LEFT/MIDDLE=PAN | WHEEL=ZOOM\nA=SHOW ALL | S=TOGGLE SAFETENSORS | G=TOGGLE GGUF | L=HEIGHT/FOOTPRINT | R=RESET | ESC=CLOSE"; u:atlas_city_text(u:atlas_city_text(u:atlas_city_text(u:atlas_city_text(first,scale),sources),legend),controls) }
-def u:atlas_city_select(state,index) { u:atlas_city_restate(state,state.camera,index,state.filter,state.lod,state.close_requested,state.press_x,state.press_y,state.gesture_dragged) }
-def u:atlas_city_key(state,key) { if equal(key,"a") { u:atlas_city_restate(state,state.camera,-1,0,state.lod,state.close_requested,state.press_x,state.press_y,0) } else { if equal(key,"s") { next=if eq(state.filter,1) { 0 } else { 1 }; u:atlas_city_restate(state,state.camera,-1,next,state.lod,state.close_requested,state.press_x,state.press_y,0) } else { if equal(key,"g") { next=if eq(state.filter,2) { 0 } else { 2 }; u:atlas_city_restate(state,state.camera,-1,next,state.lod,state.close_requested,state.press_x,state.press_y,0) } else { if equal(key,"l") { u:atlas_city_restate(state,state.camera,state.selected,state.filter,1-state.lod,state.close_requested,state.press_x,state.press_y,0) } else { if equal(key,"r") { fresh=u:atlas_city_defaults(); u:atlas_city_state(state.city,fresh.camera,state.viewport_width,state.viewport_height,-1,0,1,state.revision+1,state.close_requested,0,0,0) } else { state } } } } } }
-def u:atlas_city_visible(state,index) { format=take(state.city.scene_columns.format_codes,0,index); eq(state.filter,0)+eq(state.filter,format+1) }
+def u:atlas_city_log_height(bytes) {
+  "Provide atlas city log height behavior in this MLPL module.";
+  if lt(bytes,1) {
+    0.25
+  } else {
+    1+log(bytes)/log(2)
+  }
+}
+def u:atlas_ray_box_distance(ray,center,size) {
+  "Provide atlas ray box distance behavior in this MLPL module.";
+  near=0;
+  far=1000000000;
+  valid=1;
+  axis=0;
+  while lt(axis,3) {
+    origin=take(ray.origin,0,axis);
+    direction=take(ray.direction,0,axis);
+    half=take(size,0,axis)/2;
+    low=take(center,0,axis)-half;
+    high=take(center,0,axis)+half;
+    if lt(abs(direction),0.000000001) {
+      if lt(origin,low)+gt(origin,high) {
+        valid=0
+      }
+    } else {
+      first=(low-origin)/direction;
+      second=(high-origin)/direction;
+      axis_near=if lt(first,second) {
+        first
+      } else {
+        second
+      };
+      axis_far=if lt(first,second) {
+        second
+      } else {
+        first
+      };
+      if gt(axis_near,near) {
+        near=axis_near
+      };
+      if lt(axis_far,far) {
+        far=axis_far
+      };
+      if gt(near,far) {
+        valid=0
+      }
+    };
+    axis=axis+1
+  };
+  distance=if gt(near,0) {
+    near
+  } else {
+    far
+  };
+  {hit: valid*gt(distance,0),distance: distance}
+}
+def u:atlas_city_selected_name(state) {
+  "Provide atlas city selected name behavior in this MLPL module.";
+  if lt(state.selected,0) {
+    "none"
+  } else { u:atlas_text_row(state.city.scene_columns.name_bytes,state.city.scene_columns.name_lengths,state.selected,state.city.bounds.max_label_bytes) }
+}
+def u:atlas_city_selected_role(state) {
+  "Provide atlas city selected role behavior in this MLPL module.";
+  if lt(state.selected,0) {
+    "none"
+  } else { u:atlas_inferred_role(u:atlas_city_selected_name(state)) }
+}
+def u:atlas_city_status(state) {
+  "Provide atlas city status behavior in this MLPL module.";
+  if lt(state.selected,0) {
+    ""
+  } else {
+    status=u:atlas_city_text("SELECTED: ",u:atlas_city_selected_name(state));
+    status=u:atlas_city_text(status,u:atlas_city_text(" | ROLE ",u:atlas_city_selected_role(state)));
+    status=u:atlas_city_text(status," [HEURISTIC]");
+    detail=u:atlas_detail_checked(state.selected);
+    if is_ok(detail) {
+      tile=unwrap(detail).tile;
+      status=u:atlas_city_text(status,u:atlas_city_text("\nDETAIL FIXTURE: MIN ",to_json(tile.minimum)?));
+      status=u:atlas_city_text(status,u:atlas_city_text(" MAX ",to_json(tile.maximum)?));
+      status=u:atlas_city_text(status,u:atlas_city_text(" MEAN ",to_json(tile.mean)?));
+      u:atlas_city_text(status,u:atlas_city_text(" RMS ",to_json(tile.rms)?))
+    } else { u:atlas_city_text(status,u:atlas_city_text("\n",err_message(detail))) }
+  }
+}
+def u:atlas_city_filter_name(filter) {
+  "Provide atlas city filter name behavior in this MLPL module.";
+  if eq(filter,1) {
+    "SAFETENSORS"
+  } else {
+    if eq(filter,2) {
+      "GGUF"
+    } else {
+      "ALL"
+    }
+  }
+}
+def u:atlas_city_help(state) {
+  "Provide atlas city help behavior in this MLPL module.";
+  first=u:atlas_city_text("MODEL ATLAS | DERIVED FIXTURE | 7 TENSORS | FILTER ",u:atlas_city_filter_name(state.filter));
+  first=u:atlas_city_text(first,if state.lod {
+      " | LOD BUILDINGS"
+    } else {
+      " | LOD FOOTPRINTS"
+    });
+  scale="\nLOG2 BYTE HEIGHT: LIGHT-GREEN LABELS 1 2 4 8 16 32 | B=BYTES | WHITE AXIS | ZERO BYTES=.25";
+  sources=u:atlas_city_text("\nSOURCES derived/valid-catalog.safetensors + derived/valid-catalog.gguf | 48 PARAMS | 68 BYTES\nGGUF ARCH ",u:atlas_authoritative_architecture(state.city));
+  sources=u:atlas_city_text(sources," [METADATA]");
+  legend="\nWORLD SWATCH LABELS: S=SAFETENSORS | G=GGUF | SEL=SELECTED ACTIVE TENSOR (YELLOW)\nDETAIL: CYAN=4-BIN HISTOGRAM | GREEN=SAMPLED SURFACE | RED=Q8 ERROR\nDETAIL VALUES ARE BOUNDED DERIVED FIXTURES, NEVER USER MODEL PAYLOAD";
+  controls="\nCLICK BUILDING=SELECT/CHANGE | LEFT DRAG=ORBIT | SHIFT+LEFT/MIDDLE=PAN | WHEEL=ZOOM\nA=SHOW ALL | S=TOGGLE SAFETENSORS | G=TOGGLE GGUF | L=HEIGHT/FOOTPRINT | R=RESET | ESC=CLOSE";
+  u:atlas_city_text(u:atlas_city_text(u:atlas_city_text(u:atlas_city_text(first,scale),sources),legend),controls)
+}
+def u:atlas_city_select(state,index) {
+  "Provide atlas city select behavior in this MLPL module.";
+  u:atlas_city_restate(state,state.camera,index,state.filter,state.lod,state.close_requested,state.press_x,state.press_y,state.gesture_dragged)
+}
+def u:atlas_city_key(state,key) {
+  "Provide atlas city key behavior in this MLPL module.";
+  if equal(key,"a") { u:atlas_city_restate(state,state.camera,-1,0,state.lod,state.close_requested,state.press_x,state.press_y,0) } else {
+    if equal(key,"s") {
+      next=if eq(state.filter,1) {
+        0
+      } else {
+        1
+      };
+      u:atlas_city_restate(state,state.camera,-1,next,state.lod,state.close_requested,state.press_x,state.press_y,0)
+    } else {
+      if equal(key,"g") {
+        next=if eq(state.filter,2) {
+          0
+        } else {
+          2
+        };
+        u:atlas_city_restate(state,state.camera,-1,next,state.lod,state.close_requested,state.press_x,state.press_y,0)
+      } else {
+        if equal(key,"l") { u:atlas_city_restate(state,state.camera,state.selected,state.filter,1-state.lod,state.close_requested,state.press_x,state.press_y,0) } else {
+          if equal(key,"r") {
+            fresh=u:atlas_city_defaults();
+            u:atlas_city_state(state.city,fresh.camera,state.viewport_width,state.viewport_height,-1,0,1,state.revision+1,state.close_requested,0,0,0)
+          } else {
+            state
+          }
+        }
+      }
+    }
+  }
+}
+def u:atlas_city_visible(state,index) {
+  "Provide atlas city visible behavior in this MLPL module.";
+  format=take(state.city.scene_columns.format_codes,0,index);
+  eq(state.filter,0)+eq(state.filter,format+1)
+}

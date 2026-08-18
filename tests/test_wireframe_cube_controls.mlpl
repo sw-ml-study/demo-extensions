@@ -1,7 +1,9 @@
+# Native mlplunit coverage for tests test wireframe cube controls.
 include "demos/wireframe-cube/controls.mlpl";
 
 @test {name: "cube reducer owns dimensions speed pause and reset", tags: ["native3d", "controls", "reducer"]}
 def u:test_cube_control_core() {
+  "Exercise test cube control core behavior in this MLPL module.";
   initial=u:wireframe_cube_control_defaults();
   changed=u:wireframe_cube_reduce(initial,{kind:"key",key:"width_up"});
   changed=u:wireframe_cube_reduce(changed,{kind:"key",key:"height_down"});
@@ -9,7 +11,12 @@ def u:test_cube_control_core() {
   changed=u:wireframe_cube_reduce(changed,{kind:"key",key:"speed_down"});
   paused=u:wireframe_cube_reduce(changed,{kind:"key",key:"pause"});
   resumed=u:wireframe_cube_reduce(paused,{kind:"key",key:"space"});
-  reverse=initial; i=0; while lt(i,7) { reverse=u:wireframe_cube_reduce(reverse,{kind:"key",key:"speed_down"}); i=i+1 };
+  reverse=initial;
+  i=0;
+  while lt(i,7) {
+    reverse=u:wireframe_cube_reduce(reverse,{kind:"key",key:"speed_down"});
+    i=i+1
+  };
   u:assert_eq([changed.width,changed.height,changed.length,changed.rotation_speed],[2.25,1.75,2.25,0.5],"dimension and signed-speed controls");
   u:assert_eq(paused.paused,1,"pause toggles in MLPL");
   u:assert_eq([resumed.paused,resumed.rotation_speed],[0,changed.rotation_speed],"second physical Space resumes with the prior speed");
@@ -20,6 +27,7 @@ def u:test_cube_control_core() {
 
 @test {name: "cube reducer cycles style resize and lifecycle", tags: ["native3d", "controls", "events"]}
 def u:test_cube_control_style_and_lifecycle() {
+  "Exercise test cube control style and lifecycle behavior in this MLPL module.";
   state=u:wireframe_cube_control_defaults();
   state=u:wireframe_cube_reduce(state,{kind:"key",key:"color_cycle"});
   state=u:wireframe_cube_reduce(state,{kind:"key",key:"thickness_up"});
@@ -33,6 +41,7 @@ def u:test_cube_control_style_and_lifecycle() {
 
 @test {name: "cube reducer owns mouse orbit zoom and pan", tags: ["native3d", "controls", "pointer"]}
 def u:test_cube_mouse_camera() {
+  "Exercise test cube mouse camera behavior in this MLPL module.";
   initial=u:wireframe_cube_control_defaults();
   orbit=u:wireframe_cube_reduce(initial,{kind:"pointer_down",button:"left",x:100,y:100,shift:0});
   orbit=u:wireframe_cube_reduce(orbit,{kind:"pointer_move",x:130,y:80,left:1,shift:0});
@@ -50,8 +59,15 @@ def u:test_cube_mouse_camera() {
 
 @test {name: "cube reducer clamps bounds and ignores unknown events", tags: ["native3d", "controls", "bounds"]}
 def u:test_cube_control_bounds() {
+  "Exercise test cube control bounds behavior in this MLPL module.";
   state=u:wireframe_cube_control_defaults();
-  i=0; while lt(i,500) { state=u:wireframe_cube_reduce(state,{kind:"key",key:"width_down"}); state=u:wireframe_cube_reduce(state,{kind:"key",key:"speed_up"}); state=u:wireframe_cube_reduce(state,{kind:"key",key:"thickness_down"}); i=i+1 };
+  i=0;
+  while lt(i,500) {
+    state=u:wireframe_cube_reduce(state,{kind:"key",key:"width_down"});
+    state=u:wireframe_cube_reduce(state,{kind:"key",key:"speed_up"});
+    state=u:wireframe_cube_reduce(state,{kind:"key",key:"thickness_down"});
+    i=i+1
+  };
   u:assert_eq([state.width,state.rotation_speed,state.line_thickness],[0.25,10,0.5],"controls clamp at documented bounds");
   unchanged=u:wireframe_cube_reduce(state,{kind:"pointer",x:12,y:13});
   u:assert_eq(unchanged,state,"unknown structured events are no-ops");
@@ -61,6 +77,7 @@ def u:test_cube_control_bounds() {
 
 @test {name: "cube reducer emits deterministic native bulk scene", tags: ["native3d", "controls", "arrays"]}
 def u:test_cube_bulk_scene_update() {
+  "Exercise test cube bulk scene update behavior in this MLPL module.";
   state=u:wireframe_cube_reduce(u:wireframe_cube_control_defaults(),{kind:"key",key:"pause"});
   update=unwrap(u:wireframe_cube_bulk_update(state));
   again=unwrap(u:wireframe_cube_bulk_update(state));

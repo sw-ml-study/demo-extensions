@@ -1,9 +1,16 @@
 # Public MLPL facade over values returned by the private native namespace.
 # The argument is explicit until sw-MLPL gains the recorded host registry hook.
-def u:_hello_native_value(value) { "Private native-boundary normalization seam."; value }
+def u:_hello_native_value(value) {
+  "Private native-boundary normalization seam.";
+  value
+}
 
-def u:hello_present_answer(native_value) { "Present a typed answer supplied by _hello.answer.";
+def u:hello_present_answer(native_value) {
+  "Present a typed answer supplied by _hello.answer.";
   u:_hello_native_value(native_value)
 }
 
-def u:extension_scaffold_version() { 1 }
+def u:extension_scaffold_version() {
+  "Provide extension scaffold version behavior in this MLPL module.";
+  1
+}

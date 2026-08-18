@@ -197,8 +197,10 @@ just check
 ```
 
 The complete gate checks repository layout, `.gitignore`, tracked files,
-public/private namespaces, Rust formatting, compilation, clippy, all Rust
-tests, native mlplunit tests, and whitespace. The intentional panic test may
+public/private namespaces, canonical MLPL formatting, MLPL module comments and
+function docstrings, Rust formatting, compilation, clippy, all Rust tests,
+native mlplunit tests, and whitespace. Set `MLPL_FMT` to an absolute formatter
+path when the adjacent `../sw-mlpl` checkout is unavailable. The intentional panic test may
 print its panic-hook message; the test verifies that the panic is converted to
 `ExtensionPanicked` before it can unwind across the C ABI.
 

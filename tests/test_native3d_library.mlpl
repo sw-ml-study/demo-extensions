@@ -1,7 +1,9 @@
+# Native mlplunit coverage for tests test native3d library.
 include "lib/native3d/app.mlpl";
 
 @test {name: "native3d camera reducer owns orbit zoom and pan", tags: ["native3d", "camera", "library"]}
 def u:test_native3d_camera_reduce() {
+  "Exercise test native3d camera reduce behavior in this MLPL module.";
   camera=u:n3d_camera_defaults();
   camera=u:n3d_camera_reduce(camera,{kind:"pointer_down",button:"left",x:100,y:100,shift:0});
   camera=u:n3d_camera_reduce(camera,{kind:"pointer_move",x:130,y:80,left:1,shift:0});
@@ -17,7 +19,9 @@ def u:test_native3d_camera_reduce() {
 
 @test {name: "native3d pick ray intersects a plane", tags: ["native3d", "picking", "library"]}
 def u:test_native3d_pick_ray_plane() {
-  camera=u:n3d_camera_defaults(); ray=unwrap(u:n3d_pick_ray(camera,{viewport:{width:800,height:600},xy:[400,300]}));
+  "Exercise test native3d pick ray plane behavior in this MLPL module.";
+  camera=u:n3d_camera_defaults();
+  ray=unwrap(u:n3d_pick_ray(camera,{viewport:{width:800,height:600},xy:[400,300]}));
   hit=unwrap(u:n3d_ray_plane_hit(ray,[0,0,0],[0,0,1]));
   u:assert_eq(hit.hit,1,"center ray hits origin plane");
   u:assert_true(lt(reduce(:max,abs(hit.point)),0.000001),"center hit is the origin")?;
@@ -27,6 +31,7 @@ def u:test_native3d_pick_ray_plane() {
 
 @test {name: "native3d generic styles lines and plane grids keep bulk shapes", tags: ["native3d", "arrays", "library"]}
 def u:test_native3d_geometry() {
+  "Exercise test native3d geometry behavior in this MLPL module.";
   style=unwrap(u:n3d_uniform_line_style(2,[0.2,0.8,1,1],2));
   lines=unwrap(u:n3d_lines(reshape([0,0,0,1,0,0,1,1,0],[3,3]),reshape([0,1,1,2],[2,2]),style,0));
   grid=unwrap(u:n3d_plane_grid(2,3,1,[0.4,0.4,0.4,1],1));
@@ -39,11 +44,19 @@ def u:test_native3d_geometry() {
   u:assert_eq(shape(grid.edges),[7,2],"2x3 grid edge shape")
 }
 
-def u:n3d_test_reduce(state,event) { {value: state.value+event.delta,camera: state.camera,revision: state.revision+1} }
-def u:n3d_test_render(state) { style=unwrap(u:n3d_uniform_line_style(1,[1,1,1,1],1)); u:n3d_lines(reshape([0,0,0,state.value,0,0],[2,3]),reshape([0,1],[1,2]),style,0) }
+def u:n3d_test_reduce(state,event) {
+  "Provide n3d test reduce behavior in this MLPL module.";
+  {value: state.value+event.delta,camera: state.camera,revision: state.revision+1}
+}
+def u:n3d_test_render(state) {
+  "Provide n3d test render behavior in this MLPL module.";
+  style=unwrap(u:n3d_uniform_line_style(1,[1,1,1,1],1));
+  u:n3d_lines(reshape([0,0,0,state.value,0,0],[2,3]),reshape([0,1],[1,2]),style,0)
+}
 
 @test {name: "native3d app transition assembles one owned command", tags: ["native3d", "lifecycle", "library"]}
 def u:test_native3d_transition() {
+  "Exercise test native3d transition behavior in this MLPL module.";
   initial={value:1,camera: u:n3d_camera_defaults(),revision:0};
   result=unwrap(u:n3d_transition(initial,{kind:"test",delta:2},:u:n3d_test_reduce,:u:n3d_test_render,"HELP"));
   u:assert_eq([result.state.value,result.command.revision],[3,1],"generic reducer and renderer callbacks own app state")?;

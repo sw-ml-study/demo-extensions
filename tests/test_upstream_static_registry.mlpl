@@ -1,5 +1,7 @@
+# Native mlplunit coverage for tests test upstream static registry.
 @test {name: "upstream static registry invokes hello", tags: ["extensions", "upstream-registry"]}
-def u:test_upstream_static_registry() { "Prove the shipped colon-qualified scalar registry path.";
+def u:test_upstream_static_registry() {
+  "Prove the shipped colon-qualified scalar registry path.";
   u:assert_eq(hello:answer(), 42, "static registry returns the canonical answer")
 }
 

@@ -1,7 +1,19 @@
+# MLPL application semantics for demos model atlas sparse scan.
 include "../../lib/model-atlas/bounded_scan.mlpl";
 
-path=unwrap_or(list_get(args(),0),""); size=file_size(path)?; width=32; name=tokenize_bytes("sparse.weight"); names=reshape(concat(name,fill([width-tally(name)],0)),[1,width]);
+path=unwrap_or(list_get(args(),0),"");
+size=file_size(path)?;
+width=32;
+name=tokenize_bytes("sparse.weight");
+names=reshape(concat(name,fill([width-tally(name)],0)),[1,width]);
 adapter={schema: "sw-ml-study.model-atlas.scan-adapter",version: 1,format: "safetensors",file_size: size,catalog_ranges: [[0,8]],tensor_columns: {count: 1,offsets: [size-8],lengths: [8],ranks: [1],shapes: [[8,0,0,0]],dtype_codes: [1],name_lengths: [tally(name)],name_bytes: names}};
 budgets={max_catalog_bytes: 8,max_tensors: 2,max_rank: 4,max_name_bytes: width,max_detail_bytes: 4,max_iterations: 16,max_cache_bytes: 4,max_cache_entries: 1};
-scan=u:atlas_scan(path,adapter,budgets)?; detail=u:atlas_read_detail(path,scan,0,4,4,budgets)?;
-if (1-eq(scan.catalog_bytes,8))+(1-eq(detail.length,4))+(1-equal(detail.bytes,[0,0,0,0])) { err("sparse scan evidence mismatch") } else { print("PASS bounded Model Atlas sparse scan"); print({file_bytes: size,catalog_bytes_per_pass: scan.catalog_bytes,passes: scan.passes,selected_detail_bytes: detail.length,retained_tensor_descriptors: scan.tensor_count}); ok(1) }
+scan=u:atlas_scan(path,adapter,budgets)?;
+detail=u:atlas_read_detail(path,scan,0,4,4,budgets)?;
+if (1-eq(scan.catalog_bytes,8))+(1-eq(detail.length,4))+(1-equal(detail.bytes,[0,0,0,0])) {
+  err("sparse scan evidence mismatch")
+} else {
+  print("PASS bounded Model Atlas sparse scan");
+  print({file_bytes: size,catalog_bytes_per_pass: scan.catalog_bytes,passes: scan.passes,selected_detail_bytes: detail.length,retained_tensor_descriptors: scan.tensor_count});
+  ok(1)
+}

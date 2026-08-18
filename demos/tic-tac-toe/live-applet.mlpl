@@ -1,13 +1,39 @@
+# MLPL application semantics for demos tic tac toe live applet.
 include "controls.mlpl";
 
 def u:ttt_submit(state) {
+  "Provide ttt submit behavior in this MLPL module.";
   scene=u:ttt_scene(state.board,state.hover_cell)?;
-  help=if eq(state.user_mark,1) { if state.user_first { "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE X / FIRST   GOLD LINE SHOWS WINNER" } else { "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE X / SECOND   GOLD LINE SHOWS WINNER" } } else { if state.user_first { "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE O / FIRST   GOLD LINE SHOWS WINNER" } else { "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE O / SECOND   GOLD LINE SHOWS WINNER" } };
+  help=if eq(state.user_mark,1) {
+    if state.user_first {
+      "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE X / FIRST   GOLD LINE SHOWS WINNER"
+    } else {
+      "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE X / SECOND   GOLD LINE SHOWS WINNER"
+    }
+  } else {
+    if state.user_first {
+      "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE O / FIRST   GOLD LINE SHOWS WINNER"
+    } else {
+      "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE O / SECOND   GOLD LINE SHOWS WINNER"
+    }
+  };
   port_send(port,{op:"set_scene",positions: scene.positions,edges: scene.edges,colors: scene.colors,thicknesses: scene.thicknesses,ids: scene.ids,rotation_y_speed:0,revision: state.revision,camera: u:n3d_camera_record(state.camera),help: help});
   ok(state)
 }
 
-def u:ttt_on_event(event,state) { next=u:ttt_reduce(state,event); u:ttt_submit(next)?; next }
+def u:ttt_on_event(event,state) {
+  "Provide ttt on event behavior in this MLPL module.";
+  next=u:ttt_reduce(state,event);
+  u:ttt_submit(next)?;
+  next
+}
 
-state=u:ttt_app_defaults(); u:ttt_submit(state)?;
-on(port,"key",:u:ttt_on_event); on(port,"pointer_move",:u:ttt_on_event); on(port,"pointer_down",:u:ttt_on_event); on(port,"pointer_up",:u:ttt_on_event); on(port,"wheel",:u:ttt_on_event); on(port,"resize",:u:ttt_on_event); run(port,state)
+state=u:ttt_app_defaults();
+u:ttt_submit(state)?;
+on(port,"key",:u:ttt_on_event);
+on(port,"pointer_move",:u:ttt_on_event);
+on(port,"pointer_down",:u:ttt_on_event);
+on(port,"pointer_up",:u:ttt_on_event);
+on(port,"wheel",:u:ttt_on_event);
+on(port,"resize",:u:ttt_on_event);
+run(port,state)

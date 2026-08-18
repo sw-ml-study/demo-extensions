@@ -1,21 +1,54 @@
+# MLPL application semantics for demos life torus model.
 include "../life-plane/model.mlpl";
 
-def u:life_wrap(value,size) { value-floor(value/size)*size }
+def u:life_wrap(value,size) {
+  "Provide life wrap behavior in this MLPL module.";
+  value-floor(value/size)*size
+}
 
 def u:life_step_torus(grid) {
-  if 1-u:life_valid(grid) { err({kind:"life_grid",message:"cannot evolve an invalid toroidal grid"}) } else {
-    board=reshape(grid.cells,[grid.rows,grid.columns]); up=rotate(board,1,0); down=rotate(board,0-1,0); left=rotate(board,1,1); right=rotate(board,0-1,1); neighbors=up+down+left+right+rotate(up,1,1)+rotate(up,0-1,1)+rotate(down,1,1)+rotate(down,0-1,1); next=gt(eq(neighbors,3)+board*eq(neighbors,2),0); ok({rows: grid.rows,columns: grid.columns,cells: flatten(next)})
+  "Provide life step torus behavior in this MLPL module.";
+  if 1-u:life_valid(grid) {
+    err({kind:"life_grid",message:"cannot evolve an invalid toroidal grid"})
+  } else {
+    board=reshape(grid.cells,[grid.rows,grid.columns]);
+    up=rotate(board,1,0);
+    down=rotate(board,0-1,0);
+    left=rotate(board,1,1);
+    right=rotate(board,0-1,1);
+    neighbors=up+down+left+right+rotate(up,1,1)+rotate(up,0-1,1)+rotate(down,1,1)+rotate(down,0-1,1);
+    next=gt(eq(neighbors,3)+board*eq(neighbors,2),0);
+    ok({rows: grid.rows,columns: grid.columns,cells: flatten(next)})
   }
 }
 
 def u:life_place_coordinates_torus(grid,coordinates,index,row_offset,column_offset) {
-  flat=flatten(coordinates); count=take(shape(coordinates),0,0); cells=grid.cells;
-  while lt(index,count) { row=u:life_wrap(row_offset+take(flat,0,index*2),grid.rows); column=u:life_wrap(column_offset+take(flat,0,index*2+1),grid.columns); cells=scatter(cells,row*grid.columns+column,1); index=index+1 };
+  "Provide life place coordinates torus behavior in this MLPL module.";
+  flat=flatten(coordinates);
+  count=take(shape(coordinates),0,0);
+  cells=grid.cells;
+  while lt(index,count) {
+    row=u:life_wrap(row_offset+take(flat,0,index*2),grid.rows);
+    column=u:life_wrap(column_offset+take(flat,0,index*2+1),grid.columns);
+    cells=scatter(cells,row*grid.columns+column,1);
+    index=index+1
+  };
   {rows: grid.rows,columns: grid.columns,cells: cells}
 }
 
 def u:life_translate_torus_cells(grid,row_delta,column_delta) {
-  cells=fill([grid.rows*grid.columns],0); row=0;
-  while lt(row,grid.rows) { column=0; while lt(column,grid.columns) { source_row=u:life_wrap(row-row_delta,grid.rows); source_column=u:life_wrap(column-column_delta,grid.columns); cells=scatter(cells,row*grid.columns+column,take(grid.cells,0,source_row*grid.columns+source_column)); column=column+1 }; row=row+1 };
+  "Provide life translate torus cells behavior in this MLPL module.";
+  cells=fill([grid.rows*grid.columns],0);
+  row=0;
+  while lt(row,grid.rows) {
+    column=0;
+    while lt(column,grid.columns) {
+      source_row=u:life_wrap(row-row_delta,grid.rows);
+      source_column=u:life_wrap(column-column_delta,grid.columns);
+      cells=scatter(cells,row*grid.columns+column,take(grid.cells,0,source_row*grid.columns+source_column));
+      column=column+1
+    };
+    row=row+1
+  };
   cells
 }
