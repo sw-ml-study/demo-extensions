@@ -34,6 +34,8 @@ Rust owns only confined model-path discovery and the existing generic window,
 input, port, and retained-line renderer. Decoder/catalog source is reused at
 build time from adjacent `demo-ml-utils`, so the demo exercises its public
 Safetensors/GGUF contracts rather than inventing another format implementation.
+For GGUF, the app retains published tensor-name offsets and lengths and performs
+one bounded lazy read only when a name is displayed or selected.
 
 ## Bounds and evidence
 
@@ -67,10 +69,10 @@ Unsupported formats fail closed before payload reads. See
 precise decoder ownership split and why the first slice requires no sw-MLPL
 language change.
 
-A real SmolLM2 Q8_0 acceptance run first exposed a catalog correctness gate;
-`demo-ml-utils` commit `31b038f` now parses those arrays and recovers the exact
-tensor boundary. Commit `a72810e` makes the isolated traversal stack-safer and
-measures 5.14 seconds, but the composed applet still exceeded its former 16 MiB
-worker stack. The host now enforces a bounded 64 MiB worker-stack ceiling for
-UI validation. The remaining roughly 505 MB catalog peak RSS and generic
-streaming requirement are recorded in the blocker matrix.
+A real SmolLM2 Q8_0 acceptance run first exposed catalog correctness and memory
+gates. `demo-ml-utils` commit `3310837` now reaches the exact tensor boundary
+after 147,209 metadata-array elements in one second at 54,592 KiB peak RSS
+under its 16 MiB standalone probe. This app adopts its lazy tensor-name-offset
+contract. The larger composed interpreter applet still needs its explicit
+bounded 64 MiB worker stack; that is distinct from catalog retained memory and
+is recorded in the blocker matrix.

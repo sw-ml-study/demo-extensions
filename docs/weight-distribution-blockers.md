@@ -12,7 +12,7 @@ requirements. It is based on the checked-in contracts in adjacent
 | GGUF I8 (type 24), I16 (type 25) | Supported through bounded aligned prefix reads | Complete for this slice |
 | GGUF Q8_0 (type 8) | Supported as complete 34-byte blocks with binary16 scales | Complete for this slice |
 | Standard real-model GGUF metadata arrays | **Correctness resolved by `demo-ml-utils` 31b038f:** bounded scalar arrays and top-level F32/I64/F64 recover the exact SmolLM2 tensor boundary | Correctness is complete; malformed, nested, truncated, and over-budget arrays remain rejected |
-| Real-model metadata-array performance | **Host primitive resolved by `sw-mlpl` b4691193; integration remains:** `demo-ml-utils` a72810e reports 5.14 seconds but about 505 MB peak RSS; the composed applet exceeded its former 16 MiB worker stack and now uses an explicit 64 MiB ceiling | `demo-ml-utils`: consume `scan_length_prefixed` so cataloging skips unretained values, then publish downstream applet latency/peak-memory evidence |
+| Real-model metadata-array performance | **Resolved by `demo-ml-utils` 3310837:** SmolLM2 traverses 147,209 array elements and 272 tensors in one second at 54,592 KiB peak RSS under its 16 MiB standalone probe; this app adopts lazy `tensor_name_offsets`/`tensor_name_lengths` reads | Complete for catalog memory; the composed interpreter applet still requires its explicit 64 MiB worker-stack ceiling |
 | GGUF F16/F32 | Catalog-visible but not selectively decoded by the shared slice/statistics API | `demo-ml-utils`: add aligned finite floating-point selective decode and fixtures |
 | GGUF Q4/Q5/K-family and other quantizers | Catalog-visible where type IDs are known, payload decode rejected | `demo-ml-utils`: implement each official block layout, exact extent validation, bounded decode, golden fixtures, and mergeable/sample statistics |
 | Reference-vs-quantized error for arbitrary models | Q8_0 error tiles exist only when a caller supplies a matching reference vector | `demo-ml-utils`: define an honest tensor-pair/provenance contract; this app must not infer a reference tensor |
@@ -54,11 +54,10 @@ supported after `demo-ml-utils` commit `31b038f`. The shared parser reports 40
 metadata entries, five arrays/147,209 elements, 272 tensors, and the exact
 1,786,144-byte tensor-data boundary. This application uses a 4 MiB catalog
 budget so that validated boundary fits; its former 1 MiB cap correctly failed
-closed before payload access. Commit `a72810e` improves isolated traversal to
-5.14 seconds, but measures roughly 505 MB peak RSS. The composed applet still
-exceeded its former 16 MiB worker stack, so this host now uses a bounded 64 MiB
-worker stack for UI validation. This does not close the memory requirement:
-`sw-mlpl` commit `b4691193` now provides the generic bounded
-`scan_length_prefixed` primitive. `demo-ml-utils` must consume it so cataloging
-can eliminate retained metadata-array payloads rather than relying on stack or
-heap growth; downstream memory evidence must then be repeated.
+closed before payload access. `demo-ml-utils` commit `3310837` consumes the
+packed reads and native bounded scanner, retains tensor-name offsets/lengths
+instead of padded name matrices, and measures one second at 54,592 KiB peak
+RSS under a 16 MiB standalone stack. This app lazily reads only names it shows
+or selects. The larger composed interpreter applet still overflows at a 16 MiB
+worker stack, so its explicit bounded 64 MiB ceiling remains an application
+composition requirement rather than a catalog-memory workaround.
