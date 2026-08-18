@@ -52,6 +52,13 @@ one bounded lazy read when a tensor is selected. The analyzed tile caches that
 bounded name; pointer, camera, selection, and retained-view updates do not
 repeat filesystem reads or UTF-8 decoding.
 
+The tile also caches its complete invariant `TENSOR …` status prefix. Dynamic
+redraws concatenate only numeric bin metrics, and every persisted path, label,
+or error string is type-guarded with a visible `<… UNAVAILABLE>` fallback before
+byte-based text construction. Physical resize events update MLPL's viewport, so
+post-orbit picking uses the actual drawable bounds rather than the initial
+800×600 test default.
+
 ## Bounds and evidence
 
 - Discovery retains at most 64 relative model paths.

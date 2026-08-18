@@ -1,7 +1,7 @@
 use mlpl_native3d_window::interaction::{InputEvent, Modifiers, PointerButton};
 use mlpl_native3d_window::live::{
     LiveCommand, close_event, input_event, key_event, parse_live_command, parse_scene_command,
-    run_applet_with_host_root, weight_distribution_applet_source,
+    resize_event, run_applet_with_host_root, weight_distribution_applet_source,
 };
 
 fn orbit_then_select_bar(
@@ -166,6 +166,7 @@ fn shared_q8_0_fixture_decodes_one_bounded_block() {
     let source = weight_distribution_applet_source(&["valid-catalog.gguf".into()]);
     let result = run_applet_with_host_root(&source, &root, |commands, events| {
         parse_scene_command(commands.recv().unwrap()).unwrap();
+        events.send(resize_event(900, 700)).unwrap();
         events.send(key_event("enter")).unwrap();
         let loading = parse_scene_command(commands.recv().unwrap()).unwrap();
         assert!(loading.help.contains("LOADING BOUNDED MODEL CATALOG"));
@@ -194,6 +195,7 @@ fn downloaded_real_q8_0_model_reaches_supported_tensor_menu() {
     let source = weight_distribution_applet_source(&paths);
     let result = run_applet_with_host_root(&source, &root, |commands, events| {
         parse_scene_command(commands.recv().unwrap()).unwrap();
+        events.send(resize_event(900, 700)).unwrap();
         events.send(key_event("enter")).unwrap();
         let loading = parse_scene_command(commands.recv().unwrap()).unwrap();
         assert!(loading.help.contains("LOADING BOUNDED MODEL CATALOG"));
