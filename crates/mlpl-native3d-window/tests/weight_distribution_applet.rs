@@ -143,6 +143,21 @@ fn model_discovery_is_sorted_bounded_and_format_limited() {
 }
 
 #[test]
+fn supervised_rooted_worker_reports_an_exact_terminal_eval_error() {
+    let root = std::env::temp_dir().join(format!("weight-supervisor-{}", std::process::id()));
+    std::fs::create_dir_all(&root).unwrap();
+    let worker =
+        mlpl_native3d_window::live::spawn_rooted_applet("tokenize_bytes(1)", &root).unwrap();
+    let failure = worker
+        .result
+        .recv_timeout(std::time::Duration::from_secs(2))
+        .unwrap()
+        .unwrap_err();
+    assert!(failure.to_string().contains("expected a string value"));
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
 fn shared_q8_0_fixture_decodes_one_bounded_block() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../../demo-ml-utils/fixtures/gguf")

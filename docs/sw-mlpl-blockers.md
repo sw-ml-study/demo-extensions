@@ -190,8 +190,11 @@ owned diagnostic.
 
 Downstream mitigation: cache all bounded tensor strings needed by histogram
 interaction state so ordinary drag/click redraws do not repeat lazy GGUF reads or
-decoding. This removes the observed trigger but does not replace host supervision
-for other uncatchable evaluator failures.
+decoding. The native demo host now also supervises its rooted worker, retains the
+window with a red error scene and exact diagnostic, and lets `R` start a fresh
+worker or `Esc` quit. This proves the lifecycle locally, but it does not replace a
+first-class sw-mlpl contract: downstream should not have to reimplement worker,
+environment, port, configured-root, and recovery ownership.
 
 ## Derived scalar reuse from array/record computations — open
 

@@ -5,6 +5,55 @@ use mlpl_array::DenseArray;
 use mlpl_eval::Value;
 use mlpl_native3d_scene::{Camera, LineScene};
 
+/// Channels for one supervised rooted MLPL worker.
+pub struct RootedAppletWorker {
+    pub commands: std::sync::mpsc::Receiver<Value>,
+    pub events: std::sync::mpsc::Sender<Value>,
+    pub result: std::sync::mpsc::Receiver<Result<Value, mlpl_eval::EvalError>>,
+}
+
+/// Starts one rooted MLPL worker without consuming the native host event loop.
+///
+/// # Errors
+///
+/// Rejects an invalid root or a worker thread that cannot be started.
+pub fn spawn_rooted_applet(
+    source: &str,
+    root: &std::path::Path,
+) -> Result<RootedAppletWorker, mlpl_eval::EvalError> {
+    let root = root.canonicalize().map_err(|error| {
+        mlpl_eval::EvalError::Unsupported(format!("invalid applet filesystem root: {error}"))
+    })?;
+    if !root.is_dir() {
+        return Err(mlpl_eval::EvalError::Unsupported(
+            "applet filesystem root is not a directory".into(),
+        ));
+    }
+    let (command_tx, command_rx) = std::sync::mpsc::channel();
+    let (event_tx, event_rx) = std::sync::mpsc::channel();
+    let (result_tx, result_rx) = std::sync::mpsc::channel();
+    let source = source.to_owned();
+    std::thread::Builder::new()
+        .name("mlpl-native3d-applet".into())
+        .stack_size(64 * 1024 * 1024)
+        .spawn(move || {
+            let mut environment = mlpl_eval::Environment::new();
+            environment.ui_host_thread = true;
+            environment.fs_root = Some(root);
+            let handle = environment.register_port(command_tx, event_rx);
+            environment.ext_handles.insert("port".into(), handle);
+            let _ = result_tx.send(mlpl_eval::eval_source_value(&source, &mut environment));
+        })
+        .map_err(|error| {
+            mlpl_eval::EvalError::Unsupported(format!("cannot start rooted applet worker: {error}"))
+        })?;
+    Ok(RootedAppletWorker {
+        commands: command_rx,
+        events: event_tx,
+        result: result_rx,
+    })
+}
+
 /// Runs a parked-main MLPL applet with one explicit canonical filesystem root.
 ///
 /// This downstream adapter preserves the host's opt-in containment policy until
@@ -22,35 +71,9 @@ pub fn run_applet_with_host_root<H>(
 where
     H: FnOnce(std::sync::mpsc::Receiver<Value>, std::sync::mpsc::Sender<Value>),
 {
-    let root = root.canonicalize().map_err(|error| {
-        mlpl_eval::EvalError::Unsupported(format!("invalid applet filesystem root: {error}"))
-    })?;
-    if !root.is_dir() {
-        return Err(mlpl_eval::EvalError::Unsupported(
-            "applet filesystem root is not a directory".into(),
-        ));
-    }
-    let (command_tx, command_rx) = std::sync::mpsc::channel();
-    let (event_tx, event_rx) = std::sync::mpsc::channel();
-    let (result_tx, result_rx) = std::sync::mpsc::channel();
-    let source = source.to_owned();
-    let worker = std::thread::Builder::new()
-        .name("mlpl-native3d-applet".into())
-        .stack_size(64 * 1024 * 1024)
-        .spawn(move || {
-            let mut environment = mlpl_eval::Environment::new();
-            environment.ui_host_thread = true;
-            environment.fs_root = Some(root);
-            let handle = environment.register_port(command_tx, event_rx);
-            environment.ext_handles.insert("port".into(), handle);
-            let _ = result_tx.send(mlpl_eval::eval_source_value(&source, &mut environment));
-        })
-        .map_err(|error| {
-            mlpl_eval::EvalError::Unsupported(format!("cannot start rooted applet worker: {error}"))
-        })?;
-    host(command_rx, event_tx);
-    let _ = worker.join();
-    result_rx.recv().unwrap_or_else(|_| {
+    let worker = spawn_rooted_applet(source, root)?;
+    host(worker.commands, worker.events);
+    worker.result.recv().unwrap_or_else(|_| {
         Err(mlpl_eval::EvalError::Unsupported(
             "rooted applet worker died".into(),
         ))

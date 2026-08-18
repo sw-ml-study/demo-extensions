@@ -111,14 +111,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         .or(model_atlas_file)
         .or(audio_spectrum)
         .or(weight_distribution);
-    let result = if let Some(root) = rooted {
-        mlpl_native3d_window::live::run_applet_with_host_root(&source, &root, |commands, events| {
-            let mut application = Application::new_rooted(commands, events, Some(root.clone()));
-            if let Err(error) = event_loop.run_app(&mut application) {
-                host_error = Some(error.to_string());
-            }
-        })
-    } else {
+    if let Some(root) = rooted {
+        let mut application = Application::new_supervised(source, root)?;
+        event_loop.run_app(&mut application)?;
+        return Ok(());
+    }
+    let result = {
         run_applet_with_host(&source, |commands, events| {
             let mut application = Application::new(commands, events);
             if let Err(error) = event_loop.run_app(&mut application) {
@@ -158,6 +156,9 @@ struct Application {
     audio_next: Instant,
     audio_output: Option<mlpl_native3d_window::audio::PcmOutput>,
     audio_visual_pending: Option<mlpl_native3d_window::audio::PcmChunk>,
+    worker_result: Option<Receiver<Result<Value, mlpl_eval::EvalError>>>,
+    restart: Option<(String, std::path::PathBuf)>,
+    worker_error: Option<String>,
 }
 
 impl Application {
@@ -196,10 +197,89 @@ impl Application {
             audio_next: now,
             audio_output: None,
             audio_visual_pending: None,
+            worker_result: None,
+            restart: None,
+            worker_error: None,
+        }
+    }
+
+    fn new_supervised(source: String, root: std::path::PathBuf) -> Result<Self, Box<dyn Error>> {
+        let worker = mlpl_native3d_window::live::spawn_rooted_applet(&source, &root)?;
+        let mut application = Self::new_rooted(worker.commands, worker.events, Some(root.clone()));
+        application.worker_result = Some(worker.result);
+        application.restart = Some((source, root));
+        Ok(application)
+    }
+
+    fn enter_worker_error(&mut self, message: &str) {
+        eprintln!("MLPL applet failed: {message}");
+        self.worker_error = Some(message.to_string());
+        self.help = format!(
+            "MLPL WORKER ERROR — WINDOW RETAINED\nR RESTARTS A FRESH MLPL ENVIRONMENT | ESC QUITS\n\n{message}"
+        );
+        self.status = format!("ERROR: {message}");
+        self.rotation_speed = 0.0;
+        self.retained_scene = None;
+        self.scene = LineScene::from_arrays(
+            vec![
+                -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, -2.0, 2.0, 0.0, 2.0, -2.0, 0.0,
+            ],
+            vec![0, 1, 2, 3],
+            0.0,
+            [1.0, 0.1, 0.1, 1.0],
+            5.0,
+        )
+        .ok();
+        if let Some(graphics) = &self.graphics {
+            graphics
+                .window
+                .set_title("MLPL worker error — R restart | Esc quit");
+            graphics.window.request_redraw();
+        }
+    }
+
+    fn poll_worker(&mut self) {
+        let Some(result) = self.worker_result.as_ref() else {
+            return;
+        };
+        match result.try_recv() {
+            Ok(Ok(_)) => self.enter_worker_error("worker stopped without closing the window"),
+            Ok(Err(error)) => self.enter_worker_error(&error.to_string()),
+            Err(std::sync::mpsc::TryRecvError::Disconnected) if self.worker_error.is_none() => {
+                self.enter_worker_error("worker result channel disconnected");
+            }
+            Err(
+                std::sync::mpsc::TryRecvError::Empty | std::sync::mpsc::TryRecvError::Disconnected,
+            ) => {}
+        }
+    }
+
+    fn restart_worker(&mut self) {
+        let Some((source, root)) = self.restart.clone() else {
+            return;
+        };
+        match mlpl_native3d_window::live::spawn_rooted_applet(&source, &root) {
+            Ok(worker) => {
+                self.commands = worker.commands;
+                self.events = worker.events;
+                self.worker_result = Some(worker.result);
+                self.worker_error = None;
+                self.scene = None;
+                self.retained_scene = None;
+                self.pending_input = BoundedInput::new(64).expect("nonzero input capacity");
+                self.frame_gate = FrameGate::new();
+                self.help = "RESTARTING FRESH MLPL ENVIRONMENT...".into();
+                self.status.clear();
+            }
+            Err(error) => self.enter_worker_error(&format!("restart failed: {error}")),
         }
     }
 
     fn drain_commands(&mut self, event_loop: &ActiveEventLoop) {
+        self.poll_worker();
+        if self.worker_error.is_some() {
+            return;
+        }
         while let Ok(value) = self.commands.try_recv() {
             match mlpl_native3d_window::live::parse_live_command(value) {
                 Ok(mlpl_native3d_window::live::LiveCommand::Scene(command)) => {
@@ -339,9 +419,9 @@ impl Application {
         self.audio_next = Instant::now();
     }
 
-    fn send(&self, event: Value, event_loop: &ActiveEventLoop) {
+    fn send(&mut self, event: Value, _event_loop: &ActiveEventLoop) {
         if self.events.send(event).is_err() {
-            event_loop.exit();
+            self.poll_worker();
         }
     }
 
@@ -496,6 +576,14 @@ impl ApplicationHandler for Application {
                 ..
             } => {
                 if let Some(key) = normalize_key(&logical_key) {
+                    if self.worker_error.is_some() {
+                        if key == "r" {
+                            self.restart_worker();
+                        } else if key == "escape" {
+                            event_loop.exit();
+                        }
+                        return;
+                    }
                     self.send(key_event(key), event_loop);
                     if key == "escape" {
                         self.send(close_event(), event_loop);
@@ -806,7 +894,7 @@ impl Graphics {
 
 #[cfg(test)]
 mod tests {
-    use super::{normalize_button, normalize_key, normalize_wheel};
+    use super::{Application, normalize_button, normalize_key, normalize_wheel};
     use mlpl_native3d_window::interaction::{PointerButton, PointerButtons};
     use winit::dpi::PhysicalPosition;
     use winit::event::{MouseButton, MouseScrollDelta};
@@ -852,5 +940,18 @@ mod tests {
         )));
         assert!((pixel[0] - 3.0).abs() < f64::EPSILON);
         assert!((pixel[1] - 4.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn terminal_worker_error_becomes_a_retained_restart_screen() {
+        let (_command_tx, command_rx) = std::sync::mpsc::channel();
+        let (event_tx, _event_rx) = std::sync::mpsc::channel();
+        let mut application = Application::new(command_rx, event_tx);
+        application.enter_worker_error("expected a string value");
+        assert!(application.scene.is_some());
+        assert!(application.help.contains("WINDOW RETAINED"));
+        assert!(application.help.contains("R RESTARTS"));
+        assert!(application.help.contains("ESC QUITS"));
+        assert!(application.status.contains("expected a string value"));
     }
 }

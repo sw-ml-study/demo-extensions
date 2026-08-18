@@ -22,6 +22,10 @@ the original message printed in the help panel and status line. `R` restarts at
 the file menu, `M` returns to that menu, and `Esc` quits by explicit user choice.
 If drawing the error overlay itself fails, the last valid scene remains visible
 and the recoverable error state is still retained for the next input event.
+Evaluator-level failures that cannot become MLPL `err(...)` values are supervised
+by the native host: the same window displays a red X and the exact terminal
+diagnostic. Ordinary input is then disabled; `R` creates a fresh MLPL environment
+with the same confined root, while `Esc` quits. No process relaunch is required.
 
 ## What the view means
 
