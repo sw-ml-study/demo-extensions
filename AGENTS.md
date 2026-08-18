@@ -242,6 +242,12 @@ match a neighboring repository.
   `@test` registration, shared `u:assert_*` helpers, and exactly one
   `u:run_registered_tests()` call per suite. Do not substitute ad hoc process
   exit checks for mlplunit.
+- Every user-defined function in every tracked `.mlpl` file must have a
+  docstring as its first expression. Every tracked `.mlpl` file must also have
+  a module-purpose comment and must be formatted with the canonical sw-mlpl
+  formatter. Run `scripts/check-mlpl-style` before every commit and again before
+  every push; do not commit or push when it reports formatting or documentation
+  drift.
 - Resolve tools without installing or overwriting user binaries. Prefer
   `$MLPL` and `$MLPLUNIT` when set, then PATH, then documented adjacent
   development checkouts. Environment overrides must be absolute paths.
@@ -273,6 +279,9 @@ does not repeat it. A step is not complete until all items are satisfied:
 1. Run the focused red/green tests during development, then run the repository
    pre-commit gate (`just check` once available). Rust behavior requires the
    applicable scoped `cargo test`; MLPL behavior requires mlplunit.
+   The gate must include `scripts/check-mlpl-style`, proving that all tracked
+   MLPL files are canonically formatted and every user-defined function has a
+   docstring before both commit and push.
 2. Update user-facing documentation, design/contract documentation, catalogs,
    and examples affected by the step. Documentation-only conclusions must name
    their evidence and limitations.
