@@ -134,10 +134,82 @@ fn downloaded_real_q8_0_model_reaches_supported_tensor_menu() {
         events.send(key_event("enter")).unwrap();
         let loading = parse_scene_command(commands.recv().unwrap()).unwrap();
         assert!(loading.help.contains("LOADING BOUNDED MODEL CATALOG"));
-        let tensors = parse_scene_command(commands.recv().unwrap()).unwrap();
+        let mut tensors = parse_scene_command(commands.recv().unwrap()).unwrap();
         assert!(tensors.help.contains("CHOOSE TENSOR"));
         assert!(tensors.help.contains("[SUPPORTED]"));
         assert!(!tensors.status.contains("CATALOG REJECTED"));
+        for _ in 0..12 {
+            if tensors
+                .help
+                .lines()
+                .any(|line| line.starts_with(">> ") && line.contains("[SUPPORTED]"))
+            {
+                break;
+            }
+            events.send(key_event("arrow_down")).unwrap();
+            tensors = parse_scene_command(commands.recv().unwrap()).unwrap();
+        }
+        assert!(
+            tensors
+                .help
+                .lines()
+                .any(|line| line.starts_with(">> ") && line.contains("[SUPPORTED]")),
+            "real model menu must expose a selectable supported tensor"
+        );
+        events.send(key_event("enter")).unwrap();
+        let histogram = parse_scene_command(commands.recv().unwrap()).unwrap();
+        assert!(histogram.help.contains("BOUNDED SAMPLE HISTOGRAM"));
+        for _ in 0..7 {
+            events.send(key_event("arrow_down")).unwrap();
+            assert!(matches!(
+                parse_live_command(commands.recv().unwrap()).unwrap(),
+                LiveCommand::Patch(_)
+            ));
+            parse_live_command(commands.recv().unwrap()).unwrap();
+        }
+        let mut selected_a_bar = false;
+        'screen: for y in (180..=620).step_by(40) {
+            for x in (120..=900).step_by(40) {
+                events
+                    .send(input_event(InputEvent::pointer_button(
+                        PointerButton::Left,
+                        true,
+                        [f64::from(x), f64::from(y)],
+                        Modifiers::NONE,
+                    )))
+                    .unwrap();
+                parse_live_command(commands.recv().unwrap()).unwrap();
+                events
+                    .send(input_event(InputEvent::pointer_button(
+                        PointerButton::Left,
+                        false,
+                        [f64::from(x), f64::from(y)],
+                        Modifiers::NONE,
+                    )))
+                    .unwrap();
+                let released = parse_live_command(commands.recv().unwrap()).unwrap();
+                if matches!(released, LiveCommand::Patch(_)) {
+                    let Ok(view) = commands.recv() else {
+                        return;
+                    };
+                    parse_live_command(view).unwrap();
+                    selected_a_bar = true;
+                    break 'screen;
+                }
+            }
+        }
+        assert!(
+            selected_a_bar,
+            "screen-space click scan must select a real bar"
+        );
+        events
+            .send(input_event(InputEvent::pointer_move(
+                [401.0, 300.0],
+                mlpl_native3d_window::interaction::PointerButtons::NONE,
+                Modifiers::NONE,
+            )))
+            .unwrap();
+        parse_live_command(commands.recv().unwrap()).unwrap();
         events.send(close_event()).unwrap();
     });
     assert!(result.is_ok(), "real Q8_0 applet failed: {result:?}");

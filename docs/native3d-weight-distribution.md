@@ -14,11 +14,14 @@ MLPL worker. Stable IDs keep the eight histogram boxes, numeric count scale,
 and color legend retained; bin selection sends only changed scene lines and
 camera changes send view-only commands.
 
-Pointer reduction is pure MLPL state transformation; command emission happens
-afterward so `ok(...)` transport acknowledgements cannot become application
-state. Any interaction failure is converted into the existing red fail-closed
-scene while the window remains open, with the original message visible and
-`M` available to return to the model menu.
+Pointer reduction is pure MLPL state transformation. A single caught dispatch
+boundary covers reduction, retained-diff and status construction, and port
+delivery so transport failures cannot escape the MLPL event loop. Any failure
+is converted into the red fail-closed scene while the window remains open, with
+the original message printed in the help panel and status line. `R` restarts at
+the file menu, `M` returns to that menu, and `Esc` quits by explicit user choice.
+If drawing the error overlay itself fails, the last valid scene remains visible
+and the recoverable error state is still retained for the next input event.
 
 ## What the view means
 
