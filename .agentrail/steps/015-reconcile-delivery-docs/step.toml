@@ -1,9 +1,10 @@
 number = 15
 slug = "reconcile-delivery-docs"
-status = "in-progress"
+status = "completed"
 description = "Reconcile docs/sagas.md, docs/plan.md, README.md, and directly related docume..."
 role = "meta"
 context_files = []
 created_at = "2026-09-02T09:59:58"
+completed_at = "2026-09-02T10:02:35"
 task_type = "documentation"
-commits = []
+commits = ["1ecfc2716e44606af035514a809d00b7378e4768"]
