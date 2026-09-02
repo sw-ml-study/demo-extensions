@@ -1,8 +1,9 @@
 number = 12
 slug = "native3d-weight-distribution-explorer"
-status = "in-progress"
+status = "completed"
 description = "Build an interactive native 3D weight-distribution explorer over real bounded..."
 role = "production"
 context_files = []
 created_at = "2026-08-17T14:49:13"
-commits = []
+completed_at = "2026-09-01T20:46:20"
+commits = ["db059e299d4d963cacf27b6877a11cfeb1eab1e4"]
