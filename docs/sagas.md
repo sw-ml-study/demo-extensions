@@ -4,6 +4,13 @@ Only one saga is active at a time. A later saga may be replanned when the
 previous acceptance report exposes an upstream blocker. Steps are independently
 reviewable and use red/green TDD; no step silently modifies `../sw-mlpl`.
 
+Current status (2026-09-02): no implementation saga is active. The
+`native3d-retained-scene` saga completed through step 014, including Model
+Atlas, disk usage, audio spectrum, weight distribution, the Yew microscope,
+and repository-wide retained-scene migration. Point cloud is the recommended
+next candidate; embedding/PCA follows it. A candidate becomes active only when
+an explicit AgentRail saga/step is created.
+
 The mandatory checklist in `AGENTS.md` applies to every step in every saga:
 pre-commit tests, affected documentation, `.gitignore` audit, tracked-file
 audit, named-file staging, a detailed commit, AgentRail completion metadata,
@@ -140,7 +147,7 @@ The first implementation slice deliberately starts with the pure MLPL model.
 That gives cell editing and frame animation one tested transition function and
 keeps renderer performance choices out of the game rules.
 
-## Active: native3d-retained-scene
+## Completed: native3d-retained-scene
 
 Purpose: keep native interaction responsive when MLPL geometry work is slower
 than display refresh, then introduce generic shadow-scene patches.
@@ -152,14 +159,15 @@ than display refresh, then introduce generic shadow-scene patches.
 3. Add versioned ID-addressed atomic add/update/remove patches and use them for
    changed Life cells instead of complete scene replacement.
 
-The first two steps and the torus insertion are complete. The active patch
-step is the performance and transport foundation for the queued Model Atlas.
+All steps are complete. The final repository-wide pass also migrated cube,
+tic-tac-toe, real-file Model Atlas, disk usage, audio, and weight-distribution
+interaction to the same retained invariant.
 
 Acceptance: at most one frame is outstanding across the Port, discrete input
 stays ordered, malformed or stale patches fail closed, and retained Rust scene
 objects contain no Life rules.
 
-## Queued: native3d-model-atlas
+## Delivered: native3d-model-atlas
 
 Purpose: connect bounded model-file analysis from `demo-ml-utils` to this
 repository's generic native renderer without loading a whole model file or
@@ -188,7 +196,7 @@ tensor payload into memory.
    payload decoding.
 6. Open on a confined real-file picker, reuse the bounded `demo-ml-utils`
    Safetensors catalog, render a capped tensor view, and return with M.
-   **Implemented in the active detail slice:** `just model-atlas-file` starts
+   **Delivered:** `just model-atlas-file` starts
    at the picker and never reads tensor payloads. GGUF remains a later format
    addition.
 
@@ -294,7 +302,7 @@ camera controls, stable-ID selection patches, and explicit fail-closed decoder
 reasons. The exact shared-library and host ownership matrix is recorded in
 `docs/weight-distribution-blockers.md`.
 
-## In progress: native3d-life-surfaces
+## Partially delivered, not active: native3d-life-surfaces
 
 Purpose: reuse the Life application on closed 3D surfaces after the finite
 plane is accepted.
@@ -313,7 +321,10 @@ sphere neighbor policies; seams and poles have golden tests; Rust contains no
 Life rule or preset; and surface selection changes topology and projection
 explicitly rather than accidentally inheriting plane boundaries.
 
-## Queued: native3d-point-cloud
+The plane and torus are delivered. Sphere topology/projection is future scope
+and has no active AgentRail step.
+
+## Recommended next candidate: native3d-point-cloud
 
 Purpose: prove a native macOS/Linux visualization using the public extension
 path and no browser technology.
@@ -328,7 +339,7 @@ path and no browser technology.
 Acceptance: the demo displays a bulk point cloud in a real native window,
 headless tests remain authoritative, and no GPU/window types leak into the ABI.
 
-## Queued: native3d-live-interaction
+## Partially delivered, remaining work not active: native3d-live-interaction
 
 Purpose: support a persistent REPL-friendly viewer without compromising host
 thread, callback, or unload safety.
@@ -343,7 +354,12 @@ thread, callback, or unload safety.
 Acceptance: update, select, close, and deactivate are deterministic; no stale
 native resource remains callable; blocked unload explains exactly why.
 
-## Queued: embedding-pca-explorer
+The interpreted applets already provide bounded/coalesced input, resize,
+stable-ID updates, picking, and clean close. Persistent REPL handles, compiled
+provider parity, and quiescent dynamic unload remain future extension-boundary
+work.
+
+## Future candidate after point cloud: embedding-pca-explorer
 
 Purpose: make array computation—not graphics—the center of the first flagship
 application.
@@ -359,7 +375,7 @@ Acceptance: the demo explains `[N,D] -> [N,3]`, all visual attributes are
 array-driven, a selected point maps to its metadata row, and results are golden
 and deterministic.
 
-## Queued: rag-semantic-space
+## Future candidate: rag-semantic-space
 
 Purpose: turn the embedding viewer into a deterministic semantic retrieval
 application while keeping retrieval logic in MLPL.
@@ -373,7 +389,7 @@ application while keeping retrieval logic in MLPL.
 Acceptance: golden queries, rankings, visual IDs, and metadata agree; the demo
 does not require a network service or external vector database.
 
-## Queued: geography-and-stars
+## Future candidate: geography-and-stars
 
 Purpose: demonstrate that the extension primitives are reusable beyond ML.
 

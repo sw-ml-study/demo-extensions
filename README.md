@@ -2,15 +2,13 @@
 
 `demo-extensions` explores how independently built Rust libraries can add
 native capabilities to [sw-MLPL](../sw-mlpl) without adding each domain to the
-language runtime. Native 3D visualization is the motivating application; the
-current foundation deliberately starts with a headless `hello` extension so
-ABI, loading, packaging, ownership, and lifecycle behavior can be tested apart
-from GPU and window-system concerns.
+language runtime. The repository now includes the original headless `hello`
+extension foundation plus native interactive line-rendered applications,
+bounded model/media/filesystem demonstrations, and a Rust/Yew ML microscope.
 
-The wireframe cube is a first-pass proof of concept for an extension supplying
-interactive native-3D primitives to MLPL. It prioritizes a truthful public API,
-MLPL-owned application behavior, portability, and testability over visual
-polish; later iterations can refine rendering, controls, and performance.
+The wireframe cube remains the smallest visual teaching path. All interactive
+native demos now initialize one retained scene, use stable-ID patches for
+geometry/style changes, and use view updates for camera/help/status changes.
 
 The repository proves the downstream extension boundary with a real
 `.dylib`/`.so` and a Rust host harness. sw-MLPL now exposes a separate static
@@ -170,8 +168,8 @@ MLPL-owned; the shared Rust host only normalizes input and renders generic
 lines.
 
 The window keeps winit/wgpu on the main thread and runs sw-MLPL on a worker.
-`controls.mlpl` receives generic key/resize events and sends complete owned
-scene commands back to the renderer. Use W/S for width, arrows for height, A/D
+`controls.mlpl` receives generic key/resize events and sends retained patches
+or view-only commands back to the renderer after initialization. Use W/S for width, arrows for height, A/D
 for length, +/- for signed speed, Space for pause, C for color, brackets for
 thickness, R for reset, and Escape to close. Left-drag orbits and tilts, the
 wheel zooms, and Shift-left-drag or middle-drag pans; these mappings and camera
@@ -189,7 +187,7 @@ The native demos include an editable Conway's Life plane. Its MLPL layer
 provides dead finite boundaries, whole-array B3/S23 evolution, owned cell
 updates, deterministic replacement presets, mouse cell editing, animation and
 speed controls, shared orbit/pan/zoom, and the complete visible control legend.
-connects to the existing native host through complete generic bulk line arrays.
+connects to the existing native host through generic stable-ID bulk line arrays.
 
 Run the mandatory pre-commit gate:
 
@@ -215,7 +213,7 @@ cargo test -p mlpl-extension-loader --test manifest_resolution
 
 ## Current status
 
-The completed foundation proves:
+The delivered repository proves:
 
 - fixed-layout ABI V1 values, errors, descriptors, and version negotiation;
 - bounded fail-closed metadata validation and host-owned metadata copies;
@@ -243,6 +241,12 @@ The completed foundation proves:
   arrays, state/size records, and explicit MLPL-supplied render state.
 - an MLPL-owned control reducer for dimensions, signed speed, pause/reset,
   palette, thickness, resize/close events, and deterministic bulk updates.
+- bounded/coalesced input, camera/picking, single-flight animation frames, and
+  atomic retained-scene patches across every interactive native demo;
+- native tic-tac-toe, Life plane/torus, Model Atlas, disk usage, audio spectrum,
+  and weight-distribution applications with MLPL-owned semantics;
+- an offline-first Rust/Yew microscope over schema-validated, hash-pinned MLPL
+  recordings.
 
 The opt-in wgpu/winit window is connected to the MLPL reducer through sw-MLPL's
 parked-main Port contract. Only owned event and scene values cross between the
@@ -298,7 +302,7 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
 - [MLPL Life controls](docs/life-controls.md) — editing gestures, animation,
   presets, camera arbitration, visible bindings, and native ownership split.
 - [Native Life acceptance](docs/life-acceptance.md) — responsiveness fix,
-  retained view diffs, bounds, platform evidence, and remaining patch work.
+  retained view/geometry diffs, bounds, and platform evidence.
 - [Toroidal Life](docs/life-torus.md) — two-axis wrap topology, curved mapping,
   surface picking, controls, ownership, and current performance bounds.
 - [Retained scene patches](docs/retained-scene-patches.md) — stable-ID atomic
@@ -333,8 +337,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   repository commands.
 - [Implementation plan](docs/plan.md) — recommended architecture, capability
   gates, and demo order.
-- [Saga queue](docs/sagas.md) — completed foundation and queued implementation
-  sagas.
+- [Saga status and candidates](docs/sagas.md) — delivered sagas, partial future
+  scope, and the recommended point-cloud/embedding direction.
 - [Upstream sw-MLPL contract](docs/upstream-contract.md) — the host registry,
   array, handle, event-loop, and deployment capabilities required upstream.
 - [Research transcript](docs/sw-mlpl-demo-extensions.txt) — original analysis

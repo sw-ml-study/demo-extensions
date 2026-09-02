@@ -43,8 +43,9 @@ established bulk-line API; no Life-specific or filled-cell primitive was added
 without profiling evidence.
 
 The worker/Port test sends preset, run, frame, wheel, and close events through
-the actual applet. Geometry changes send complete owned scenes, camera changes
-send retained-scene `set_view` diffs, and nonvisual transitions send nothing.
+the actual applet. After initialization, geometry changes send bounded
+stable-ID `patch_scene` diffs, camera changes send retained `set_view` diffs,
+and nonvisual transitions send nothing.
 This prevents paused frames and idle mouse motion from queueing full 1,600-cell
 rebuilds. The native smoke run remains the visual evidence.
 
@@ -54,8 +55,7 @@ Life rules, state, picking decisions, gesture arbitration, presets, timing,
 and camera transitions are MLPL-owned. Rust will continue to provide generic
 normalized events and bulk geometry rendering.
 
-A queued follow-on will separate topology from projection: the current plane
-keeps dead edges, a torus wraps both grid axes and renders on a donut, and a
-sphere receives a tested seam/pole adjacency policy. That work follows plane
-acceptance so closed-surface topology does not obscure the base interaction
-contract.
+A delivered follow-on separated topology from projection for the torus: the
+plane keeps dead edges while the torus wraps both grid axes and renders on a
+donut. A sphere with a tested seam/pole adjacency policy remains future scope
+with no active AgentRail step.

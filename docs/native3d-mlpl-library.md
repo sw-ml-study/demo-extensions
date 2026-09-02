@@ -15,9 +15,12 @@ surface and can be included by cube, board-game, and grid demos.
   intersects them with application-selected planes.
 - `geometry.mlpl` validates generic line batches, constructs parallel RGBA,
   thickness, and stable-ID arrays, and generates an XZ-plane grid.
+- `retained.mlpl` compares generic stable-ID line scenes and emits bounded
+  add/update/remove patch commands.
 - `app.mlpl` includes both modules and supplies the generic transition and Port
   lifecycle. An application supplies initial state plus pure reducer and
-  renderer callbacks; the library emits complete `set_scene` commands.
+  renderer callbacks. Older simple users may emit complete commands through
+  this helper; interactive demos use `retained.mlpl` after initialization.
 
 The `u:n3d_*` prefix is intentional: current ordinary user-defined MLPL
 functions live in the `u` namespace. This is a source-level library, not a new

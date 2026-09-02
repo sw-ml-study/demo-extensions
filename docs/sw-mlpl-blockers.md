@@ -93,8 +93,9 @@ with equivalent events, scene updates, diagnostics, and close behavior.
 ## Current interpreted result
 
 `just cube-3d` runs winit/wgpu on the main thread and sw-MLPL on a worker.
-Generic owned events flow to `controls.mlpl`; complete owned scene commands
-flow back. Headless protocol tests and native mlplunit prove the same logic.
+Generic owned events flow to `controls.mlpl`; one initial scene followed by
+stable-ID patches or view-only commands flows back. Headless protocol tests and
+native mlplunit prove the same logic.
 
 ## Upstream handoff order
 

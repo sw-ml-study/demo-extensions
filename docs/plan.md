@@ -13,6 +13,17 @@ This repository owns examples, acceptance tests, packaging examples, and any
 temporary public SDK crates needed to prove the design. General runtime and
 language changes belong in `../sw-mlpl` under separately authorized work.
 
+## Delivery snapshot
+
+As of 2026-09-02, the extension foundation, safe SDK, native line renderer,
+pointer/camera contract, tic-tac-toe, Life plane and torus, Model Atlas,
+disk-usage explorer, audio spectrum player, weight-distribution explorer, Yew
+microscope viewer, and repository-wide retained-scene migration are delivered.
+The numbered sections below preserve the original architectural sequence; they
+are not an active queue. The recommended next candidate is the native point
+cloud, followed by the embedding/PCA explorer. Neither is active until an
+AgentRail step explicitly starts it.
+
 ## Recommended architecture
 
 The public programming model is an MLPL module, not an `ffi.call` API:
@@ -196,16 +207,16 @@ primitive set.
 Gate: no domain knowledge enters Rust, and each new demo reuses the public
 third-party extension path without privileged runtime hooks.
 
-## Explicit demo order
+## Original demo order and remaining direction
 
-1. `hello` — loading, registration, signature, result, error, deactivation.
-2. `wireframe-cube` — array-generated lines and adjustable native controls.
-3. `point-cloud` — one bulk `[N,3]` array in a blocking native window.
-4. `live-point-cloud` — persistent handle, bulk update, picking, close.
-5. `embedding-pca` — meaningful array computation and visual encodings.
-6. `rag-explorer` — similarity, filtering, selection, and metadata UI.
-7. `world-capitals` — spherical transforms and ragged border lines.
-8. `star-explorer` — larger true-3D catalog and filtering.
+1. `hello` — delivered.
+2. `wireframe-cube` — delivered, including retained updates.
+3. `point-cloud` — recommended next candidate.
+4. `live-point-cloud` — future persistent-handle work after the point slice.
+5. `embedding-pca` — future candidate after point rendering/picking.
+6. `rag-explorer` — future candidate.
+7. `world-capitals` — future candidate.
+8. `star-explorer` — future candidate.
 
 UMAP and t-SNE follow PCA, not precede it: PCA is deterministic, easier to
 test, and exercises the core array algebra without adding stochastic optimizer
