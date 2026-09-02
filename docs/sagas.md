@@ -7,9 +7,10 @@ reviewable and use red/green TDD; no step silently modifies `../sw-mlpl`.
 Current status (2026-09-02): `native3d-point-cloud` has delivered its initial
 renderer-neutral contract, headless renderer, and native GPU point pipeline. The
 generic retained-update and stable-ID selection contract is also delivered. The
-deterministic MLPL point-cloud teaching app is delivered and acceptance remains.
-The `native3d-retained-scene` saga completed through step 015, including Model Atlas,
-disk usage, audio spectrum, weight distribution, the Yew microscope, and
+deterministic MLPL teaching app and bounded portability, CPU-performance,
+packaging, and limitation acceptance are delivered.
+The `native3d-retained-scene` saga completed through step 015, including Model
+Atlas, disk usage, audio spectrum, weight distribution, the Yew microscope, and
 repository-wide retained-scene migration plus documentation reconciliation.
 Embedding/PCA remains the recommended successor after the point-cloud saga.
 

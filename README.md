@@ -246,6 +246,8 @@ The delivered repository proves:
   selection events, with application meaning reserved for MLPL;
 - a deterministic `just point-cloud` MLPL teaching app with selection, camera,
   patches, lifecycle, and a headless real-worker acceptance test;
+- a bounded `just point-cloud-acceptance` release probe and evidence matrix that
+  separate CPU byte/timing observations from unmeasured GPU/Linux behavior;
 - a deterministic headless transform, perspective projection, clipping, and
   thick-line raster pipeline with portable PPM evidence.
 - a real headless `_native3d` provider with typed viewer lifecycle, bulk line
@@ -323,6 +325,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   selection delivery.
 - [Native3D point-cloud demo](docs/native3d-point-cloud-demo.md) — deterministic
   MLPL-owned arrays, controls, selection styling, and host responsibility split.
+- [Native3D point-cloud acceptance](docs/native3d-point-cloud-acceptance.md) —
+  release/package evidence, measured CPU bounds, portability, and limitations.
 - [Native 3D disk-usage explorer](docs/native3d-disk-usage.md) — bounded
   metadata-only scanning, cached MLPL navigation, color semantics, and
   retained shadow-scene diffs.

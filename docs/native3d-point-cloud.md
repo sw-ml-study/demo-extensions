@@ -4,6 +4,9 @@ Status: renderer-neutral contract, deterministic headless renderer, native
 wgpu/winit point pipeline, generic retained updates/selection events, and the
 deterministic MLPL teaching application are delivered.
 
+Final portability, packaging, and bounded CPU evidence is recorded in
+`native3d-point-cloud-acceptance.md`.
+
 ## V1 scene
 
 The version-one schema is `sw-ml-study.native3d.point-scene`. It contains

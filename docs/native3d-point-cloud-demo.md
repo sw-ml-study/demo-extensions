@@ -42,5 +42,6 @@ commands.
 The demo is capped at 24 generated points while the generic retained host cap is
 100,000. The renderer still expands each visible point to six vertices and
 uploads a fresh owned buffer per frame. Accessibility beyond the visible help
-overlay, performance characterization, package acceptance, and a real
-embedding/PCA application remain future work.
+overlay and a real embedding/PCA application remain future work. Measured CPU
+evidence, package checks, platform scope, and precise limitations are recorded
+in `native3d-point-cloud-acceptance.md`.

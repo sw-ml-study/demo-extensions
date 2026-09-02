@@ -22,10 +22,10 @@ microscope viewer, and repository-wide retained-scene migration are delivered.
 The native point-cloud saga has delivered its renderer-neutral bulk-array
 contract, deterministic headless projection/raster slice, and native wgpu/winit
 point pipeline with retained updates and selection delivery. Its deterministic
-MLPL point-cloud teaching application is also delivered. The numbered sections
-below preserve the original architectural sequence rather than serving as the
-executable queue. Embedding/PCA remains a future candidate after point-cloud
-acceptance.
+MLPL point-cloud teaching application and bounded acceptance are also delivered.
+The numbered sections below preserve the original architectural sequence rather
+than serving as the executable queue. Embedding/PCA is now the recommended
+future candidate.
 
 ## Recommended architecture
 
@@ -214,7 +214,7 @@ third-party extension path without privileged runtime hooks.
 
 1. `hello` — delivered.
 2. `wireframe-cube` — delivered, including retained updates.
-3. `point-cloud` — active; generic infrastructure and deterministic MLPL demo are delivered.
+3. `point-cloud` — delivered, including bounded acceptance and explicit limits.
 4. `live-point-cloud` — future persistent-handle work after the point slice.
 5. `embedding-pca` — future candidate after point rendering/picking.
 6. `rag-explorer` — future candidate.

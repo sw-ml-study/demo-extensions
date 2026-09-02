@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+output=$(cargo run --quiet --release --manifest-path "$repo_root/Cargo.toml" \
+    -p mlpl-native3d-window --example point_cloud_probe -- 100 1000 10000)
+
+printf '%s\n' "$output"
+printf '%s\n' "$output" | awk '
+  /^points=/ {
+    rows += 1
+    if ($0 !~ /visible=[0-9]+ owned_bytes=[0-9]+ upload_bytes=[0-9]+ plan_bytes=[0-9]+ expanded_bytes=[0-9]+ plan_us=[0-9]+ expand_us=[0-9]+$/) exit 1
+  }
+  /^note=headless_cpu_timing_only_gpu_throughput_not_measured$/ { note = 1 }
+  END { if (rows != 3 || note != 1) exit 1 }
+'

@@ -1,6 +1,6 @@
 number = 6
 slug = "point-cloud-acceptance"
-status = "pending"
+status = "in-progress"
 description = "Close the native3d point-cloud saga with evidence-driven portability, perform..."
 role = "legacy"
 context_files = []

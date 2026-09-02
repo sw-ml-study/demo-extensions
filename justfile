@@ -87,6 +87,10 @@ point-cloud-smoke:
 point-cloud:
     ./scripts/run-point-cloud
 
+# Report bounded release-mode CPU evidence for the generic point path.
+point-cloud-acceptance:
+    ./scripts/check-point-cloud-acceptance
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check
