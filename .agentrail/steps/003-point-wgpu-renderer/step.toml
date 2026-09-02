@@ -1,6 +1,6 @@
 number = 3
 slug = "point-wgpu-renderer"
-status = "pending"
+status = "in-progress"
 description = "Using Rust TDD, integrate the generic bounded PointScene pipeline into the ex..."
 role = "legacy"
 context_files = []

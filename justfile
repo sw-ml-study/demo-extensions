@@ -79,6 +79,10 @@ microscope-web:
 microscope-web-build:
     ./scripts/build-microscope-web
 
+# Open the opt-in native GPU point-scene smoke fixture.
+point-cloud-smoke:
+    ./scripts/run-point-cloud-smoke
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

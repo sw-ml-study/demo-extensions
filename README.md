@@ -240,6 +240,8 @@ The delivered repository proves:
   planning and explicit owned-byte accounting;
 - deterministic headless point projection, viewport/near-plane culling,
   far-to-near alpha ordering, stable-ID picking ties, and raster evidence;
+- a native wgpu/winit circular point-sprite pipeline with full stable IDs and an
+  opt-in `just point-cloud-smoke` fixture on graphical macOS/Linux sessions;
 - a deterministic headless transform, perspective projection, clipping, and
   thick-line raster pipeline with portable PPM evidence.
 - a real headless `_native3d` provider with typed viewer lifecycle, bulk line

@@ -1,5 +1,5 @@
-use mlpl_native3d_scene::{Camera, LineScene, Viewport};
-use mlpl_native3d_window::{line_vertices, text_vertices, text_vertices_colored};
+use mlpl_native3d_scene::{Camera, LineScene, PointLimits, PointScene, Viewport};
+use mlpl_native3d_window::{line_vertices, point_vertices, text_vertices, text_vertices_colored};
 
 fn line_scene() -> LineScene {
     LineScene::parse(
@@ -40,6 +40,62 @@ fn expands_planned_lines_to_gpu_triangles_without_scene_semantics() {
 #[test]
 fn empty_line_plan_produces_no_gpu_work() {
     assert!(line_vertices(&[], Viewport::new(32, 32).unwrap()).is_empty());
+}
+
+#[test]
+fn expands_planned_points_to_identity_retaining_gpu_quads() {
+    let viewport = Viewport::new(200, 100).unwrap();
+    let scene = PointScene::from_parallel_arrays(
+        vec![0.0, 0.0, 0.0],
+        vec![10.0],
+        vec![[0.25, 0.5, 1.0, 1.0]],
+        vec![0.4],
+        vec![0x0123_4567_89ab_cdef],
+        PointLimits::new(1, 44).unwrap(),
+    )
+    .unwrap();
+    let plan = scene.plan_points(Camera::default(), viewport, 0.0).unwrap();
+    let vertices = point_vertices(plan.points(), viewport);
+
+    assert_eq!(vertices.len(), 6);
+    assert_eq!(std::mem::size_of_val(&vertices[0]), 40);
+    assert!(vertices.iter().all(|vertex| {
+        vertex
+            .color
+            .into_iter()
+            .zip([0.25, 0.5, 1.0, 0.4])
+            .all(|(actual, expected)| (actual - expected).abs() < f32::EPSILON)
+            && vertex.stable_id == [0x89ab_cdef, 0x0123_4567]
+            && vertex.position.into_iter().all(f32::is_finite)
+    }));
+    assert!(
+        vertices[0]
+            .local
+            .into_iter()
+            .zip([-1.0, -1.0])
+            .all(|(actual, expected)| (actual - expected).abs() < f32::EPSILON)
+    );
+    assert!(
+        vertices[5]
+            .local
+            .into_iter()
+            .zip([1.0, 1.0])
+            .all(|(actual, expected)| (actual - expected).abs() < f32::EPSILON)
+    );
+    let horizontal_span = vertices
+        .iter()
+        .map(|vertex| vertex.position[0])
+        .fold(f32::NEG_INFINITY, f32::max)
+        - vertices
+            .iter()
+            .map(|vertex| vertex.position[0])
+            .fold(f32::INFINITY, f32::min);
+    assert!((horizontal_span - 0.1).abs() < 0.001);
+}
+
+#[test]
+fn empty_point_plan_produces_no_gpu_work() {
+    assert!(point_vertices(&[], Viewport::new(32, 32).unwrap()).is_empty());
 }
 
 #[test]

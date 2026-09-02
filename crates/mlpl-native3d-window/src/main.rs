@@ -1,12 +1,13 @@
-//! Opt-in native wgpu/winit smoke viewer for a generic line-scene JSON file.
+//! Opt-in native wgpu/winit viewer for generic line and point scenes.
 
 use std::error::Error;
+use std::io::Read;
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender};
 use std::time::Instant;
 
 use mlpl_eval::{Value, run_applet_with_host};
-use mlpl_native3d_scene::{Camera, LineScene, Viewport};
+use mlpl_native3d_scene::{Camera, LineScene, PointLimits, PointScene, Viewport};
 use mlpl_native3d_window::interaction::{
     BoundedInput, FrameGate, InputError, InputEvent, Modifiers, PointerButton, PointerButtons,
 };
@@ -14,7 +15,9 @@ use mlpl_native3d_window::live::{
     applet_source, close_event, input_event, key_event, life_torus_applet_source,
     model_atlas_applet_source, resize_event, tic_tac_toe_applet_source,
 };
-use mlpl_native3d_window::{GpuVertex, line_vertices, text_vertices, text_vertices_colored};
+use mlpl_native3d_window::{
+    GpuPointVertex, GpuVertex, line_vertices, point_vertices, text_vertices, text_vertices_colored,
+};
 use wgpu::util::DeviceExt;
 use winit::{
     application::ApplicationHandler,
@@ -50,6 +53,38 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 ";
 
+const POINT_SHADER: &str = r"
+struct VertexInput {
+    @location(0) position: vec2<f32>,
+    @location(1) color: vec4<f32>,
+    @location(2) local: vec2<f32>,
+    @location(3) stable_id: vec2<u32>,
+};
+
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) color: vec4<f32>,
+    @location(1) local: vec2<f32>,
+};
+
+@vertex
+fn vs_main(input: VertexInput) -> VertexOutput {
+    var output: VertexOutput;
+    output.position = vec4<f32>(input.position, 0.0, 1.0);
+    output.color = input.color;
+    output.local = input.local;
+    return output;
+}
+
+@fragment
+fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
+    if dot(input.local, input.local) > 1.0 {
+        discard;
+    }
+    return input.color;
+}
+";
+
 fn main() -> Result<(), Box<dyn Error>> {
     let event_loop = EventLoop::new()?;
     let arguments: Vec<_> = std::env::args().collect();
@@ -77,6 +112,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         .position(|argument| argument == "--weight-distribution")
         .and_then(|index| arguments.get(index + 1))
         .map(std::path::PathBuf::from);
+    let point_scene = arguments
+        .iter()
+        .position(|argument| argument == "--point-scene")
+        .and_then(|index| arguments.get(index + 1))
+        .map(|path| load_point_scene(std::path::Path::new(path)))
+        .transpose()?;
     let source = if tic_tac_toe {
         tic_tac_toe_applet_source()
     } else if let Some(root) = disk_usage.as_ref() {
@@ -113,12 +154,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         .or(weight_distribution);
     if let Some(root) = rooted {
         let mut application = Application::new_supervised(source, root)?;
+        application.point_scene = point_scene;
         event_loop.run_app(&mut application)?;
         return Ok(());
     }
     let result = {
         run_applet_with_host(&source, |commands, events| {
             let mut application = Application::new(commands, events);
+            application.point_scene = point_scene;
             if let Err(error) = event_loop.run_app(&mut application) {
                 host_error = Some(error.to_string());
             }
@@ -131,8 +174,24 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn load_point_scene(path: &std::path::Path) -> Result<PointScene, Box<dyn Error>> {
+    const MAX_FILE_BYTES: u64 = 64 * 1024 * 1024;
+    let mut source = String::new();
+    std::fs::File::open(path)?
+        .take(MAX_FILE_BYTES + 1)
+        .read_to_string(&mut source)?;
+    if u64::try_from(source.len()).unwrap_or(u64::MAX) > MAX_FILE_BYTES {
+        return Err("point scene file exceeds 64 MiB".into());
+    }
+    let limits = PointLimits::new(1_000_000, 44_000_000)
+        .map_err(|error| format!("point limits rejected: {error:?}"))?;
+    PointScene::parse(&source, limits)
+        .map_err(|error| format!("point scene rejected: {error:?}").into())
+}
+
 struct Application {
     scene: Option<LineScene>,
+    point_scene: Option<PointScene>,
     retained_scene: Option<mlpl_native3d_window::live::RetainedScene>,
     graphics: Option<Graphics>,
     commands: Receiver<Value>,
@@ -174,6 +233,7 @@ impl Application {
         let now = Instant::now();
         Self {
             scene: None,
+            point_scene: None,
             retained_scene: None,
             graphics: None,
             commands,
@@ -524,9 +584,14 @@ impl Application {
             graphics.window.request_redraw();
             return;
         };
-        if let Err(error) =
-            graphics.render(scene, self.camera, self.angle, &self.help, &self.status)
-        {
+        if let Err(error) = graphics.render(
+            scene,
+            self.point_scene.as_ref(),
+            self.camera,
+            self.angle,
+            &self.help,
+            &self.status,
+        ) {
             match error {
                 wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated => graphics.reconfigure(),
                 wgpu::SurfaceError::OutOfMemory => event_loop.exit(),
@@ -741,6 +806,7 @@ struct Graphics {
     queue: wgpu::Queue,
     configuration: wgpu::SurfaceConfiguration,
     pipeline: wgpu::RenderPipeline,
+    point_pipeline: wgpu::RenderPipeline,
 }
 
 impl Graphics {
@@ -804,6 +870,7 @@ impl Graphics {
             multiview: None,
             cache: None,
         });
+        let point_pipeline = create_point_pipeline(&device, configuration.format);
         Ok(Self {
             window,
             surface,
@@ -811,6 +878,7 @@ impl Graphics {
             queue,
             configuration,
             pipeline,
+            point_pipeline,
         })
     }
 
@@ -830,6 +898,7 @@ impl Graphics {
     fn render(
         &mut self,
         scene: &LineScene,
+        point_scene: Option<&PointScene>,
         camera: Camera,
         angle: f32,
         help: &str,
@@ -843,6 +912,9 @@ impl Graphics {
             return Ok(());
         };
         let mut vertices = line_vertices(&lines, viewport);
+        let point_vertices = point_scene
+            .and_then(|scene| scene.plan_points(camera, viewport, angle).ok())
+            .map_or_else(Vec::new, |plan| point_vertices(plan.points(), viewport));
         vertices.extend(text_vertices(help, viewport));
         let help_line_count = help.lines().fold(0.0_f32, |count, _| count + 1.0);
         let status_y = 14.0 + help_line_count * 18.0;
@@ -859,6 +931,14 @@ impl Graphics {
                 contents: bytemuck::cast_slice(&vertices),
                 usage: wgpu::BufferUsages::VERTEX,
             });
+        let point_buffer = (!point_vertices.is_empty()).then(|| {
+            self.device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("mlpl native3d point vertices"),
+                    contents: bytemuck::cast_slice(&point_vertices),
+                    usage: wgpu::BufferUsages::VERTEX,
+                })
+        });
         let frame = self.surface.get_current_texture()?;
         let view = frame
             .texture
@@ -888,6 +968,14 @@ impl Graphics {
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
+            if let Some(point_buffer) = point_buffer.as_ref() {
+                pass.set_pipeline(&self.point_pipeline);
+                pass.set_vertex_buffer(0, point_buffer.slice(..));
+                pass.draw(
+                    0..u32::try_from(point_vertices.len()).unwrap_or(u32::MAX),
+                    0..1,
+                );
+            }
             pass.set_pipeline(&self.pipeline);
             pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             pass.draw(0..u32::try_from(vertices.len()).unwrap_or(u32::MAX), 0..1);
@@ -898,13 +986,66 @@ impl Graphics {
     }
 }
 
+fn create_point_pipeline(
+    device: &wgpu::Device,
+    format: wgpu::TextureFormat,
+) -> wgpu::RenderPipeline {
+    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: Some("mlpl native3d point shader"),
+        source: wgpu::ShaderSource::Wgsl(POINT_SHADER.into()),
+    });
+    device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        label: Some("mlpl native3d point pipeline"),
+        layout: None,
+        vertex: wgpu::VertexState {
+            module: &shader,
+            entry_point: Some("vs_main"),
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
+            buffers: &[wgpu::VertexBufferLayout {
+                array_stride: std::mem::size_of::<GpuPointVertex>() as wgpu::BufferAddress,
+                step_mode: wgpu::VertexStepMode::Vertex,
+                attributes: &wgpu::vertex_attr_array![
+                    0 => Float32x2,
+                    1 => Float32x4,
+                    2 => Float32x2,
+                    3 => Uint32x2
+                ],
+            }],
+        },
+        primitive: wgpu::PrimitiveState::default(),
+        depth_stencil: None,
+        multisample: wgpu::MultisampleState::default(),
+        fragment: Some(wgpu::FragmentState {
+            module: &shader,
+            entry_point: Some("fs_main"),
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
+            targets: &[Some(wgpu::ColorTargetState {
+                format,
+                blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
+        }),
+        multiview: None,
+        cache: None,
+    })
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Application, normalize_button, normalize_key, normalize_wheel};
+    use super::{Application, load_point_scene, normalize_button, normalize_key, normalize_wheel};
     use mlpl_native3d_window::interaction::{PointerButton, PointerButtons};
     use winit::dpi::PhysicalPosition;
     use winit::event::{MouseButton, MouseScrollDelta};
     use winit::keyboard::{Key, NamedKey};
+
+    #[test]
+    fn bundled_point_scene_loads_through_the_bounded_smoke_path() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/native3d-point-scene.json");
+        let scene = load_point_scene(&path).unwrap();
+        assert_eq!(scene.len(), 7);
+        assert_eq!(scene.ids(), [101, 102, 103, 104, 105, 106, 107]);
+    }
 
     #[test]
     fn normalizes_named_space_for_the_live_event_path() {

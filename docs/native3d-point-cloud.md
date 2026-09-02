@@ -1,7 +1,8 @@
 # Native3D Point-Cloud Contract
 
-Status: renderer-neutral contract and deterministic headless renderer delivered;
-GPU/window and application slices remain later AgentRail steps.
+Status: renderer-neutral contract, deterministic headless renderer, and native
+wgpu/winit point pipeline delivered; retained updates, picking events, and the
+MLPL application slice remain later AgentRail steps.
 
 ## V1 scene
 
@@ -48,6 +49,36 @@ The CPU evidence renderer draws bounded circular sprites with source-over alpha
 onto the same fixed background used by line evidence. It is a regression oracle,
 not the future wgpu implementation or a promise about antialiasing.
 
+## Native GPU layout and smoke check
+
+`point_vertices` expands each visible, depth-ordered point to six triangle
+vertices. `GpuPointVertex` is a 40-byte `repr(C)`/bytemuck record: two `f32`
+normalized-device coordinates, four `f32` color channels, two `f32` local
+circle coordinates, and the low/high `u32` halves of the stable ID. The fragment
+shader discards square corners outside the unit circle and uses source-over
+alpha blending. Stable IDs are copied into the GPU buffer for the later picking
+slice; this step does not expose a GPU readback or picking event.
+
+The backend creates a fresh owned vertex copy for each frame, after bounded CPU
+projection and culling. That is 240 uploaded bytes per visible point in this
+small teaching implementation. It is intentionally not described as zero-copy
+or an optimized instanced layout. Empty plans create no point buffer. The window
+path rejects smoke JSON above 64 MiB before parsing, uses wgpu/winit on macOS and
+Linux, and leaves the existing line, camera, lifecycle, input, and ABI boundaries
+intact.
+
+On a graphical macOS or Linux session, run:
+
+```sh
+just point-cloud-smoke
+```
+
+This opens the existing MLPL-owned wireframe applet with the bounded generic
+fixture in `fixtures/native3d-point-scene.json` rendered through the point
+pipeline. The check is intentionally opt-in because CI may be headless. Orbit,
+pan, zoom, and rotation continue through the existing camera path; point
+selection is not wired yet.
+
 ## Evidence and remaining scope
 
 `point_scene_contract.rs` starts red against the absent API and covers valid
@@ -57,6 +88,5 @@ limits. `point_headless_renderer.rs` pins near/offscreen culling, far-to-near
 ordering, stable-ID overlap/picking ties, rotation validation, attribute-sensitive
 pixels, and a deterministic PPM hash. Existing line-scene tests remain unchanged.
 
-Native wgpu/winit integration, typed viewer handles, retained point patches,
-MLPL fixtures, and the embedding/PCA application are not implemented by these
-headless steps.
+Retained point patches, pointer-to-ID event delivery, MLPL point application
+semantics, and the embedding/PCA application remain unimplemented.

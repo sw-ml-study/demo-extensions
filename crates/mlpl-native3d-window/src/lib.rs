@@ -1,7 +1,7 @@
 //! Native-window rendering primitives over renderer-neutral planned lines.
 
 use bytemuck::{Pod, Zeroable};
-use mlpl_native3d_scene::{PlannedLine, Viewport};
+use mlpl_native3d_scene::{PlannedLine, PlannedScreenPoint, Viewport};
 
 pub mod audio;
 pub mod disk_usage;
@@ -17,6 +17,20 @@ pub struct GpuVertex {
     pub position: [f32; 2],
     /// Linear RGBA line color.
     pub color: [f32; 4],
+}
+
+/// One GPU-ready point-triangle vertex with retained generic identity.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub struct GpuPointVertex {
+    /// XY position in normalized device coordinates.
+    pub position: [f32; 2],
+    /// Linear RGBA point color, including scene opacity.
+    pub color: [f32; 4],
+    /// Unit-square coordinate used by the fragment shader for circle coverage.
+    pub local: [f32; 2],
+    /// Low/high halves of the stable point ID retained for later picking.
+    pub stable_id: [u32; 2],
 }
 
 /// Expands generic thick lines into two GPU triangles per line.
@@ -47,6 +61,43 @@ pub fn line_vertices(lines: &[PlannedLine], viewport: Viewport) -> Vec<GpuVertex
             position: [point[0] / width * 2.0 - 1.0, 1.0 - point[1] / height * 2.0],
             color: line.color(),
         });
+        output.extend_from_slice(&[
+            corners[0], corners[1], corners[2], corners[2], corners[1], corners[3],
+        ]);
+    }
+    output
+}
+
+/// Expands depth-ordered screen points into two GPU triangles per point.
+#[must_use]
+#[allow(clippy::cast_precision_loss)] // Viewport edges are bounded to 8192 and exactly fit f32.
+pub fn point_vertices(points: &[PlannedScreenPoint], viewport: Viewport) -> Vec<GpuPointVertex> {
+    let [width, height] = viewport.dimensions();
+    let (width, height) = (width as f32, height as f32);
+    let mut output = Vec::with_capacity(points.len() * 6);
+    for point in points {
+        let center = point.center();
+        let radius = point.size() * 0.5;
+        let id = point.id();
+        let stable_id = [
+            u32::try_from(id & u64::from(u32::MAX)).unwrap_or(u32::MAX),
+            u32::try_from(id >> 32).unwrap_or(u32::MAX),
+        ];
+        let vertex = |local: [f32; 2]| GpuPointVertex {
+            position: [
+                (center[0] + local[0] * radius) / width * 2.0 - 1.0,
+                1.0 - (center[1] + local[1] * radius) / height * 2.0,
+            ],
+            color: point.color(),
+            local,
+            stable_id,
+        };
+        let corners = [
+            vertex([-1.0, -1.0]),
+            vertex([-1.0, 1.0]),
+            vertex([1.0, -1.0]),
+            vertex([1.0, 1.0]),
+        ];
         output.extend_from_slice(&[
             corners[0], corners[1], corners[2], corners[2], corners[1], corners[3],
         ]);

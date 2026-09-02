@@ -5,7 +5,7 @@ previous acceptance report exposes an upstream blocker. Steps are independently
 reviewable and use red/green TDD; no step silently modifies `../sw-mlpl`.
 
 Current status (2026-09-02): `native3d-point-cloud` has delivered its initial
-renderer-neutral contract and headless rendering steps. The
+renderer-neutral contract, headless renderer, and native GPU point pipeline. The
 `native3d-retained-scene` saga completed through step 015, including Model Atlas,
 disk usage, audio spectrum, weight distribution, the Yew microscope, and
 repository-wide retained-scene migration plus documentation reconciliation.
