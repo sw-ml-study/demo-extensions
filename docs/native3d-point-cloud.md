@@ -1,8 +1,8 @@
 # Native3D Point-Cloud Contract
 
 Status: renderer-neutral contract, deterministic headless renderer, and native
-wgpu/winit point pipeline delivered; retained updates, picking events, and the
-MLPL application slice remain later AgentRail steps.
+wgpu/winit point pipeline delivered, including generic retained updates and
+selection events; the MLPL application slice remains a later AgentRail step.
 
 ## V1 scene
 
@@ -56,8 +56,9 @@ vertices. `GpuPointVertex` is a 40-byte `repr(C)`/bytemuck record: two `f32`
 normalized-device coordinates, four `f32` color channels, two `f32` local
 circle coordinates, and the low/high `u32` halves of the stable ID. The fragment
 shader discards square corners outside the unit circle and uses source-over
-alpha blending. Stable IDs are copied into the GPU buffer for the later picking
-slice; this step does not expose a GPU readback or picking event.
+alpha blending. Stable IDs are copied into the GPU buffer for identity
+continuity, while selection uses the matching bounded CPU plan and requires no
+GPU readback.
 
 The backend creates a fresh owned vertex copy for each frame, after bounded CPU
 projection and culling. That is 240 uploaded bytes per visible point in this
@@ -76,8 +77,33 @@ just point-cloud-smoke
 This opens the existing MLPL-owned wireframe applet with the bounded generic
 fixture in `fixtures/native3d-point-scene.json` rendered through the point
 pipeline. The check is intentionally opt-in because CI may be headless. Orbit,
-pan, zoom, and rotation continue through the existing camera path; point
-selection is not wired yet.
+pan, zoom, and rotation continue through the existing camera path; a left-button
+release emits the generic selection event, though the wireframe smoke applet does
+not assign it application meaning.
+
+## Retained updates and selection delivery
+
+MLPL can replace point state with `set_points` and atomically update it with
+`patch_points`. Complete commands carry parallel `positions`, `sizes`, `colors`,
+`opacities`, and `ids` arrays plus a revision, camera, help, and optional status.
+Patches carry `base_revision`, an advancing `target_revision`, parallel upsert
+arrays, and `remove_ids`. A patch may describe at most 100,000 operations and
+the resulting scene may retain at most 100,000 points. Duplicate/conflicting
+IDs, stale revisions, unknown removals, invalid attributes, empty results, and
+budget overruns leave prior state unchanged; rejected live patches request a
+complete resynchronization. Geometry-preserving `set_view` commands advance the
+same retained revision, so subsequent selection events identify the visible
+view consistently.
+
+On left-button release, the window projects the current retained point scene
+through the current physical-pixel viewport and sends an owned
+`point_selection` record. `hit` is numeric zero/one, while `id` and `revision`
+are decimal strings; no-hit uses an empty ID string. Strings preserve the full
+generic `u64` identity without rounding through MLPL's `f64` arrays. Incoming
+command IDs remain non-negative integral MLPL array values and are rejected
+above the exactly representable integer range. The event reports identity
+only: MLPL decides whether it means selection, inspection, filtering, or no
+application action.
 
 ## Evidence and remaining scope
 
@@ -88,5 +114,10 @@ limits. `point_headless_renderer.rs` pins near/offscreen culling, far-to-near
 ordering, stable-ID overlap/picking ties, rotation validation, attribute-sensitive
 pixels, and a deterministic PPM hash. Existing line-scene tests remain unchanged.
 
-Retained point patches, pointer-to-ID event delivery, MLPL point application
-semantics, and the embedding/PCA application remain unimplemented.
+`point_retained.rs` covers complete/patch command dispatch, atomic add/update/
+remove behavior, stale and unknown IDs, conflict and final-scene budget failures,
+and exact-ID hit/no-hit event encoding under the authoritative overlap policy.
+
+MLPL point application semantics and the embedding/PCA application remain
+unimplemented. GPU picking/readback is deliberately unnecessary in this slice:
+the same bounded CPU render plan determines both visible ordering and selection.

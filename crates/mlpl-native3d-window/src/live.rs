@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::interaction::{InputEvent, Modifiers, PointerButton, PointerButtons};
 use mlpl_array::DenseArray;
 use mlpl_eval::Value;
-use mlpl_native3d_scene::{Camera, LineScene};
+use mlpl_native3d_scene::{Camera, LineScene, PointLimits, PointScene, Viewport};
 
 /// Channels for one supervised rooted MLPL worker.
 pub struct RootedAppletWorker {
@@ -373,6 +373,107 @@ impl RetainedScene {
     }
 }
 
+/// One generic point retained by stable identity.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PointObject {
+    pub position: [f32; 3],
+    pub size: f32,
+    pub color: [f32; 4],
+    pub opacity: f32,
+}
+
+/// A complete bounded point-scene replacement from MLPL.
+#[derive(Debug)]
+pub struct PointSceneCommand {
+    pub scene: PointScene,
+    pub objects: BTreeMap<u64, PointObject>,
+    pub camera: Camera,
+    pub revision: u64,
+    pub help: String,
+    pub status: String,
+}
+
+/// One atomic ID-addressed point patch.
+#[derive(Clone, Debug)]
+pub struct PointPatchCommand {
+    pub base_revision: u64,
+    pub target_revision: u64,
+    pub upserts: BTreeMap<u64, PointObject>,
+    pub remove_ids: Vec<u64>,
+}
+
+/// A validated point scene retained independently of application meaning.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RetainedPointScene {
+    scene: PointScene,
+    objects: BTreeMap<u64, PointObject>,
+    revision: u64,
+}
+
+impl RetainedPointScene {
+    /// Initializes retained state from a validated complete command.
+    ///
+    /// # Errors
+    ///
+    /// Rejects a command whose objects cannot reproduce its bounded scene.
+    pub fn from_command(command: &PointSceneCommand) -> Result<Self, String> {
+        point_scene_from_objects(&command.objects)?;
+        Ok(Self {
+            scene: command.scene.clone(),
+            objects: command.objects.clone(),
+            revision: command.revision,
+        })
+    }
+
+    /// Applies a complete patch transaction or preserves the prior state.
+    ///
+    /// # Errors
+    ///
+    /// Rejects revision mismatches, unknown removals, or invalid/budgeted state.
+    pub fn apply(&mut self, patch: &PointPatchCommand) -> Result<(), String> {
+        if patch.base_revision != self.revision || patch.target_revision <= patch.base_revision {
+            return Err("point patch revision mismatch".into());
+        }
+        let mut next = self.objects.clone();
+        for id in &patch.remove_ids {
+            if next.remove(id).is_none() {
+                return Err("point patch removes an unknown id".into());
+            }
+        }
+        for (id, point) in &patch.upserts {
+            next.insert(*id, *point);
+        }
+        let scene = point_scene_from_objects(&next)?;
+        self.scene = scene;
+        self.objects = next;
+        self.revision = patch.target_revision;
+        Ok(())
+    }
+
+    /// Advances the revision for a geometry-preserving camera/view update.
+    ///
+    /// # Errors
+    ///
+    /// Rejects a revision older than the retained point scene.
+    pub fn apply_view(&mut self, revision: u64) -> Result<(), String> {
+        if revision < self.revision {
+            return Err("point view revision is stale".into());
+        }
+        self.revision = revision;
+        Ok(())
+    }
+
+    #[must_use]
+    pub const fn revision(&self) -> u64 {
+        self.revision
+    }
+
+    #[must_use]
+    pub const fn scene(&self) -> &PointScene {
+        &self.scene
+    }
+}
+
 #[derive(Debug)]
 pub struct ViewCommand {
     pub camera: Camera,
@@ -386,6 +487,8 @@ pub struct ViewCommand {
 pub enum LiveCommand {
     Scene(SceneCommand),
     Patch(ScenePatchCommand),
+    PointScene(PointSceneCommand),
+    PointPatch(PointPatchCommand),
     View(ViewCommand),
     FrameAck(u64),
     AudioOpen(String),
@@ -523,6 +626,38 @@ pub fn input_event(event: InputEvent) -> Value {
     }
 }
 
+/// Projects and picks a point, returning an exact-ID owned MLPL event.
+///
+/// # Errors
+///
+/// Rejects invalid camera, viewport, rotation, or scene planning state.
+pub fn point_selection_event(
+    scene: &PointScene,
+    camera: Camera,
+    viewport: Viewport,
+    rotation_y: f32,
+    position: [f64; 2],
+    revision: u64,
+) -> Result<Value, String> {
+    let plan = scene
+        .plan_points(camera, viewport, rotation_y)
+        .map_err(|error| format!("point selection planning failed: {error:?}"))?;
+    let position = [
+        to_f32(position[0], "point selection x")?,
+        to_f32(position[1], "point selection y")?,
+    ];
+    let selected = plan.pick(position);
+    Ok(record([
+        ("kind", Value::Str("point_selection".into())),
+        ("hit", scalar(bool_number(selected.is_some()))),
+        (
+            "id",
+            Value::Str(selected.map_or_else(String::new, |point| point.id().to_string())),
+        ),
+        ("revision", Value::Str(revision.to_string())),
+    ]))
+}
+
 fn modifier_fields(modifiers: Modifiers) -> [(&'static str, Value); 4] {
     [
         (
@@ -570,6 +705,98 @@ pub fn parse_scene_command(value: Value) -> Result<SceneCommand, String> {
     parse_scene_fields(&fields)
 }
 
+/// Decodes one complete bounded generic point scene.
+///
+/// # Errors
+///
+/// Rejects malformed arrays, attributes, identities, revisions, and budgets.
+pub fn parse_point_scene_command(value: Value) -> Result<PointSceneCommand, String> {
+    let fields = record_fields(value, "command")?;
+    if string_field(&fields, "op")? != "set_points" {
+        return Err("unsupported live command".into());
+    }
+    parse_point_scene_fields(&fields)
+}
+
+/// Decodes one bounded generic point patch.
+///
+/// # Errors
+///
+/// Rejects malformed arrays, duplicate/conflicting IDs, and revisions.
+pub fn parse_point_patch_command(value: Value) -> Result<PointPatchCommand, String> {
+    let fields = record_fields(value, "command")?;
+    if string_field(&fields, "op")? != "patch_points" {
+        return Err("unsupported live command".into());
+    }
+    parse_point_patch_fields(&fields)
+}
+
+fn parse_point_scene_fields(fields: &BTreeMap<String, Value>) -> Result<PointSceneCommand, String> {
+    let ids_raw = vector_field(fields, "ids")?;
+    let ids = parse_unique_ids(&ids_raw, "point id")?;
+    let objects = parse_point_objects(fields, &ids)?;
+    let scene = point_scene_from_objects(&objects)?;
+    let view = parse_view_fields(fields)?;
+    Ok(PointSceneCommand {
+        scene,
+        objects,
+        camera: view.camera,
+        revision: view.revision,
+        help: view.help,
+        status: view.status,
+    })
+}
+
+fn parse_point_patch_fields(fields: &BTreeMap<String, Value>) -> Result<PointPatchCommand, String> {
+    const MAX_PATCH_POINTS: usize = 100_000;
+    let base_revision = parse_named_revision(fields, "base_revision")?;
+    let target_revision = parse_named_revision(fields, "target_revision")?;
+    if target_revision <= base_revision {
+        return Err("target_revision must advance".into());
+    }
+    let ids_raw = vector_field(fields, "ids")?;
+    let remove_raw = vector_field(fields, "remove_ids")?;
+    if ids_raw.len().saturating_add(remove_raw.len()) > MAX_PATCH_POINTS {
+        return Err("point patch exceeds operation budget".into());
+    }
+    let ids = parse_unique_ids(&ids_raw, "point id")?;
+    let remove_ids = parse_unique_ids(&remove_raw, "point remove id")?;
+    if ids.iter().any(|id| remove_ids.contains(id)) {
+        return Err("point patch cannot upsert and remove the same id".into());
+    }
+    Ok(PointPatchCommand {
+        base_revision,
+        target_revision,
+        upserts: parse_point_objects(fields, &ids)?,
+        remove_ids,
+    })
+}
+
+fn parse_point_objects(
+    fields: &BTreeMap<String, Value>,
+    ids: &[u64],
+) -> Result<BTreeMap<u64, PointObject>, String> {
+    let count = ids.len();
+    let positions = array_field(fields, "positions", &[count, 3])?;
+    let sizes = array_field(fields, "sizes", &[count])?;
+    let colors = array_field(fields, "colors", &[count, 4])?;
+    let opacities = array_field(fields, "opacities", &[count])?;
+    ids.iter()
+        .copied()
+        .enumerate()
+        .map(|(row, id)| {
+            let point = PointObject {
+                position: triple(&positions[row * 3..row * 3 + 3], "point position")?,
+                size: to_f32(sizes[row], "point size")?,
+                color: color4(&colors[row * 4..row * 4 + 4])?,
+                opacity: to_f32(opacities[row], "point opacity")?,
+            };
+            validate_point_object(id, point)?;
+            Ok((id, point))
+        })
+        .collect()
+}
+
 /// Decodes a camera/help-only update that retains the current geometry.
 ///
 /// # Errors
@@ -606,6 +833,8 @@ pub fn parse_live_command(value: Value) -> Result<LiveCommand, String> {
     match string_field(&fields, "op")? {
         "set_scene" => parse_scene_fields(&fields).map(LiveCommand::Scene),
         "patch_scene" => parse_scene_patch_fields(&fields).map(LiveCommand::Patch),
+        "set_points" => parse_point_scene_fields(&fields).map(LiveCommand::PointScene),
+        "patch_points" => parse_point_patch_fields(&fields).map(LiveCommand::PointPatch),
         "set_view" => parse_view_fields(&fields).map(LiveCommand::View),
         "frame_ack" => parse_revision(&fields).map(LiveCommand::FrameAck),
         "audio_open" => string_field(&fields, "path")
@@ -885,6 +1114,47 @@ fn scene_from_objects(
         .map_err(|error| format!("invalid retained scene: {error:?}"))
 }
 
+fn validate_point_object(id: u64, point: PointObject) -> Result<(), String> {
+    let limits = PointLimits::new(1, 44).map_err(|error| format!("invalid limits: {error:?}"))?;
+    PointScene::from_parallel_arrays(
+        point.position.to_vec(),
+        vec![point.size],
+        vec![point.color],
+        vec![point.opacity],
+        vec![id],
+        limits,
+    )
+    .map(|_| ())
+    .map_err(|error| format!("invalid patched point: {error:?}"))
+}
+
+fn point_scene_from_objects(objects: &BTreeMap<u64, PointObject>) -> Result<PointScene, String> {
+    const MAX_RETAINED_POINTS: usize = 100_000;
+    if objects.is_empty() {
+        return Err("retained point scene cannot be empty".into());
+    }
+    let byte_limit = objects
+        .len()
+        .checked_mul(44)
+        .ok_or_else(|| "retained point byte budget overflow".to_owned())?;
+    let limits = PointLimits::new(MAX_RETAINED_POINTS, byte_limit)
+        .map_err(|error| format!("invalid retained point limits: {error:?}"))?;
+    let mut positions = Vec::with_capacity(objects.len() * 3);
+    let mut sizes = Vec::with_capacity(objects.len());
+    let mut colors = Vec::with_capacity(objects.len());
+    let mut opacities = Vec::with_capacity(objects.len());
+    let mut ids = Vec::with_capacity(objects.len());
+    for (id, point) in objects {
+        positions.extend(point.position);
+        sizes.push(point.size);
+        colors.push(point.color);
+        opacities.push(point.opacity);
+        ids.push(*id);
+    }
+    PointScene::from_parallel_arrays(positions, sizes, colors, opacities, ids, limits)
+        .map_err(|error| format!("invalid retained point scene: {error:?}"))
+}
+
 fn matrix_field(
     fields: &BTreeMap<String, Value>,
     name: &str,
@@ -939,8 +1209,11 @@ fn record_fields(value: Value, name: &str) -> Result<BTreeMap<String, Value>, St
 }
 
 fn numeric_index(value: f64, name: &str) -> Result<usize, String> {
-    if !value.is_finite() || value < 0.0 || value.fract() != 0.0 {
-        return Err(format!("{name} must be a nonnegative integer"));
+    const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
+    if !value.is_finite() || !(0.0..=MAX_SAFE_INTEGER).contains(&value) || value.fract() != 0.0 {
+        return Err(format!(
+            "{name} must be an exactly representable nonnegative integer"
+        ));
     }
     value
         .to_string()

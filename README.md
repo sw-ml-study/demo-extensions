@@ -242,6 +242,8 @@ The delivered repository proves:
   far-to-near alpha ordering, stable-ID picking ties, and raster evidence;
 - a native wgpu/winit circular point-sprite pipeline with full stable IDs and an
   opt-in `just point-cloud-smoke` fixture on graphical macOS/Linux sessions;
+- atomic retained point replacements/patches and precision-safe stable-ID
+  selection events, with application meaning reserved for MLPL;
 - a deterministic headless transform, perspective projection, clipping, and
   thick-line raster pipeline with portable PPM evidence.
 - a real headless `_native3d` provider with typed viewer lifecycle, bulk line

@@ -1,6 +1,6 @@
 number = 4
 slug = "point-retained-picking"
-status = "pending"
+status = "in-progress"
 description = "Using Rust TDD, add generic retained point-scene updates and pointer-to-stabl..."
 role = "legacy"
 context_files = []

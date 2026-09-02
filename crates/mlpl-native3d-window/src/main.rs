@@ -193,6 +193,7 @@ struct Application {
     scene: Option<LineScene>,
     point_scene: Option<PointScene>,
     retained_scene: Option<mlpl_native3d_window::live::RetainedScene>,
+    retained_point_scene: Option<mlpl_native3d_window::live::RetainedPointScene>,
     graphics: Option<Graphics>,
     commands: Receiver<Value>,
     events: Sender<Value>,
@@ -235,6 +236,7 @@ impl Application {
             scene: None,
             point_scene: None,
             retained_scene: None,
+            retained_point_scene: None,
             graphics: None,
             commands,
             events,
@@ -280,6 +282,7 @@ impl Application {
         self.status = format!("ERROR: {message}");
         self.rotation_speed = 0.0;
         self.retained_scene = None;
+        self.retained_point_scene = None;
         self.scene = LineScene::from_arrays(
             vec![
                 -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, -2.0, 2.0, 0.0, 2.0, -2.0, 0.0,
@@ -326,6 +329,7 @@ impl Application {
                 self.worker_error = None;
                 self.scene = None;
                 self.retained_scene = None;
+                self.retained_point_scene = None;
                 self.pending_input = BoundedInput::new(64).expect("nonzero input capacity");
                 self.frame_gate = FrameGate::new();
                 self.help = "RESTARTING FRESH MLPL ENVIRONMENT...".into();
@@ -343,22 +347,9 @@ impl Application {
         while let Ok(value) = self.commands.try_recv() {
             match mlpl_native3d_window::live::parse_live_command(value) {
                 Ok(mlpl_native3d_window::live::LiveCommand::Scene(command)) => {
-                    if let Some(graphics) = &self.graphics {
-                        graphics.window.set_title(&scene_title(&command));
+                    if !self.set_line_scene(command, event_loop) {
+                        return;
                     }
-                    match mlpl_native3d_window::live::RetainedScene::from_scene_command(&command) {
-                        Ok(retained) => self.retained_scene = Some(retained),
-                        Err(error) => {
-                            eprintln!("MLPL retained scene rejected: {error}");
-                            event_loop.exit();
-                            return;
-                        }
-                    }
-                    self.scene = Some(command.scene);
-                    self.camera = command.camera;
-                    self.rotation_speed = command.rotation_speed;
-                    self.help = command.help;
-                    self.status = command.status;
                 }
                 Ok(mlpl_native3d_window::live::LiveCommand::Patch(command)) => {
                     let Some(retained) = self.retained_scene.as_mut() else {
@@ -373,6 +364,14 @@ impl Application {
                     }
                     self.scene = Some(retained.scene().clone());
                 }
+                Ok(mlpl_native3d_window::live::LiveCommand::PointScene(command)) => {
+                    if !self.set_point_scene(command, event_loop) {
+                        return;
+                    }
+                }
+                Ok(mlpl_native3d_window::live::LiveCommand::PointPatch(command)) => {
+                    self.patch_point_scene(&command, event_loop);
+                }
                 Ok(mlpl_native3d_window::live::LiveCommand::View(command)) => {
                     if let Some(retained) = self.retained_scene.as_mut() {
                         if let Err(error) =
@@ -383,6 +382,13 @@ impl Application {
                             return;
                         }
                         self.scene = Some(retained.scene().clone());
+                    }
+                    if let Some(retained) = self.retained_point_scene.as_mut()
+                        && let Err(error) = retained.apply_view(command.revision)
+                    {
+                        eprintln!("MLPL retained point view rejected: {error}");
+                        event_loop.exit();
+                        return;
                     }
                     if let Some(rotation_speed) = command.rotation_speed {
                         self.rotation_speed = rotation_speed;
@@ -433,6 +439,93 @@ impl Application {
                     return;
                 }
             }
+        }
+    }
+
+    fn set_line_scene(
+        &mut self,
+        command: mlpl_native3d_window::live::SceneCommand,
+        event_loop: &ActiveEventLoop,
+    ) -> bool {
+        if let Some(graphics) = &self.graphics {
+            graphics.window.set_title(&scene_title(&command));
+        }
+        match mlpl_native3d_window::live::RetainedScene::from_scene_command(&command) {
+            Ok(retained) => self.retained_scene = Some(retained),
+            Err(error) => {
+                eprintln!("MLPL retained scene rejected: {error}");
+                event_loop.exit();
+                return false;
+            }
+        }
+        self.scene = Some(command.scene);
+        self.camera = command.camera;
+        self.rotation_speed = command.rotation_speed;
+        self.help = command.help;
+        self.status = command.status;
+        true
+    }
+
+    fn set_point_scene(
+        &mut self,
+        command: mlpl_native3d_window::live::PointSceneCommand,
+        event_loop: &ActiveEventLoop,
+    ) -> bool {
+        match mlpl_native3d_window::live::RetainedPointScene::from_command(&command) {
+            Ok(retained) => self.retained_point_scene = Some(retained),
+            Err(error) => {
+                eprintln!("MLPL retained point scene rejected: {error}");
+                event_loop.exit();
+                return false;
+            }
+        }
+        self.point_scene = Some(command.scene);
+        self.camera = command.camera;
+        self.help = command.help;
+        self.status = command.status;
+        true
+    }
+
+    fn patch_point_scene(
+        &mut self,
+        command: &mlpl_native3d_window::live::PointPatchCommand,
+        event_loop: &ActiveEventLoop,
+    ) {
+        let Some(retained) = self.retained_point_scene.as_mut() else {
+            eprintln!("MLPL point patch arrived before a complete point scene");
+            event_loop.exit();
+            return;
+        };
+        if let Err(error) = retained.apply(command) {
+            eprintln!("MLPL point patch rejected: {error}");
+            self.send(mlpl_native3d_window::live::resync_event(), event_loop);
+            return;
+        }
+        self.point_scene = Some(retained.scene().clone());
+    }
+
+    fn send_point_selection(&mut self, event_loop: &ActiveEventLoop) {
+        let revision = self
+            .retained_point_scene
+            .as_ref()
+            .map_or(0, mlpl_native3d_window::live::RetainedPointScene::revision);
+        let selection = self
+            .point_scene
+            .as_ref()
+            .zip(self.graphics.as_ref().and_then(Graphics::viewport))
+            .and_then(|(scene, viewport)| {
+                mlpl_native3d_window::live::point_selection_event(
+                    scene,
+                    self.camera,
+                    viewport,
+                    self.angle,
+                    self.pointer_position,
+                    revision,
+                )
+                .ok()
+            });
+        if let Some(selection) = selection {
+            self.send(selection, event_loop);
         }
     }
 
@@ -580,12 +673,12 @@ impl Application {
         let Some(graphics) = self.graphics.as_mut() else {
             return;
         };
-        let Some(scene) = self.scene.as_ref() else {
+        if self.scene.is_none() && self.point_scene.is_none() {
             graphics.window.request_redraw();
             return;
-        };
+        }
         if let Err(error) = graphics.render(
-            scene,
+            self.scene.as_ref(),
             self.point_scene.as_ref(),
             self.camera,
             self.angle,
@@ -692,6 +785,9 @@ impl ApplicationHandler for Application {
                         ),
                         event_loop,
                     );
+                    if button == PointerButton::Left && !pressed {
+                        self.send_point_selection(event_loop);
+                    }
                 }
             }
             WindowEvent::MouseWheel { delta, .. } => {
@@ -895,9 +991,13 @@ impl Graphics {
         self.surface.configure(&self.device, &self.configuration);
     }
 
+    fn viewport(&self) -> Option<Viewport> {
+        Viewport::new(self.configuration.width, self.configuration.height).ok()
+    }
+
     fn render(
         &mut self,
-        scene: &LineScene,
+        scene: Option<&LineScene>,
         point_scene: Option<&PointScene>,
         camera: Camera,
         angle: f32,
@@ -908,10 +1008,9 @@ impl Graphics {
         else {
             return Ok(());
         };
-        let Ok(lines) = scene.plan_lines(camera, viewport, angle) else {
-            return Ok(());
-        };
-        let mut vertices = line_vertices(&lines, viewport);
+        let mut vertices = scene
+            .and_then(|scene| scene.plan_lines(camera, viewport, angle).ok())
+            .map_or_else(Vec::new, |lines| line_vertices(&lines, viewport));
         let point_vertices = point_scene
             .and_then(|scene| scene.plan_points(camera, viewport, angle).ok())
             .map_or_else(Vec::new, |plan| point_vertices(plan.points(), viewport));
