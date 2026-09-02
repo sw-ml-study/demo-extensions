@@ -5,6 +5,7 @@ use std::collections::BTreeSet;
 use serde::{Deserialize, Serialize};
 
 use crate::NumericArray;
+use crate::{Camera, HeadlessImage, PointRenderPlan, RenderError, Viewport};
 
 const POINT_SCHEMA: &str = "sw-ml-study.native3d.point-scene";
 const POINT_VERSION: u32 = 1;
@@ -217,6 +218,35 @@ impl PointScene {
             })
             .collect();
         Ok(PointUploadPlan { points, byte_len })
+    }
+
+    /// Projects, culls, and depth-orders points for a bounded viewport.
+    ///
+    /// # Errors
+    ///
+    /// Rejects invalid camera state or non-finite rotation.
+    pub fn plan_points(
+        &self,
+        camera: Camera,
+        viewport: Viewport,
+        rotation_y: f32,
+    ) -> Result<PointRenderPlan, RenderError> {
+        crate::point_renderer::plan_points(self, camera, viewport, rotation_y)
+    }
+
+    /// Produces deterministic CPU-rasterized point evidence.
+    ///
+    /// # Errors
+    ///
+    /// Rejects invalid camera state or non-finite rotation.
+    pub fn render_points_headless(
+        &self,
+        camera: Camera,
+        viewport: Viewport,
+        rotation_y: f32,
+    ) -> Result<HeadlessImage, RenderError> {
+        let plan = self.plan_points(camera, viewport, rotation_y)?;
+        Ok(crate::point_renderer::rasterize(&plan, viewport))
     }
 
     fn validate(&self, limits: PointLimits) -> Result<(), PointSceneError> {

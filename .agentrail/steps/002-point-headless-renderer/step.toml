@@ -1,6 +1,6 @@
 number = 2
 slug = "point-headless-renderer"
-status = "pending"
+status = "in-progress"
 description = "Using Rust TDD, add pure camera-space projection, viewport clipping/culling, ..."
 role = "legacy"
 context_files = []

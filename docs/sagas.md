@@ -4,11 +4,11 @@ Only one saga is active at a time. A later saga may be replanned when the
 previous acceptance report exposes an upstream blocker. Steps are independently
 reviewable and use red/green TDD; no step silently modifies `../sw-mlpl`.
 
-Current status (2026-09-02): `native3d-point-cloud` is active at its initial
-renderer-neutral contract step. The `native3d-retained-scene` saga completed
-through step 015, including Model
-Atlas, disk usage, audio spectrum, weight distribution, the Yew microscope,
-and repository-wide retained-scene migration plus documentation reconciliation.
+Current status (2026-09-02): `native3d-point-cloud` has delivered its initial
+renderer-neutral contract and headless rendering steps. The
+`native3d-retained-scene` saga completed through step 015, including Model Atlas,
+disk usage, audio spectrum, weight distribution, the Yew microscope, and
+repository-wide retained-scene migration plus documentation reconciliation.
 Embedding/PCA remains the recommended successor after the point-cloud saga.
 
 The mandatory checklist in `AGENTS.md` applies to every step in every saga:

@@ -238,6 +238,8 @@ The delivered repository proves:
 - a bounded renderer-neutral point-scene contract for `[N,3]` positions and
   parallel size/color/opacity/stable-ID arrays, with deterministic upload
   planning and explicit owned-byte accounting;
+- deterministic headless point projection, viewport/near-plane culling,
+  far-to-near alpha ordering, stable-ID picking ties, and raster evidence;
 - a deterministic headless transform, perspective projection, clipping, and
   thick-line raster pipeline with portable PPM evidence.
 - a real headless `_native3d` provider with typed viewer lifecycle, bulk line

@@ -95,6 +95,14 @@ impl Camera {
     pub const fn distance(self) -> f32 {
         self.distance
     }
+
+    pub(crate) const fn vertical_fov_radians(self) -> f32 {
+        self.vertical_fov_radians
+    }
+
+    pub(crate) const fn near(self) -> f32 {
+        self.near
+    }
 }
 
 /// A bounded output surface measured in physical pixels.
@@ -175,6 +183,11 @@ pub struct HeadlessImage {
 }
 
 impl HeadlessImage {
+    pub(crate) const BACKGROUND: [u8; 4] = BACKGROUND;
+
+    pub(crate) fn from_rgba(dimensions: [u32; 2], rgba: Vec<u8>) -> Self {
+        Self { dimensions, rgba }
+    }
     /// Returns `[width, height]`.
     #[must_use]
     pub const fn dimensions(&self) -> [u32; 2] {
@@ -209,6 +222,14 @@ pub enum RenderError {
     InvalidCamera,
     /// Rotation must be finite.
     NonFiniteRotation,
+}
+
+pub(crate) fn validate_render_inputs(camera: Camera, rotation_y: f32) -> Result<(), RenderError> {
+    validate_camera(camera)?;
+    if !rotation_y.is_finite() {
+        return Err(RenderError::NonFiniteRotation);
+    }
+    Ok(())
 }
 
 pub(crate) fn plan_lines(

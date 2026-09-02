@@ -1,7 +1,7 @@
 # Native3D Point-Cloud Contract
 
-Status: renderer-neutral contract delivered; GPU/window and application slices
-remain later AgentRail steps.
+Status: renderer-neutral contract and deterministic headless renderer delivered;
+GPU/window and application slices remain later AgentRail steps.
 
 ## V1 scene
 
@@ -32,15 +32,31 @@ opacity is folded into alpha. This is accounting evidence, not a Rust ABI,
 wgpu vertex layout, zero-copy promise, or GPU allocation. Those decisions are
 intentionally deferred to the renderer step.
 
+## Headless projection, ordering, and picking
+
+The pure point planner uses the shared validated orbit-camera convention and
+physical-pixel viewport. It applies optional Y rotation, rejects points behind
+the near plane, and culls circles wholly outside the viewport before producing
+an output vector. Retained IDs survive projection.
+
+Transparent points are ordered far-to-near. Exact depth ties are painted with
+larger IDs first, making the lowest stable ID topmost; picking walks the same
+circle coverage in reverse draw order. This deterministic tie policy avoids
+depending on input order and adds no domain meaning to IDs.
+
+The CPU evidence renderer draws bounded circular sprites with source-over alpha
+onto the same fixed background used by line evidence. It is a regression oracle,
+not the future wgpu implementation or a promise about antialiasing.
+
 ## Evidence and remaining scope
 
 `point_scene_contract.rs` starts red against the absent API and covers valid
 planning, exact attribute/order preservation, malformed and non-finite data,
 parallel length mismatches, duplicate identity, and independent count/byte
-limits. Existing line-scene, camera, clipping, and headless raster tests remain
-unchanged.
+limits. `point_headless_renderer.rs` pins near/offscreen culling, far-to-near
+ordering, stable-ID overlap/picking ties, rotation validation, attribute-sensitive
+pixels, and a deterministic PPM hash. Existing line-scene tests remain unchanged.
 
-The next slice may project/rasterize these generic points headlessly. Native
-wgpu/winit integration, typed viewer handles, retained point patches, picking,
-MLPL fixtures, and the embedding/PCA application are not implemented by this
-contract step.
+Native wgpu/winit integration, typed viewer handles, retained point patches,
+MLPL fixtures, and the embedding/PCA application are not implemented by these
+headless steps.
