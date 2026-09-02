@@ -1,9 +1,10 @@
 number = 14
 slug = "retained-scene-all-demos"
-status = "in-progress"
+status = "completed"
 description = "Make retained shadow-scene diffs the repository-wide invariant for every inte..."
 role = "production"
 context_files = []
 created_at = "2026-08-16T19:09:29"
+completed_at = "2026-09-02T09:52:03"
 task_type = "implementation"
-commits = []
+commits = ["47bbf73c46d4778e6b33ea4b24ddaea9e561eadc"]
