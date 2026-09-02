@@ -1,0 +1,56 @@
+# MLPL-owned live orchestration for the deterministic point-cloud app.
+include "./controls.mlpl";
+
+def u:point_cloud_submit(state) {
+  "Send one complete MLPL-owned point scene.";
+  port_send(port,u:point_cloud_set_command(state)?);
+  ok(state)
+}
+
+def u:point_cloud_submit_patch(before,after) {
+  "Send one atomic point-style patch after selection changes.";
+  port_send(port,u:point_cloud_patch(before,after)?);
+  ok(after)
+}
+
+def u:point_cloud_on_event(event,state) {
+  "Reduce an event and emit the smallest matching generic host command.";
+  next=u:point_cloud_reduce(state,event);
+  if equal(event.kind,"point_selection") {
+    u:point_cloud_submit_patch(state,next)?
+  } else {
+    pointer=equal(event.kind,"pointer_down")+equal(event.kind,"pointer_up")+equal(event.kind,"pointer_move")+equal(event.kind,"wheel");
+    if pointer {
+      port_send(port,u:point_cloud_view_command(next))
+    } else {
+      if equal(event.kind,"key") {
+        if equal(event.key,"r") {
+          u:point_cloud_submit(next)?
+        }
+      }
+    }
+  };
+  if equal(event.kind,"frame") {
+    port_send(port,{op:"frame_ack",revision: next.revision})
+  };
+  next
+}
+
+def u:point_cloud_on_resync(event,state) {
+  "Resend complete point state after a rejected retained transaction.";
+  u:point_cloud_submit(state)?;
+  state
+}
+
+state=u:point_cloud_defaults();
+u:point_cloud_submit(state)?;
+on(port,"key",:u:point_cloud_on_event);
+on(port,"frame",:u:point_cloud_on_event);
+on(port,"pointer_move",:u:point_cloud_on_event);
+on(port,"pointer_down",:u:point_cloud_on_event);
+on(port,"pointer_up",:u:point_cloud_on_event);
+on(port,"wheel",:u:point_cloud_on_event);
+on(port,"point_selection",:u:point_cloud_on_event);
+on(port,"close",:u:point_cloud_on_event);
+on(port,"resync",:u:point_cloud_on_resync);
+run(port,state)

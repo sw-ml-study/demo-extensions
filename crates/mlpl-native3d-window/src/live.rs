@@ -135,6 +135,10 @@ const WD_GGUF_Q8: &str = include_str!("../../../../demo-ml-utils/src/formats/ggu
 const WD_MODEL: &str = include_str!("../../../demos/weight-distribution/model.mlpl");
 const WD_SCENE: &str = include_str!("../../../demos/weight-distribution/scene.mlpl");
 const WD_APPLET: &str = include_str!("../../../demos/weight-distribution/live-applet.mlpl");
+const POINT_MODEL: &str = include_str!("../../../demos/point-cloud/model.mlpl");
+const POINT_SCENE: &str = include_str!("../../../demos/point-cloud/scene.mlpl");
+const POINT_CONTROLS: &str = include_str!("../../../demos/point-cloud/controls.mlpl");
+const POINT_APPLET: &str = include_str!("../../../demos/point-cloud/live-applet.mlpl");
 
 #[must_use]
 pub fn applet_source() -> String {
@@ -177,6 +181,17 @@ pub fn life_torus_applet_source() -> String {
         without_includes(LIFE_TORUS_CONTROLS),
         without_includes(LIFE_TORUS_SCENE),
         without_includes(LIFE_TORUS_APPLET)
+    )
+}
+
+#[must_use]
+pub fn point_cloud_applet_source() -> String {
+    format!(
+        "{CAMERA_SOURCE}\n{}\n{}\n{}\n{}",
+        without_includes(POINT_MODEL),
+        without_includes(POINT_SCENE),
+        without_includes(POINT_CONTROLS),
+        without_includes(POINT_APPLET)
     )
 }
 

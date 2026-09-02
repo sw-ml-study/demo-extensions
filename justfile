@@ -83,6 +83,10 @@ microscope-web-build:
 point-cloud-smoke:
     ./scripts/run-point-cloud-smoke
 
+# Open the deterministic MLPL-owned native point-cloud teaching app.
+point-cloud:
+    ./scripts/run-point-cloud
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

@@ -13,7 +13,7 @@ use mlpl_native3d_window::interaction::{
 };
 use mlpl_native3d_window::live::{
     applet_source, close_event, input_event, key_event, life_torus_applet_source,
-    model_atlas_applet_source, resize_event, tic_tac_toe_applet_source,
+    model_atlas_applet_source, point_cloud_applet_source, resize_event, tic_tac_toe_applet_source,
 };
 use mlpl_native3d_window::{
     GpuPointVertex, GpuVertex, line_vertices, point_vertices, text_vertices, text_vertices_colored,
@@ -89,6 +89,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let event_loop = EventLoop::new()?;
     let arguments: Vec<_> = std::env::args().collect();
     let tic_tac_toe = arguments.iter().any(|argument| argument == "--tic-tac-toe");
+    let point_cloud = arguments.iter().any(|argument| argument == "--point-cloud");
     let life = arguments.iter().any(|argument| argument == "--life");
     let life_torus = arguments.iter().any(|argument| argument == "--life-torus");
     let model_atlas = arguments.iter().any(|argument| argument == "--model-atlas");
@@ -118,7 +119,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         .and_then(|index| arguments.get(index + 1))
         .map(|path| load_point_scene(std::path::Path::new(path)))
         .transpose()?;
-    let source = if tic_tac_toe {
+    let source = if point_cloud {
+        point_cloud_applet_source()
+    } else if tic_tac_toe {
         tic_tac_toe_applet_source()
     } else if let Some(root) = disk_usage.as_ref() {
         let snapshot = mlpl_native3d_window::disk_usage::capture_snapshot(
@@ -203,6 +206,8 @@ struct Application {
     help: String,
     status: String,
     pointer_position: [f64; 2],
+    point_press_position: Option<[f64; 2]>,
+    point_dragged: bool,
     pointer_buttons: PointerButtons,
     modifiers: Modifiers,
     pending_input: BoundedInput,
@@ -246,6 +251,8 @@ impl Application {
             help: String::new(),
             status: String::new(),
             pointer_position: [0.0; 2],
+            point_press_position: None,
+            point_dragged: false,
             pointer_buttons: PointerButtons::NONE,
             modifiers: Modifiers::NONE,
             pending_input: BoundedInput::new(64).expect("nonzero input capacity"),
@@ -331,6 +338,8 @@ impl Application {
                 self.retained_scene = None;
                 self.retained_point_scene = None;
                 self.pending_input = BoundedInput::new(64).expect("nonzero input capacity");
+                self.point_press_position = None;
+                self.point_dragged = false;
                 self.frame_gate = FrameGate::new();
                 self.help = "RESTARTING FRESH MLPL ENVIRONMENT...".into();
                 self.status.clear();
@@ -527,6 +536,29 @@ impl Application {
         if let Some(selection) = selection {
             self.send(selection, event_loop);
         }
+    }
+
+    fn note_point_motion(&mut self) {
+        if let Some(press) = self.point_press_position {
+            let distance =
+                (self.pointer_position[0] - press[0]).hypot(self.pointer_position[1] - press[1]);
+            self.point_dragged |= distance > 4.0;
+        }
+    }
+
+    fn note_point_button(&mut self, button: PointerButton, pressed: bool) -> bool {
+        if button != PointerButton::Left {
+            return false;
+        }
+        if pressed {
+            self.point_press_position = Some(self.pointer_position);
+            self.point_dragged = false;
+            return false;
+        }
+        let activation = self.point_press_position.is_some() && !self.point_dragged;
+        self.point_press_position = None;
+        self.point_dragged = false;
+        activation
     }
 
     fn open_audio(&mut self, path: &str, event_loop: &ActiveEventLoop) {
@@ -763,6 +795,7 @@ impl ApplicationHandler for Application {
             }
             WindowEvent::CursorMoved { position, .. } => {
                 self.pointer_position = [position.x, position.y];
+                self.note_point_motion();
                 self.queue_input(
                     InputEvent::pointer_move(
                         self.pointer_position,
@@ -775,6 +808,7 @@ impl ApplicationHandler for Application {
             WindowEvent::MouseInput { state, button, .. } => {
                 if let Some((button, flag)) = normalize_button(button) {
                     let pressed = state == ElementState::Pressed;
+                    let point_activation = self.note_point_button(button, pressed);
                     self.pointer_buttons = self.pointer_buttons.with(flag, pressed);
                     self.queue_input(
                         InputEvent::pointer_button(
@@ -785,7 +819,7 @@ impl ApplicationHandler for Application {
                         ),
                         event_loop,
                     );
-                    if button == PointerButton::Left && !pressed {
+                    if point_activation {
                         self.send_point_selection(event_loop);
                     }
                 }
@@ -1144,6 +1178,24 @@ mod tests {
         let scene = load_point_scene(&path).unwrap();
         assert_eq!(scene.len(), 7);
         assert_eq!(scene.ids(), [101, 102, 103, 104, 105, 106, 107]);
+    }
+
+    #[test]
+    fn point_activation_distinguishes_click_from_camera_drag() {
+        let (_command_tx, command_rx) = std::sync::mpsc::channel();
+        let (event_tx, _event_rx) = std::sync::mpsc::channel();
+        let mut application = Application::new(command_rx, event_tx);
+        application.pointer_position = [10.0, 10.0];
+        assert!(!application.note_point_button(PointerButton::Left, true));
+        application.pointer_position = [12.0, 12.0];
+        application.note_point_motion();
+        assert!(application.note_point_button(PointerButton::Left, false));
+
+        application.pointer_position = [10.0, 10.0];
+        assert!(!application.note_point_button(PointerButton::Left, true));
+        application.pointer_position = [20.0, 20.0];
+        application.note_point_motion();
+        assert!(!application.note_point_button(PointerButton::Left, false));
     }
 
     #[test]

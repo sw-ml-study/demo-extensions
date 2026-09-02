@@ -1,0 +1,2 @@
+# MLPL point-cloud reducer facade used by native tests and the live applet.
+include "./scene.mlpl";

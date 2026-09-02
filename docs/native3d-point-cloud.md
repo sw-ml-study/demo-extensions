@@ -1,8 +1,8 @@
 # Native3D Point-Cloud Contract
 
-Status: renderer-neutral contract, deterministic headless renderer, and native
-wgpu/winit point pipeline delivered, including generic retained updates and
-selection events; the MLPL application slice remains a later AgentRail step.
+Status: renderer-neutral contract, deterministic headless renderer, native
+wgpu/winit point pipeline, generic retained updates/selection events, and the
+deterministic MLPL teaching application are delivered.
 
 ## V1 scene
 
@@ -118,6 +118,7 @@ pixels, and a deterministic PPM hash. Existing line-scene tests remain unchanged
 remove behavior, stale and unknown IDs, conflict and final-scene budget failures,
 and exact-ID hit/no-hit event encoding under the authoritative overlap policy.
 
-MLPL point application semantics and the embedding/PCA application remain
+The deterministic MLPL teaching application is documented in
+`native3d-point-cloud-demo.md`. The embedding/PCA application remains
 unimplemented. GPU picking/readback is deliberately unnecessary in this slice:
 the same bounded CPU render plan determines both visible ordering and selection.

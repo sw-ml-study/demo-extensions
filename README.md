@@ -244,6 +244,8 @@ The delivered repository proves:
   opt-in `just point-cloud-smoke` fixture on graphical macOS/Linux sessions;
 - atomic retained point replacements/patches and precision-safe stable-ID
   selection events, with application meaning reserved for MLPL;
+- a deterministic `just point-cloud` MLPL teaching app with selection, camera,
+  patches, lifecycle, and a headless real-worker acceptance test;
 - a deterministic headless transform, perspective projection, clipping, and
   thick-line raster pipeline with portable PPM evidence.
 - a real headless `_native3d` provider with typed viewer lifecycle, bulk line
@@ -317,8 +319,10 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
 - [Retained scene patches](docs/retained-scene-patches.md) — stable-ID atomic
   line diffs, revision/resync behavior, bounds, ownership, and measured scope.
 - [Native3D point-cloud contract](docs/native3d-point-cloud.md) — bulk point
-  shapes, attributes, stable IDs, explicit budgets, upload planning, and
-  deliberately deferred renderer/application scope.
+  shapes, attributes, stable IDs, budgets, rendering, retained updates, and
+  selection delivery.
+- [Native3D point-cloud demo](docs/native3d-point-cloud-demo.md) — deterministic
+  MLPL-owned arrays, controls, selection styling, and host responsibility split.
 - [Native 3D disk-usage explorer](docs/native3d-disk-usage.md) — bounded
   metadata-only scanning, cached MLPL navigation, color semantics, and
   retained shadow-scene diffs.

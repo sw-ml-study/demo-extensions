@@ -1,0 +1,76 @@
+# MLPL-owned state and deterministic data policy for the point-cloud teaching app.
+include "../../lib/native3d/camera.mlpl";
+
+def u:point_cloud_state(selected_id,camera,revision,close_requested) {
+  "Construct point cloud application state.";
+  {selected_id: selected_id,camera: camera,revision: revision,close_requested: close_requested}
+}
+
+def u:point_cloud_defaults() {
+  "Construct deterministic point cloud defaults.";
+  u:point_cloud_state(-1,u:n3d_camera_defaults(),0,0)
+}
+
+def u:point_cloud_restate(state,selected_id,camera,close_requested) {
+  "Advance point cloud state after an application transition.";
+  u:point_cloud_state(selected_id,camera,state.revision+1,close_requested)
+}
+
+def u:point_cloud_id_from_string(text) {
+  "Resolve an exact selection string against the bounded stable-ID catalog.";
+  found=-1;
+  index=0;
+  while lt(index,24) {
+    id=1000+index;
+    if equal(text,unwrap(to_json(id))) {
+      found=id
+    };
+    index=index+1
+  };
+  found
+}
+
+def u:point_cloud_reduce(state,event) {
+  "Reduce generic input and point-selection events into MLPL-owned state.";
+  pointer=equal(event.kind,"pointer_down")+equal(event.kind,"pointer_up")+equal(event.kind,"pointer_move")+equal(event.kind,"wheel");
+  if pointer {
+    u:point_cloud_restate(state,state.selected_id,u:n3d_camera_reduce(state.camera,event),state.close_requested)
+  } else {
+    if equal(event.kind,"point_selection") {
+      selected=if event.hit {
+        u:point_cloud_id_from_string(event.id)
+      } else {
+        -1
+      };
+      u:point_cloud_restate(state,selected,state.camera,state.close_requested)
+    } else {
+      if equal(event.kind,"key") {
+        if equal(event.key,"r") {
+          u:point_cloud_restate(state,-1,u:n3d_camera_defaults(),0)
+        } else {
+          if equal(event.key,"escape") {
+            u:point_cloud_restate(state,state.selected_id,state.camera,1)
+          } else {
+            state
+          }
+        }
+      } else {
+        if equal(event.kind,"close") {
+          u:point_cloud_restate(state,state.selected_id,state.camera,1)
+        } else {
+          state
+        }
+      }
+    }
+  }
+}
+
+def u:point_cloud_help(state) {
+  "Explain MLPL and Rust responsibilities plus interactive controls.";
+  selection=if lt(state.selected_id,0) {
+    "NONE"
+  } else {
+    unwrap(to_json(state.selected_id))
+  };
+  str_concat("POINT CLOUD — MLPL OWNS XYZ / SIZE / COLOR / OPACITY / ID ARRAYS\nLEFT CLICK SELECTS STABLE ID | LEFT DRAG ORBITS | SHIFT+LEFT OR MIDDLE DRAG PANS | WHEEL ZOOMS\nR RESET | ESC CLOSE | DETERMINISTIC SYNTHETIC DATA, NOT EMBEDDINGS\nSELECTED ID: ",selection)
+}

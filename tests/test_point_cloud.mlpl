@@ -1,0 +1,62 @@
+# Native mlplunit coverage for the deterministic point-cloud teaching app.
+include "demos/point-cloud/controls.mlpl";
+
+@test {name:"Point cloud generation is deterministic and bounded",tags:["native3d","points","arrays"]}
+def u:test_point_cloud_arrays() {
+  "Exercise deterministic point cloud array generation.";
+  state=u:point_cloud_defaults();
+  scene=unwrap(u:point_cloud_scene(state));
+  again=unwrap(u:point_cloud_scene(state));
+  u:assert_eq(shape(scene.positions),[24,3],"MLPL owns a bounded xyz matrix")?;
+  u:assert_eq(shape(scene.sizes),[24],"sizes are parallel")?;
+  u:assert_eq(shape(scene.colors),[24,4],"colors are parallel")?;
+  u:assert_eq(shape(scene.opacities),[24],"opacities are parallel")?;
+  u:assert_eq(scene.ids,range(24)+1000,"stable IDs are deterministic")?;
+  u:assert_eq(scene,again,"same state produces identical arrays")
+}
+
+@test {name:"Point selection consumes exact IDs and no-hit events",tags:["native3d","points","selection"]}
+def u:test_point_cloud_selection() {
+  "Exercise exact string point selection behavior.";
+  state=u:point_cloud_defaults();
+  selected=u:point_cloud_reduce(state,{kind:"point_selection",hit:1,id:"1007",revision:"0"});
+  cleared=u:point_cloud_reduce(selected,{kind:"point_selection",hit:0,id:"",revision:"1"});
+  unknown=u:point_cloud_reduce(state,{kind:"point_selection",hit:1,id:"9999",revision:"0"});
+  u:assert_eq([selected.selected_id,selected.revision],[1007,1],"exact stable ID selects and advances")?;
+  u:assert_eq([cleared.selected_id,cleared.revision],[-1,2],"no hit clears selection")?;
+  u:assert_eq(unknown.selected_id,-1,"unknown identity cannot select")
+}
+
+@test {name:"Point camera controls and revisions stay in MLPL",tags:["native3d","points","camera"]}
+def u:test_point_cloud_camera() {
+  "Exercise point cloud camera and revision behavior.";
+  state=u:point_cloud_defaults();
+  down=u:point_cloud_reduce(state,{kind:"pointer_down",button:"left",x:100,y:100,shift:0});
+  moved=u:point_cloud_reduce(down,{kind:"pointer_move",x:125,y:80,left:1,shift:0});
+  zoomed=u:point_cloud_reduce(moved,{kind:"wheel",dx:0,dy:30,x:125,y:80,shift:0});
+  u:assert_eq([moved.camera.yaw,moved.camera.pitch],[0.25,0.2],"left drag orbits")?;
+  u:assert_true(lt(zoomed.camera.distance,state.camera.distance),"wheel zooms")?;
+  u:assert_true(gt(zoomed.revision,moved.revision),"every visible view transition advances")
+}
+
+@test {name:"Point selection emits a bounded atomic patch",tags:["native3d","points","patch"]}
+def u:test_point_cloud_patch() {
+  "Exercise point cloud patch construction.";
+  before=u:point_cloud_defaults();
+  after=u:point_cloud_reduce(before,{kind:"point_selection",hit:1,id:"1003",revision:"0"});
+  patch=unwrap(u:point_cloud_patch(before,after));
+  u:assert_eq([patch.base_revision,patch.target_revision],[0,1],"patch revisions advance")?;
+  u:assert_eq(shape(patch.positions),[24,3],"bounded patch positions")?;
+  u:assert_eq(patch.ids,range(24)+1000,"patch retains stable identities")?;
+  u:assert_eq(shape(patch.remove_ids),[0],"selection removes no points")
+}
+
+@test {name:"Point cloud teardown is explicit",tags:["native3d","points","lifecycle"]}
+def u:test_point_cloud_teardown() {
+  "Exercise point cloud close behavior.";
+  state=u:point_cloud_reduce(u:point_cloud_defaults(),{kind:"close"});
+  u:assert_eq(state.close_requested,1,"close belongs to MLPL state")?;
+  u:assert_true(gt(state.revision,0),"teardown advances the revision")
+}
+
+u:run_registered_tests()
