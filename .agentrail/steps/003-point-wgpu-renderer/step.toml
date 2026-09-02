@@ -1,0 +1,8 @@
+number = 3
+slug = "point-wgpu-renderer"
+status = "pending"
+description = "Using Rust TDD, integrate the generic bounded PointScene pipeline into the ex..."
+role = "legacy"
+context_files = []
+created_at = "2026-09-02T12:57:37"
+commits = []
