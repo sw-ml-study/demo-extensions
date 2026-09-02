@@ -1,31 +1,58 @@
 # MLPL application semantics for demos tic tac toe live applet.
 include "controls.mlpl";
+include "../../lib/native3d/retained.mlpl";
+
+def u:ttt_help(state) {
+  "Return the tic-tac-toe help legend for the selected player role.";
+  role=if eq(state.user_mark,1) {
+    "YOU ARE X / "
+  } else {
+    "YOU ARE O / "
+  };
+  order=if state.user_first {
+    "FIRST"
+  } else {
+    "SECOND"
+  };
+  str_concat("CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\n",str_concat(role,str_concat(order,"   GOLD LINE SHOWS WINNER")))
+}
 
 def u:ttt_submit(state) {
   "Provide ttt submit behavior in this MLPL module.";
   scene=u:ttt_scene(state.board,state.hover_cell)?;
-  help=if eq(state.user_mark,1) {
-    if state.user_first {
-      "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE X / FIRST   GOLD LINE SHOWS WINNER"
-    } else {
-      "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE X / SECOND   GOLD LINE SHOWS WINNER"
-    }
-  } else {
-    if state.user_first {
-      "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE O / FIRST   GOLD LINE SHOWS WINNER"
-    } else {
-      "CLICK EMPTY SQUARE   LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN   DRAG NEVER PLACES A MARK\nX/O MARK   1 FIRST   2 SECOND   R RESTART   ESC CLOSE\nYOU ARE O / SECOND   GOLD LINE SHOWS WINNER"
-    }
-  };
-  port_send(port,{op:"set_scene",positions: scene.positions,edges: scene.edges,colors: scene.colors,thicknesses: scene.thicknesses,ids: scene.ids,rotation_y_speed:0,revision: state.revision,camera: u:n3d_camera_record(state.camera),help: help});
+  port_send(port,{op:"set_scene",positions: scene.positions,edges: scene.edges,colors: scene.colors,thicknesses: scene.thicknesses,ids: scene.ids,rotation_y_speed:0,revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:ttt_help(state)});
   ok(state)
+}
+
+def u:ttt_geometry_changed(before,after) {
+  "Report whether board or hover geometry differs without allocating a scene.";
+  changed=1-eq(before.hover_cell,after.hover_cell);
+  index=0;
+  while lt(index,9) {
+    changed=changed+(1-eq(take(before.board,0,index),take(after.board,0,index)));
+    index=index+1
+  };
+  changed
 }
 
 def u:ttt_on_event(event,state) {
   "Provide ttt on event behavior in this MLPL module.";
   next=u:ttt_reduce(state,event);
-  u:ttt_submit(next)?;
+  geometry=u:ttt_geometry_changed(state,next);
+  if geometry {
+    old=u:ttt_scene(state.board,state.hover_cell)?;
+    new=u:ttt_scene(next.board,next.hover_cell)?;
+    port_send(port,u:n3d_scene_patch(old,new,state.revision,next.revision))
+  } else {
+    port_send(port,{op: "set_view",revision: next.revision,camera: u:n3d_camera_record(next.camera),help: u:ttt_help(next)})
+  };
   next
+}
+
+def u:ttt_resync(event,state) {
+  "Resend a complete board only after an explicit renderer resync request.";
+  u:ttt_submit(state)?;
+  state
 }
 
 state=u:ttt_app_defaults();
@@ -36,4 +63,5 @@ on(port,"pointer_down",:u:ttt_on_event);
 on(port,"pointer_up",:u:ttt_on_event);
 on(port,"wheel",:u:ttt_on_event);
 on(port,"resize",:u:ttt_on_event);
+on(port,"resync",:u:ttt_resync);
 run(port,state)

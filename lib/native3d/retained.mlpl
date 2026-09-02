@@ -1,0 +1,49 @@
+# Generic stable-ID retained line-scene differ for native 3D applets.
+
+def u:n3d_scene_line_index(scene,id) {
+  "Find a stable line ID in a renderer-neutral scene, or return negative one.";
+  found=-1;
+  index=0;
+  while lt(index,tally(scene.ids)) {
+    if eq(take(scene.ids,0,index),id) {
+      found=index
+    };
+    index=index+1
+  };
+  found
+}
+
+def u:n3d_patch_add_line(patch,scene,index) {
+  "Append one scene line to a retained patch accumulator.";
+  edge=take(scene.edges,0,index);
+  start=take(scene.positions,0,take(edge,0,0));
+  end=take(scene.positions,0,take(edge,0,1));
+  {starts: concat(patch.starts,start),ends: concat(patch.ends,end),colors: concat(patch.colors,take(scene.colors,0,index)),thicknesses: concat(patch.thicknesses,take(scene.thicknesses,0,index)),ids: concat(patch.ids,take(scene.ids,0,index)),removes: patch.removes,count: patch.count+1}
+}
+
+def u:n3d_scene_patch(old,new,base_revision,target_revision) {
+  "Diff two stable-ID line scenes into one bounded renderer patch command.";
+  patch={starts: fill([0],0),ends: fill([0],0),colors: fill([0],0),thicknesses: fill([0],0),ids: fill([0],0),removes: fill([0],0),count: 0};
+  index=0;
+  while lt(index,tally(new.ids)) {
+    id=take(new.ids,0,index);
+    prior=u:n3d_scene_line_index(old,id);
+    changed=lt(prior,0);
+    if 1-changed {
+      changed=(1-equal(take(new.colors,0,index),take(old.colors,0,prior)))+(1-eq(take(new.thicknesses,0,index),take(old.thicknesses,0,prior)))+(1-equal(take(new.positions,0,take(take(new.edges,0,index),0,0)),take(old.positions,0,take(take(old.edges,0,prior),0,0))))+(1-equal(take(new.positions,0,take(take(new.edges,0,index),0,1)),take(old.positions,0,take(take(old.edges,0,prior),0,1))))
+    };
+    if changed {
+      patch=u:n3d_patch_add_line(patch,new,index)
+    };
+    index=index+1
+  };
+  index=0;
+  while lt(index,tally(old.ids)) {
+    id=take(old.ids,0,index);
+    if lt(u:n3d_scene_line_index(new,id),0) {
+      patch={starts: patch.starts,ends: patch.ends,colors: patch.colors,thicknesses: patch.thicknesses,ids: patch.ids,removes: concat(patch.removes,id),count: patch.count}
+    };
+    index=index+1
+  };
+  {op: "patch_scene",base_revision: base_revision,target_revision: target_revision,ids: patch.ids,starts: reshape(patch.starts,[patch.count,3]),ends: reshape(patch.ends,[patch.count,3]),colors: reshape(patch.colors,[patch.count,4]),thicknesses: patch.thicknesses,remove_ids: patch.removes}
+}

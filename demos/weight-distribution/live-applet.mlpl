@@ -1,4 +1,5 @@
 # MLPL application semantics for demos weight distribution live applet.
+include "../../lib/native3d/retained.mlpl";
 def u:wd_submit(state) {
   "Provide wd submit behavior in this MLPL module.";
   scene=if equal(state.mode,"histogram") { u:wd_scene(state)? } else { u:wd_mode_scene(state)? };
@@ -15,6 +16,23 @@ def u:wd_submit_view(state) {
   port_send(port,{op: "set_view",revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:wd_help(state),status: u:wd_status(state)});
   ok(state)
 }
+def u:wd_scene_for_state(state) {
+  "Build the stable-ID scene associated with a weight explorer state.";
+  if equal(state.mode,"histogram") { u:wd_scene(state) } else { u:wd_mode_scene(state) }
+}
+def u:wd_submit_retained(before,after) {
+  "Send a generic retained diff plus view, status, and animation state.";
+  old=u:wd_scene_for_state(before)?;
+  new=u:wd_scene_for_state(after)?;
+  port_send(port,u:n3d_scene_patch(old,new,before.revision,after.revision));
+  speed=if equal(after.mode,"loading") {
+    2
+  } else {
+    0
+  };
+  port_send(port,{op: "set_view",revision: after.revision,camera: u:n3d_camera_record(after.camera),rotation_y_speed: speed,help: u:wd_help(after),status: u:wd_status(after)});
+  ok(after)
+}
 def u:wd_key(event,state) {
   "Provide wd key behavior in this MLPL module.";
   key=event.key;
@@ -30,7 +48,6 @@ def u:wd_key(event,state) {
     next=u:wd_restate(state,"files",index,0,state.tile,state.bins,0,state.camera,"");
     if equal(key,"enter")*gt(list_len(state.files),0) {
       next=u:wd_loading(next);
-      u:wd_submit(next)?;
       next=u:wd_open_file(next)
     }
   } else {
@@ -76,7 +93,7 @@ def u:wd_key(event,state) {
   if equal(next.mode,"histogram")*equal(state.mode,"histogram") {
     port_send(port,u:wd_scene_patch(state,next)?);
     u:wd_submit_view(next)?
-  } else { u:wd_submit(next)? };
+  } else { u:wd_submit_retained(state,next)? };
   next
 }
 def u:wd_dispatch(event,state) {
@@ -110,9 +127,14 @@ def u:wd_event(event,state) {
   attempted=u:wd_dispatch(event,state);
   next=u:wd_event_result(state,attempted);
   if is_err(attempted) {
-    ignored=u:wd_submit(next)
+    ignored=u:wd_submit_retained(state,next)
   };
   next
+}
+def u:wd_resync(event,state) {
+  "Resend a complete weight scene only after an explicit renderer resync request.";
+  u:wd_submit(state)?;
+  state
 }
 state=u:wd_defaults(weight_files);
 u:wd_submit(state)?;
@@ -123,4 +145,5 @@ on(port,"pointer_up",:u:wd_event);
 on(port,"wheel",:u:wd_event);
 on(port,"resize",:u:wd_event);
 on(port,"close",:u:wd_event);
+on(port,"resync",:u:wd_resync);
 run(port,state)

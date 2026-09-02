@@ -83,6 +83,7 @@ where
 const SCENE_SOURCE: &str = include_str!("../../../demos/wireframe-cube/scene.mlpl");
 const CAMERA_SOURCE: &str = include_str!("../../../lib/native3d/camera.mlpl");
 const GEOMETRY_SOURCE: &str = include_str!("../../../lib/native3d/geometry.mlpl");
+const RETAINED_SOURCE: &str = include_str!("../../../lib/native3d/retained.mlpl");
 const CONTROLS_SOURCE: &str = include_str!("../../../demos/wireframe-cube/controls.mlpl");
 const APPLET_BODY: &str = include_str!("../../../demos/wireframe-cube/live-applet.mlpl");
 const TTT_MODEL: &str = include_str!("../../../demos/tic-tac-toe/model.mlpl");
@@ -138,7 +139,7 @@ const WD_APPLET: &str = include_str!("../../../demos/weight-distribution/live-ap
 #[must_use]
 pub fn applet_source() -> String {
     format!(
-        "{SCENE_SOURCE}\n{CAMERA_SOURCE}\n{}\n{}",
+        "{SCENE_SOURCE}\n{CAMERA_SOURCE}\n{RETAINED_SOURCE}\n{}\n{}",
         without_includes(CONTROLS_SOURCE),
         without_includes(APPLET_BODY)
     )
@@ -147,7 +148,7 @@ pub fn applet_source() -> String {
 #[must_use]
 pub fn tic_tac_toe_applet_source() -> String {
     format!(
-        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}",
+        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{RETAINED_SOURCE}\n{}\n{}\n{}\n{}",
         without_includes(TTT_MODEL),
         without_includes(TTT_SCENE),
         without_includes(TTT_CONTROLS),
@@ -198,7 +199,7 @@ pub fn model_atlas_applet_source() -> String {
 #[must_use]
 pub fn model_atlas_file_applet_source() -> String {
     format!(
-        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+        "{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{RETAINED_SOURCE}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
         without_includes(FILE_ATLAS_HEADER),
         without_includes(FILE_ATLAS_CATALOG),
         without_includes(ATLAS_SCAN),
@@ -253,7 +254,7 @@ pub fn weight_distribution_applet_source(paths: &[String]) -> String {
         .collect::<Vec<_>>()
         .join(",");
     format!(
-        "weight_files=[{files}];\n{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+        "weight_files=[{files}];\n{CAMERA_SOURCE}\n{GEOMETRY_SOURCE}\n{RETAINED_SOURCE}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
         without_includes(ATLAS_MODEL),
         without_includes(ATLAS_SCENE),
         without_includes(WD_SAFE_HEADER),
@@ -349,9 +350,13 @@ impl RetainedScene {
     /// # Errors
     ///
     /// Rejects a view revision older than the retained scene revision.
-    pub fn apply_view_revision(&mut self, revision: u64) -> Result<(), String> {
+    pub fn apply_view(&mut self, revision: u64, rotation_speed: Option<f32>) -> Result<(), String> {
         if revision < self.revision {
             return Err("view revision is stale".into());
+        }
+        if let Some(rotation_speed) = rotation_speed {
+            self.scene = scene_from_objects(&self.objects, rotation_speed)?;
+            self.rotation_speed = rotation_speed;
         }
         self.revision = revision;
         Ok(())
@@ -372,6 +377,7 @@ impl RetainedScene {
 pub struct ViewCommand {
     pub camera: Camera,
     pub revision: u64,
+    pub rotation_speed: Option<f32>,
     pub help: String,
     pub status: String,
 }
@@ -763,9 +769,17 @@ fn parse_view_fields(fields: &BTreeMap<String, Value>) -> Result<ViewCommand, St
         Some(Value::Record { fields }) => parse_camera(fields)?,
         Some(_) => return Err("camera must be a record".into()),
     };
+    let rotation_speed = match fields.get("rotation_y_speed") {
+        None => None,
+        Some(_) => Some(to_f32(
+            scalar_field(fields, "rotation_y_speed")?,
+            "rotation_y_speed",
+        )?),
+    };
     Ok(ViewCommand {
         camera,
         revision,
+        rotation_speed,
         help,
         status,
     })

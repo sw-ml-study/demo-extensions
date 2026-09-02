@@ -4,6 +4,21 @@ use mlpl_native3d_window::live::{
     resize_event, run_applet_with_host_root, weight_distribution_applet_source,
 };
 
+fn retained_transition(
+    commands: &std::sync::mpsc::Receiver<mlpl_eval::Value>,
+) -> (
+    mlpl_native3d_window::live::ScenePatchCommand,
+    mlpl_native3d_window::live::ViewCommand,
+) {
+    let LiveCommand::Patch(patch) = parse_live_command(commands.recv().unwrap()).unwrap() else {
+        panic!("ordinary transition must use a retained patch")
+    };
+    let LiveCommand::View(view) = parse_live_command(commands.recv().unwrap()).unwrap() else {
+        panic!("retained transition must publish its view state")
+    };
+    (patch, view)
+}
+
 fn orbit_then_select_bar(
     commands: &std::sync::mpsc::Receiver<mlpl_eval::Value>,
     events: &std::sync::mpsc::Sender<mlpl_eval::Value>,
@@ -71,23 +86,14 @@ fn bounded_real_safetensors_reaches_a_retained_histogram() {
         let menu = parse_scene_command(menu_value).unwrap();
         assert!(menu.help.contains("WEIGHT DISTRIBUTION — MODEL FILES"));
         events.send(key_event("enter")).unwrap();
-        let loading = parse_scene_command(commands.recv().unwrap()).unwrap();
-        assert!(loading.help.contains("LOADING BOUNDED MODEL CATALOG"));
-        assert!((loading.rotation_speed - 2.0).abs() < f32::EPSILON);
-        let Ok(tensor_value) = commands.recv_timeout(std::time::Duration::from_secs(2)) else {
-            return;
-        };
-        let tensors = parse_scene_command(tensor_value).unwrap();
+        let (_, tensors) = retained_transition(&commands);
         assert!(tensors.help.contains("CHOOSE TENSOR"));
         events.send(key_event("enter")).unwrap();
-        let Ok(histogram_value) = commands.recv_timeout(std::time::Duration::from_secs(2)) else {
-            return;
-        };
-        let histogram = parse_scene_command(histogram_value).unwrap();
+        let (histogram_patch, histogram) = retained_transition(&commands);
         assert!(histogram.help.contains("X=WEIGHT VALUE"));
         assert!(histogram.help.contains("Y=LOG2 SAMPLE COUNT"));
         assert!(histogram.status.contains("SAMPLED 8 / 8"));
-        assert!(histogram.objects.len() > 8 * 12 + 24);
+        assert!(histogram_patch.upserts.len() > 8 * 12 + 24);
         events
             .send(input_event(InputEvent::pointer_button(
                 PointerButton::Left,
@@ -168,15 +174,14 @@ fn shared_q8_0_fixture_decodes_one_bounded_block() {
         parse_scene_command(commands.recv().unwrap()).unwrap();
         events.send(resize_event(900, 700)).unwrap();
         events.send(key_event("enter")).unwrap();
-        let loading = parse_scene_command(commands.recv().unwrap()).unwrap();
-        assert!(loading.help.contains("LOADING BOUNDED MODEL CATALOG"));
-        parse_scene_command(commands.recv().unwrap()).unwrap();
+        let (_, tensors) = retained_transition(&commands);
+        assert!(tensors.help.contains("CHOOSE TENSOR"));
         events.send(key_event("arrow_down")).unwrap();
-        let selected = parse_scene_command(commands.recv().unwrap()).unwrap();
+        let (_, selected) = retained_transition(&commands);
         assert!(selected.status.contains("quant"));
         assert!(selected.status.contains("DTYPE 8"));
         events.send(key_event("enter")).unwrap();
-        let histogram = parse_scene_command(commands.recv().unwrap()).unwrap();
+        let (_, histogram) = retained_transition(&commands);
         assert!(histogram.status.contains("SAMPLED 32 / 32"));
         assert!(histogram.status.contains("READ 34 B"));
         events.send(close_event()).unwrap();

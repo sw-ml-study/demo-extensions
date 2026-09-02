@@ -1,18 +1,42 @@
 # MLPL application semantics for demos wireframe cube live applet.
 include "controls.mlpl";
+include "../../lib/native3d/retained.mlpl";
+
+def u:wireframe_cube_help() {
+  "Return the live wireframe cube control legend.";
+  "MOUSE: LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN\nW/S WIDTH   UP/DOWN HEIGHT   A/D LENGTH\n+/- SPEED   SPACE PAUSE   C COLOR   [/] LINE\nR RESET   ESC CLOSE"
+}
 
 def u:wireframe_cube_submit(state) {
   "Provide wireframe cube submit behavior in this MLPL module.";
   bulk=u:wireframe_cube_bulk_update(state)?;
-  port_send(port,{op: "set_scene",positions: bulk.positions,edges: bulk.edges,colors: bulk.colors,thicknesses: bulk.thicknesses,ids: bulk.ids,rotation_y_speed: bulk.rotation_y_speed,revision: bulk.revision,camera: bulk.camera,help: "MOUSE: LEFT DRAG ORBIT/TILT   WHEEL ZOOM\nSHIFT+LEFT OR MIDDLE DRAG PAN\nW/S WIDTH   UP/DOWN HEIGHT   A/D LENGTH\n+/- SPEED   SPACE PAUSE   C COLOR   [/] LINE\nR RESET   ESC CLOSE"});
+  port_send(port,{op: "set_scene",positions: bulk.positions,edges: bulk.edges,colors: bulk.colors,thicknesses: bulk.thicknesses,ids: bulk.ids,rotation_y_speed: bulk.rotation_y_speed,revision: bulk.revision,camera: bulk.camera,help: u:wireframe_cube_help()});
   ok(state)
 }
 
 def u:wireframe_cube_on_event(event,state) {
   "Provide wireframe cube on event behavior in this MLPL module.";
   next=u:wireframe_cube_reduce(state,event);
-  u:wireframe_cube_submit(next)?;
+  geometry=(1-eq(next.width,state.width))+(1-eq(next.height,state.height))+(1-eq(next.length,state.length))+(1-equal(next.line_color,state.line_color))+(1-eq(next.line_thickness,state.line_thickness));
+  if geometry {
+    old=u:wireframe_cube_bulk_update(state)?;
+    new=u:wireframe_cube_bulk_update(next)?;
+    port_send(port,u:n3d_scene_patch(old,new,state.revision,next.revision))
+  } else {
+    speed=if next.paused {
+      0
+    } else {
+      next.rotation_speed
+    };
+    port_send(port,{op: "set_view",revision: next.revision,camera: u:n3d_camera_record(next.camera),rotation_y_speed: speed,help: u:wireframe_cube_help()})
+  };
   next
+}
+
+def u:wireframe_cube_resync(event,state) {
+  "Resend a complete cube scene only after an explicit renderer resync request.";
+  u:wireframe_cube_submit(state)?;
+  state
 }
 
 state=u:wireframe_cube_control_defaults();
@@ -23,4 +47,5 @@ on(port,"pointer_move",:u:wireframe_cube_on_event);
 on(port,"pointer_down",:u:wireframe_cube_on_event);
 on(port,"pointer_up",:u:wireframe_cube_on_event);
 on(port,"wheel",:u:wireframe_cube_on_event);
+on(port,"resync",:u:wireframe_cube_resync);
 run(port,state)

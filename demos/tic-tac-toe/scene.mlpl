@@ -7,10 +7,10 @@ def u:ttt_line_state() {
   {positions: fill([0],0),edges: fill([0],0),colors: fill([0],0),thicknesses: fill([0],0),ids: fill([0],0),count:0}
 }
 
-def u:ttt_add_segment(state,start,end,color,thickness) {
+def u:ttt_add_segment(state,start,end,color,thickness,id) {
   "Provide ttt add segment behavior in this MLPL module.";
   vertex=state.count*2;
-  {positions: concat(state.positions,concat(start,end)),edges: concat(state.edges,[vertex,vertex+1]),colors: concat(state.colors,color),thicknesses: concat(state.thicknesses,thickness),ids: concat(state.ids,state.count),count: state.count+1}
+  {positions: concat(state.positions,concat(start,end)),edges: concat(state.edges,[vertex,vertex+1]),colors: concat(state.colors,color),thicknesses: concat(state.thicknesses,thickness),ids: concat(state.ids,id),count: state.count+1}
 }
 
 def u:ttt_cell_center(cell,height) {
@@ -22,10 +22,10 @@ def u:ttt_cell_center(cell,height) {
 
 def u:ttt_add_grid(state) {
   "Provide ttt add grid behavior in this MLPL module.";
-  state=u:ttt_add_segment(state,[-0.5,0,-1.5],[-0.5,0,1.5],[0.65,0.7,0.8,1],2);
-  state=u:ttt_add_segment(state,[0.5,0,-1.5],[0.5,0,1.5],[0.65,0.7,0.8,1],2);
-  state=u:ttt_add_segment(state,[-1.5,0,-0.5],[1.5,0,-0.5],[0.65,0.7,0.8,1],2);
-  u:ttt_add_segment(state,[-1.5,0,0.5],[1.5,0,0.5],[0.65,0.7,0.8,1],2)
+  state=u:ttt_add_segment(state,[-0.5,0,-1.5],[-0.5,0,1.5],[0.65,0.7,0.8,1],2,0);
+  state=u:ttt_add_segment(state,[0.5,0,-1.5],[0.5,0,1.5],[0.65,0.7,0.8,1],2,1);
+  state=u:ttt_add_segment(state,[-1.5,0,-0.5],[1.5,0,-0.5],[0.65,0.7,0.8,1],2,2);
+  u:ttt_add_segment(state,[-1.5,0,0.5],[1.5,0,0.5],[0.65,0.7,0.8,1],2,3)
 }
 
 def u:ttt_add_x(state,cell) {
@@ -34,8 +34,8 @@ def u:ttt_add_x(state,cell) {
   x=take(center,0,0);
   z=take(center,0,2);
   color=[0.2,0.8,1,1];
-  state=u:ttt_add_segment(state,[x-0.3,0.02,z-0.3],[x+0.3,0.02,z+0.3],color,4);
-  u:ttt_add_segment(state,[x-0.3,0.02,z+0.3],[x+0.3,0.02,z-0.3],color,4)
+  state=u:ttt_add_segment(state,[x-0.3,0.02,z-0.3],[x+0.3,0.02,z+0.3],color,4,100+cell*10);
+  u:ttt_add_segment(state,[x-0.3,0.02,z+0.3],[x+0.3,0.02,z-0.3],color,4,101+cell*10)
 }
 
 def u:ttt_add_o(state,cell) {
@@ -47,7 +47,7 @@ def u:ttt_add_o(state,cell) {
   while lt(segment,8) {
     a=segment*0.7853981633974483;
     b=(segment+1)*0.7853981633974483;
-    state=u:ttt_add_segment(state,[x+cos(a)*0.34,0.02,z+sin(a)*0.34],[x+cos(b)*0.34,0.02,z+sin(b)*0.34],[1,0.45,0.2,1],4);
+    state=u:ttt_add_segment(state,[x+cos(a)*0.34,0.02,z+sin(a)*0.34],[x+cos(b)*0.34,0.02,z+sin(b)*0.34],[1,0.45,0.2,1],4,200+cell*10+segment);
     segment=segment+1
   };
   state
@@ -80,10 +80,10 @@ def u:ttt_add_hover(state,board,cell) {
       x=take(center,0,0);
       z=take(center,0,2);
       color=[0.45,1,0.45,1];
-      state=u:ttt_add_segment(state,[x-0.42,0.01,z-0.42],[x+0.42,0.01,z-0.42],color,2);
-      state=u:ttt_add_segment(state,[x+0.42,0.01,z-0.42],[x+0.42,0.01,z+0.42],color,2);
-      state=u:ttt_add_segment(state,[x+0.42,0.01,z+0.42],[x-0.42,0.01,z+0.42],color,2);
-      u:ttt_add_segment(state,[x-0.42,0.01,z+0.42],[x-0.42,0.01,z-0.42],color,2)
+      state=u:ttt_add_segment(state,[x-0.42,0.01,z-0.42],[x+0.42,0.01,z-0.42],color,2,300+cell*10);
+      state=u:ttt_add_segment(state,[x+0.42,0.01,z-0.42],[x+0.42,0.01,z+0.42],color,2,301+cell*10);
+      state=u:ttt_add_segment(state,[x+0.42,0.01,z+0.42],[x-0.42,0.01,z+0.42],color,2,302+cell*10);
+      u:ttt_add_segment(state,[x-0.42,0.01,z+0.42],[x-0.42,0.01,z-0.42],color,2,303+cell*10)
     }
   }
 }
@@ -115,7 +115,7 @@ def u:ttt_add_result(state,board) {
     line=u:ttt_winning_line(board,0);
     a=take([0,3,6,0,1,2,0,2],0,line);
     c=take([2,5,8,6,7,8,8,6],0,line);
-    u:ttt_add_segment(state,u:ttt_cell_center(a,0.06),u:ttt_cell_center(c,0.06),[1,0.9,0.15,1],6)
+    u:ttt_add_segment(state,u:ttt_cell_center(a,0.06),u:ttt_cell_center(c,0.06),[1,0.9,0.15,1],6,400)
   } else {
     state
   }

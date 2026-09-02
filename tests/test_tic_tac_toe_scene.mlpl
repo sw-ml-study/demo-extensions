@@ -1,5 +1,6 @@
 # Native mlplunit coverage for tests test tic tac toe scene.
 include "demos/tic-tac-toe/scene.mlpl";
+include "lib/native3d/retained.mlpl";
 
 @test {name: "tic tac toe empty board is a generic bulk line grid", tags: ["native3d", "tic-tac-toe", "scene"]}
 def u:test_ttt_empty_scene() {
@@ -20,7 +21,17 @@ def u:test_ttt_marks_scene() {
   u:assert_eq(shape(scene.edges),[14,2],"grid plus two X and eight O segments")?;
   u:assert_eq(shape(scene.positions),[28,3],"every line owns two xyz endpoints")?;
   u:assert_eq(shape(scene.thicknesses),[14],"thickness is parallel")?;
-  u:assert_eq(scene.ids,range(14),"marks retain deterministic ids")
+  u:assert_eq(scene.ids,[0,1,2,3,100,101,210,211,212,213,214,215,216,217],"marks retain semantic deterministic ids")
+}
+
+@test {name: "tic tac toe retained diff updates only changed semantic objects", tags: ["native3d", "tic-tac-toe", "retained"]}
+def u:test_ttt_retained_patch() {
+  "Verify one move produces a bounded stable-ID patch instead of a replacement.";
+  old=unwrap(u:ttt_scene(u:ttt_empty_board(),-1));
+  new=unwrap(u:ttt_scene([1,0,0,0,-1,0,0,0,0],-1));
+  patch=u:n3d_scene_patch(old,new,0,1);
+  u:assert_eq(tally(patch.ids),10,"one X and one O upsert ten line objects")?;
+  u:assert_eq(tally(patch.remove_ids),0,"placing marks removes no objects")
 }
 
 @test {name: "tic tac toe hover and winner feedback remain MLPL geometry", tags: ["native3d", "tic-tac-toe", "feedback"]}

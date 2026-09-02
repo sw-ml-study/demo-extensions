@@ -92,6 +92,11 @@ def u:audio_on_event(event,state) {
     }
   }
 }
+def u:audio_resync(event,state) {
+  "Resend a complete spectrum scene only after an explicit renderer resync request.";
+  u:audio_submit(state)?;
+  state
+}
 paths=u:audio_paths();
 state=u:audio_defaults(paths);
 u:audio_submit(state)?;
@@ -103,4 +108,5 @@ on(port,"pointer_down",:u:audio_on_event);
 on(port,"pointer_move",:u:audio_on_event);
 on(port,"pointer_up",:u:audio_on_event);
 on(port,"close",:u:audio_on_event);
+on(port,"resync",:u:audio_resync);
 run(port,state)

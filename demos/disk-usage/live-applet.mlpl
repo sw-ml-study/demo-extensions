@@ -108,6 +108,11 @@ def u:du_event(event,state) {
     }
   }
 }
+def u:du_resync(event,state) {
+  "Resend a complete disk scene only after an explicit renderer resync request.";
+  u:du_submit(state)?;
+  state
+}
 
 state=u:du_defaults(disk_usage_snapshot);
 u:du_submit(state)?;
@@ -118,4 +123,5 @@ on(port,"pointer_up",:u:du_event);
 on(port,"wheel",:u:du_event);
 on(port,"resize",:u:du_event);
 on(port,"close",:u:du_event);
+on(port,"resync",:u:du_resync);
 run(port,state)

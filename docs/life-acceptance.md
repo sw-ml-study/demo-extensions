@@ -28,7 +28,8 @@ the native host:
 - paused frames and run/speed-only state changes emit no geometry;
 - camera motion emits a validated `set_view` command containing only camera,
   revision, and help; and
-- grid changes emit a complete `set_scene` replacement.
+- grid changes emit bounded stable-ID `patch_scene` updates; only initialization
+  or an explicit renderer resync emits a complete `set_scene` replacement.
 
 The follow-up correction adds a generic `frame_ack` command. The host admits
 no new frame while one is outstanding; MLPL acknowledges every consumed frame

@@ -1,8 +1,8 @@
 use mlpl_eval::run_applet_with_host;
 use mlpl_native3d_window::interaction::{InputEvent, Modifiers};
 use mlpl_native3d_window::live::{
-    close_event, input_event, key_event, model_atlas_file_applet_source, parse_scene_command,
-    parse_view_command, run_applet_with_host_root,
+    LiveCommand, close_event, input_event, key_event, model_atlas_file_applet_source,
+    parse_live_command, parse_scene_command, parse_view_command, run_applet_with_host_root,
 };
 
 #[test]
@@ -32,26 +32,35 @@ fn real_file_menu_opens_a_bounded_safetensors_catalog_and_returns() {
             assert_eq!(menu.scene.edges().len(), 4);
 
             events.send(key_event("arrow_down")).unwrap();
-            let second = parse_scene_command(commands.recv().unwrap()).unwrap();
+            let second = parse_view_command(commands.recv().unwrap()).unwrap();
             assert!(second.status.contains("SELECTED [2/2]"));
             assert!(second.status.contains("z-second.safetensors"));
             events.send(key_event("arrow_up")).unwrap();
-            let first_again = parse_scene_command(commands.recv().unwrap()).unwrap();
+            let first_again = parse_view_command(commands.recv().unwrap()).unwrap();
             assert!(first_again.status.contains("SELECTED [1/2]"));
 
             events.send(key_event("enter")).unwrap();
-            let scanning = parse_scene_command(commands.recv().unwrap()).unwrap();
+            let LiveCommand::Patch(scanning_patch) =
+                parse_live_command(commands.recv().unwrap()).unwrap()
+            else {
+                panic!("menu transition must be a retained patch")
+            };
+            assert!(scanning_patch.upserts.is_empty());
+            let scanning = parse_view_command(commands.recv().unwrap()).unwrap();
             assert!(scanning.help.contains("ANALYZING BOUNDED"));
             assert!(scanning.status.contains("tiny.safetensors"));
-            let atlas_value = commands
+            let atlas_patch = commands
                 .recv_timeout(std::time::Duration::from_secs(1))
-                .expect("atlas command");
-            let atlas = parse_scene_command(atlas_value).unwrap();
+                .expect("atlas patch");
+            let LiveCommand::Patch(atlas_patch) = parse_live_command(atlas_patch).unwrap() else {
+                panic!("analyzed atlas must be a retained patch")
+            };
+            assert!(atlas_patch.upserts.len() > 12);
+            let atlas = parse_view_command(commands.recv().unwrap()).unwrap();
             assert!(atlas.help.contains("ONE WIREFRAME BAR PER TENSOR"));
             assert!(atlas.help.contains("CATALOG TENSORS: 1"));
             assert!(atlas.help.contains("LOG2(STORED BYTES)/4"));
             assert!(atlas.help.contains("BLUE T=TENSOR"));
-            assert!(atlas.scene.edges().len() > 12);
 
             events
                 .send(input_event(InputEvent::Wheel {
@@ -64,13 +73,18 @@ fn real_file_menu_opens_a_bounded_safetensors_catalog_and_returns() {
             assert!((zoomed.camera.distance() - atlas.camera.distance()).abs() > f32::EPSILON);
 
             events.send(key_event("r")).unwrap();
-            let reset = parse_scene_command(commands.recv().unwrap()).unwrap();
+            let reset = parse_view_command(commands.recv().unwrap()).unwrap();
             assert!((reset.camera.distance() - atlas.camera.distance()).abs() < f32::EPSILON);
 
             events.send(key_event("m")).unwrap();
-            let menu_again = parse_scene_command(commands.recv().unwrap()).unwrap();
+            let LiveCommand::Patch(menu_patch) =
+                parse_live_command(commands.recv().unwrap()).unwrap()
+            else {
+                panic!("menu return must be a retained patch")
+            };
+            assert!(!menu_patch.remove_ids.is_empty());
+            let menu_again = parse_view_command(commands.recv().unwrap()).unwrap();
             assert!(menu_again.help.contains("REAL LOCAL SAFETENSORS"));
-            assert_eq!(menu_again.scene.edges().len(), 4);
             events.send(close_event()).unwrap();
         },
     );

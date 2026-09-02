@@ -24,6 +24,11 @@ host supplies the native window, generic line renderer, event transport, and
 one canonical filesystem root. It does not contain model-format or tensor
 semantics.
 
+The renderer receives one complete menu scene at startup. Menu selection and
+camera/help/status changes use `set_view`; menu/scanning/atlas transitions and
+tensor selection use stable-ID `patch_scene` diffs. Only an explicit renderer
+resync may request another complete scene.
+
 Analysis reads the eight-byte Safetensors length prefix and at most a 1 MiB
 JSON header. JSON decoding is capped at 200,000 elements, the menu displays and
 permits selection from at most 12 discovered paths, and the initial atlas renders at most 32 tensor

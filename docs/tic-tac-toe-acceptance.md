@@ -15,6 +15,7 @@ Status date: 2026-08-16
 | Legal empty-cell interaction | Proven | occupied/no-turn/terminal/off-board no-op tests | No animated transition |
 | Grid, X/O, hover, win feedback | Proven | deterministic bulk-shape mlplunit fixtures | Line graphics only |
 | Variable per-line native rendering | Proven | Rust headless style planning and live command parsing | Owned copies; no zero-copy claim |
+| Retained scene updates | Proven | semantic-ID mlplunit diff and worker/Port command regression | Full scene reserved for initialization/resync |
 | Clean close | Proven | Escape/close worker teardown and macOS smoke | Local interpreted applet |
 | macOS native window | Proven | repeated `just tic-tac-toe` runs | Manual visual evidence |
 | Linux portability | Design/build supported | shared winit/wgpu/WGSL and MLPL source | Not visually tested on this Mac |
@@ -28,6 +29,10 @@ X must open; mark and turn-order choices are now independent. Dragging after a
 tied game formerly indexed the board with the off-board `-1` sentinel because
 an eager condition evaluated before its bounds guard. Terminal and off-board
 pointer releases are now explicit no-ops.
+
+Grid IDs are fixed at 0–3; X, O, hover, and winner objects occupy separate
+cell-addressed ranges. A move therefore adds/removes only the affected semantic
+objects, while role/help and camera-only changes use `set_view`.
 
 Stationary left release places a mark; left drag orbits/tilts, Shift-left or
 middle drag pans, and wheel input zooms. Once movement crosses four pixels, the

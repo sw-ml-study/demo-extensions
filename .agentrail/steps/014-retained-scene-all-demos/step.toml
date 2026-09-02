@@ -1,6 +1,6 @@
 number = 14
 slug = "retained-scene-all-demos"
-status = "pending"
+status = "in-progress"
 description = "Make retained shadow-scene diffs the repository-wide invariant for every inte..."
 role = "production"
 context_files = []

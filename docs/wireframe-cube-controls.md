@@ -74,12 +74,16 @@ rotation, array shapes, stable IDs, pause/resume behavior, and determinism.
 
 `just cube-3d` now opens winit/wgpu on the required main thread while sw-MLPL
 runs this reducer on a worker. The UI sends one owned normalized event at a
-time, and MLPL returns a complete owned scene command. The command also carries
+time. MLPL returns one complete scene at initialization/resync, twelve-edge
+stable-ID patches for dimension or style changes, and geometry-free view
+updates for camera, resize, pause, and signed-speed changes. Commands also carry
 the help text rendered at the top of the native view; the title displays the
 MLPL revision and live dimensions/speed for explicit feedback.
 
 The headless `live_applet.rs` host proves this same path without a display,
-including physical W/S events and a left-button drag followed by wheel zoom.
+including bounded patch sizes, physical W/S events, and a left-button drag
+followed by wheel zoom. It rejects any ordinary-event regression to a second
+full-scene command.
 The in-window legend lists every mouse gesture as well as the retained keyboard
 controls. Compiled-provider startup and dynamic loading remain separate future
 work.

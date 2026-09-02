@@ -1,5 +1,6 @@
 # MLPL application semantics for demos model atlas file live applet.
 include "./scene.mlpl";
+include "../../lib/native3d/retained.mlpl";
 
 def u:file_atlas_help(state) {
   "Provide file atlas help behavior in this MLPL module.";
@@ -18,18 +19,33 @@ def u:file_atlas_submit_view(state) {
   port_send(port,{op: "set_view",revision: state.revision,camera: u:n3d_camera_record(state.camera),help: u:file_atlas_help(state),status: u:file_atlas_status(state)});
   ok(state)
 }
+def u:file_atlas_scene_for_state(state) {
+  "Build the retained scene associated with a file-atlas application state.";
+  if equal(state.mode,"atlas") { u:file_atlas_scene(state) } else { u:file_atlas_empty_scene() }
+}
+def u:file_atlas_submit_patch(before,after) {
+  "Send a stable-ID geometry diff followed by view and status state.";
+  old=u:file_atlas_scene_for_state(before)?;
+  new=u:file_atlas_scene_for_state(after)?;
+  port_send(port,u:n3d_scene_patch(old,new,before.revision,after.revision));
+  u:file_atlas_submit_view(after)
+}
 def u:file_atlas_event(event,state) {
   "Provide file atlas event behavior in this MLPL module.";
   if equal(event.kind,"key") {
     next=u:file_atlas_key(state,event.key);
-    if equal(next.mode,"scanning") { u:file_atlas_submit(next)?; analyzed=u:file_atlas_analyze(next); u:file_atlas_submit(analyzed)?; analyzed } else { u:file_atlas_submit(next)?; next }
+    geometry=1-equal(next.mode,state.mode);
+    if equal(next.mode,"scanning") { u:file_atlas_submit_patch(state,next)?; analyzed=u:file_atlas_analyze(next); u:file_atlas_submit_patch(next,analyzed)?; analyzed } else {
+      if geometry { u:file_atlas_submit_patch(state,next)? } else { u:file_atlas_submit_view(next)? };
+      next
+    }
   } else {
     if equal(event.kind,"pointer_down")+equal(event.kind,"pointer_up")+equal(event.kind,"pointer_move")+equal(event.kind,"wheel") {
       if equal(state.mode,"atlas") {
         next=u:file_atlas_pointer_event(state,event);
         geometry=1-eq(next.tensor_selected,state.tensor_selected);
         view=1-equal(u:n3d_camera_record(next.camera),u:n3d_camera_record(state.camera));
-        if geometry { u:file_atlas_submit(next)? } else {
+        if geometry { u:file_atlas_submit_patch(state,next)? } else {
           if view { u:file_atlas_submit_view(next)? }
         };
         next
@@ -45,6 +61,11 @@ def u:file_atlas_event(event,state) {
     }
   }
 }
+def u:file_atlas_resync(event,state) {
+  "Resend a complete file-atlas scene only for renderer recovery.";
+  u:file_atlas_submit(state)?;
+  state
+}
 paths=u:file_atlas_discover(12);
 state=u:file_atlas_defaults(paths);
 u:file_atlas_submit(state)?;
@@ -55,4 +76,5 @@ on(port,"pointer_up",:u:file_atlas_event);
 on(port,"wheel",:u:file_atlas_event);
 on(port,"resize",:u:file_atlas_event);
 on(port,"close",:u:file_atlas_event);
+on(port,"resync",:u:file_atlas_resync);
 run(port,state)

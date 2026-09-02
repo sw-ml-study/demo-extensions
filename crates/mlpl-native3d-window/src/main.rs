@@ -314,12 +314,18 @@ impl Application {
                     self.scene = Some(retained.scene().clone());
                 }
                 Ok(mlpl_native3d_window::live::LiveCommand::View(command)) => {
-                    if let Some(retained) = self.retained_scene.as_mut()
-                        && let Err(error) = retained.apply_view_revision(command.revision)
-                    {
-                        eprintln!("MLPL retained view rejected: {error}");
-                        event_loop.exit();
-                        return;
+                    if let Some(retained) = self.retained_scene.as_mut() {
+                        if let Err(error) =
+                            retained.apply_view(command.revision, command.rotation_speed)
+                        {
+                            eprintln!("MLPL retained view rejected: {error}");
+                            event_loop.exit();
+                            return;
+                        }
+                        self.scene = Some(retained.scene().clone());
+                    }
+                    if let Some(rotation_speed) = command.rotation_speed {
+                        self.rotation_speed = rotation_speed;
                     }
                     self.camera = command.camera;
                     self.help = command.help;
