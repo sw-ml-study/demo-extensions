@@ -1,9 +1,10 @@
 number = 1
 slug = "point-scene-contract"
-status = "in-progress"
+status = "completed"
 description = "Using Rust TDD, define the smallest generic renderer-neutral point-scene cont..."
 role = "production"
 context_files = []
 created_at = "2026-09-02T10:03:23"
+completed_at = "2026-09-02T12:34:47"
 task_type = "native3d-point-cloud"
-commits = []
+commits = ["aa712853cab3a883e42e880ff7676a8a742a4bff"]
