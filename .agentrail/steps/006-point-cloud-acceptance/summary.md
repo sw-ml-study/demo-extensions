@@ -1,0 +1,1 @@
+Accepted the bounded native 3D point-cloud teaching path with a release CPU planning probe, reproducible package/build checks, macOS startup evidence, explicit Linux/accessibility/GPU-measurement limitations, and updated project catalogs; all focused and full gates passed.
