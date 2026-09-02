@@ -272,7 +272,7 @@ default-device audio. MP3 and Ogg/Vorbis playback were interactively confirmed
 on macOS after correcting chunk-boundary timing distortion. Linux uses the same
 CPAL/winit/wgpu source with ALSA development/runtime requirements documented.
 
-## Queued next: native3d-weight-distribution-explorer
+## Delivered evidence: native3d-weight-distribution-explorer
 
 Purpose: inspect real model weight distributions through bounded reads and
 mergeable statistics, then render MLPL-owned histogram, surface, channel, and
@@ -281,9 +281,9 @@ quantization-detail views without loading a tensor or model file wholesale.
 The first slice is intentionally limited to decoders already available through
 the downstream model utilities: supported byte-aligned Safetensors numeric
 types, GGUF I8/I16, and GGUF Q8_0. Unsupported F16/BF16/F32 paths and Q4/Q5/K
-quantizers must fail closed with a visible reason until their shared decoder
-contracts exist. The step will distinguish requirements owned by
-`demo-ml-utils` from genuine `sw-mlpl` host gaps in
+quantizers fail closed with a visible reason until their shared decoder
+contracts exist. The delivered ownership matrix distinguishes requirements
+owned by `demo-ml-utils` from genuine `sw-mlpl` host gaps in
 `docs/weight-distribution-blockers.md`; no language change is required for the
 initial supported-dtype slice.
 
