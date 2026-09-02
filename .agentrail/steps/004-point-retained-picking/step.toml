@@ -1,8 +1,9 @@
 number = 4
 slug = "point-retained-picking"
-status = "in-progress"
+status = "completed"
 description = "Using Rust TDD, add generic retained point-scene updates and pointer-to-stabl..."
 role = "legacy"
 context_files = []
 created_at = "2026-09-02T13:16:34"
-commits = []
+completed_at = "2026-09-02T13:31:17"
+commits = ["36c16a00e896e62bc5640270176f51f07b507e38"]

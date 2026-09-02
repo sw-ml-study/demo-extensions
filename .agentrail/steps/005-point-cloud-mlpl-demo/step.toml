@@ -1,0 +1,8 @@
+number = 5
+slug = "point-cloud-mlpl-demo"
+status = "pending"
+description = "Using test-driven development, add a deterministic self-explaining MLPL point..."
+role = "legacy"
+context_files = []
+created_at = "2026-09-02T13:31:17"
+commits = []
