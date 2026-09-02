@@ -1,8 +1,9 @@
 number = 5
 slug = "point-cloud-mlpl-demo"
-status = "in-progress"
+status = "completed"
 description = "Using test-driven development, add a deterministic self-explaining MLPL point..."
 role = "legacy"
 context_files = []
 created_at = "2026-09-02T13:31:17"
-commits = []
+completed_at = "2026-09-02T14:34:17"
+commits = ["44dc4a136281cf2c8d2aae1eb909d2dd995f37ff"]
