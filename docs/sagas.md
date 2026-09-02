@@ -4,12 +4,12 @@ Only one saga is active at a time. A later saga may be replanned when the
 previous acceptance report exposes an upstream blocker. Steps are independently
 reviewable and use red/green TDD; no step silently modifies `../sw-mlpl`.
 
-Current status (2026-09-02): no implementation saga is active. The
-`native3d-retained-scene` saga completed through step 014, including Model
+Current status (2026-09-02): `native3d-point-cloud` is active at its initial
+renderer-neutral contract step. The `native3d-retained-scene` saga completed
+through step 015, including Model
 Atlas, disk usage, audio spectrum, weight distribution, the Yew microscope,
-and repository-wide retained-scene migration. Point cloud is the recommended
-next candidate; embedding/PCA follows it. A candidate becomes active only when
-an explicit AgentRail saga/step is created.
+and repository-wide retained-scene migration plus documentation reconciliation.
+Embedding/PCA remains the recommended successor after the point-cloud saga.
 
 The mandatory checklist in `AGENTS.md` applies to every step in every saga:
 pre-commit tests, affected documentation, `.gitignore` audit, tracked-file
@@ -324,7 +324,7 @@ explicitly rather than accidentally inheriting plane boundaries.
 The plane and torus are delivered. Sphere topology/projection is future scope
 and has no active AgentRail step.
 
-## Recommended next candidate: native3d-point-cloud
+## Active: native3d-point-cloud
 
 Purpose: prove a native macOS/Linux visualization using the public extension
 path and no browser technology.

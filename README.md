@@ -24,7 +24,7 @@ dynamic loading and compiled-provider startup remain tracked contracts.
 crates/mlpl-extension-abi/      Versioned C-compatible ABI and validation
 crates/mlpl-extension-loader/   Package resolver, dynamic loader, and registry
 crates/mlpl-extension-sdk/      Safe author-facing SDK scaffold
-crates/mlpl-native3d-scene/      Generic line-scene parser and validation
+crates/mlpl-native3d-scene/      Generic line/point scenes and headless planning
 lib/native3d/                    Reusable MLPL camera, picking, geometry, app loop
 demos/wireframe-cube/            MLPL-owned bulk-array cube scene
 demos/tic-tac-toe/               MLPL rules, minimax, and generic line scene
@@ -235,6 +235,9 @@ The delivered repository proves:
   dimensions, rotation speed, RGBA line color, and thickness;
 - a renderer-neutral Rust line-scene contract that validates bulk `[N,3]`
   positions and `[M,2]` edges before later GPU work.
+- a bounded renderer-neutral point-scene contract for `[N,3]` positions and
+  parallel size/color/opacity/stable-ID arrays, with deterministic upload
+  planning and explicit owned-byte accounting;
 - a deterministic headless transform, perspective projection, clipping, and
   thick-line raster pipeline with portable PPM evidence.
 - a real headless `_native3d` provider with typed viewer lifecycle, bulk line
@@ -307,6 +310,9 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   surface picking, controls, ownership, and current performance bounds.
 - [Retained scene patches](docs/retained-scene-patches.md) — stable-ID atomic
   line diffs, revision/resync behavior, bounds, ownership, and measured scope.
+- [Native3D point-cloud contract](docs/native3d-point-cloud.md) — bulk point
+  shapes, attributes, stable IDs, explicit budgets, upload planning, and
+  deliberately deferred renderer/application scope.
 - [Native 3D disk-usage explorer](docs/native3d-disk-usage.md) — bounded
   metadata-only scanning, cached MLPL navigation, color semantics, and
   retained shadow-scene diffs.

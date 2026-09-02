@@ -19,10 +19,10 @@ As of 2026-09-02, the extension foundation, safe SDK, native line renderer,
 pointer/camera contract, tic-tac-toe, Life plane and torus, Model Atlas,
 disk-usage explorer, audio spectrum player, weight-distribution explorer, Yew
 microscope viewer, and repository-wide retained-scene migration are delivered.
-The numbered sections below preserve the original architectural sequence; they
-are not an active queue. The recommended next candidate is the native point
-cloud, followed by the embedding/PCA explorer. Neither is active until an
-AgentRail step explicitly starts it.
+The native point-cloud saga is now active at its renderer-neutral bulk-array
+contract. The numbered sections below preserve the original architectural
+sequence rather than serving as the executable queue. Embedding/PCA remains a
+future candidate after point rendering, interaction, and acceptance.
 
 ## Recommended architecture
 
@@ -211,7 +211,7 @@ third-party extension path without privileged runtime hooks.
 
 1. `hello` — delivered.
 2. `wireframe-cube` — delivered, including retained updates.
-3. `point-cloud` — recommended next candidate.
+3. `point-cloud` — active; renderer-neutral contract is the first slice.
 4. `live-point-cloud` — future persistent-handle work after the point slice.
 5. `embedding-pca` — future candidate after point rendering/picking.
 6. `rag-explorer` — future candidate.
