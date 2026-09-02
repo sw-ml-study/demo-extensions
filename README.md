@@ -128,6 +128,7 @@ Explore a bounded sample of real Safetensors or GGUF tensor values:
 
 ```sh
 just weight-distribution
+just microscope-web
 ```
 
 The default picker searches `../demo-ml-utils/models`; set an absolute

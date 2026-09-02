@@ -5,6 +5,8 @@ members = [
     "crates/mlpl-extension-sdk",
     "crates/mlpl-native3d-scene",
     "crates/mlpl-native3d-window",
+    "crates/mlpl-microscope-model",
+    "crates/mlpl-microscope-web",
     "extensions/hello",
     "extensions/boundary-probe",
     "extensions/native3d",

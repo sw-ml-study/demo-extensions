@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+command -v trunk >/dev/null 2>&1 || { echo "trunk is required but was not found; install it outside this script" >&2; exit 1; }
+echo "Offline viewer: http://127.0.0.1:8080"
+echo "Optional live server: ../sw-mlpl/target/release/mlpl-serve --bind 127.0.0.1:6464 --auth disabled --cors-allow http://127.0.0.1:8080"
+cd "$repo_root/crates/mlpl-microscope-web"
+exec env -u NO_COLOR trunk serve index.html --address 127.0.0.1 --port 8080

@@ -67,6 +67,18 @@ audio-spectrum:
 weight-distribution:
     ./scripts/run-weight-distribution
 
+# Validate the offline-first Rust/Yew ML microscope.
+microscope-web-check:
+    ./scripts/check-microscope-web
+
+# Serve the microscope viewer on its documented loopback URL.
+microscope-web:
+    ./scripts/run-microscope-web
+
+# Build pinned static microscope assets into the ignored dist directory.
+microscope-web-build:
+    ./scripts/build-microscope-web
+
 # Run the complete pre-commit gate.
 check:
     ./scripts/check

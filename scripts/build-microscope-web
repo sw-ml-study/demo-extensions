@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+command -v trunk >/dev/null 2>&1 || { echo "trunk is required but was not found; install it outside this script" >&2; exit 1; }
+cd "$repo_root/crates/mlpl-microscope-web"
+env -u NO_COLOR trunk build index.html --release --locked --dist "$repo_root/dist/microscope-web"

@@ -1,6 +1,7 @@
 # Rust build output
 /target/
 **/target/
+**/dist/
 
 # Locally built native extension artifacts
 *.dylib

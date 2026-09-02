@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+integration="$repo_root/integration/ml-microscope"
+
+(cd "$integration" && shasum -a 256 -c SHA256SUMS)
+cargo test --manifest-path "$repo_root/Cargo.toml" -p mlpl-microscope-model
+cargo test --manifest-path "$repo_root/Cargo.toml" -p mlpl-microscope-web
+cargo check --manifest-path "$repo_root/Cargo.toml" -p mlpl-microscope-web --target wasm32-unknown-unknown
+sw-checklist "$repo_root/crates/mlpl-microscope-model"
+sw-checklist "$repo_root/crates/mlpl-microscope-web"
+grep -q 'prefers-reduced-motion: reduce' "$repo_root/crates/mlpl-microscope-web/style.css"
+grep -q 'Exact numeric fallback' "$repo_root/crates/mlpl-microscope-web/src/render.rs"
+
+echo "PASS microscope web model, SSE, WASM, accessibility, and provenance gates"

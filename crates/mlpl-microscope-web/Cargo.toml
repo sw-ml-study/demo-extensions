@@ -1,0 +1,20 @@
+[package]
+name = "mlpl-microscope-web"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+mlpl-microscope-model = { path = "../mlpl-microscope-model" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+gloo-timers = "0.3"
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = ["HtmlInputElement", "HtmlTextAreaElement", "KeyboardEvent", "MediaQueryList", "Window"] }
+yew = { version = "0.21", features = ["csr"] }
+
+[lints]
+workspace = true

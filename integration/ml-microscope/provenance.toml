@@ -1,0 +1,5 @@
+schema = "sw-ml-study.ml-microscope-consumer-lock"
+version = 1
+source_repository = "https://github.com/sw-ml-study/demo-ml-microscope.git"
+source_revision = "21276a44c29501c37519f5f9f534f54351fbefb4"
+fixture_index = "fixtures/yew/index-v1.json"
