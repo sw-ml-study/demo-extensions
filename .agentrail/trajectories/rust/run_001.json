@@ -1,0 +1,11 @@
+{
+  "task_type": "rust",
+  "state": {
+    "number": 1,
+    "step": "vendor-km01-offline-lesson"
+  },
+  "action": "Used red/green Rust recording-contract tests; vendored hash-pinned MLPL/JSON inputs; updated selector, provenance, index, checksums, catalogs, and docs; scoped formatting to owned workspace packages; ran just microscope-web-check and just check.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-02T17:59:26"
+}

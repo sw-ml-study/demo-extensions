@@ -1,9 +1,10 @@
 number = 1
 slug = "vendor-km01-offline-lesson"
-status = "in-progress"
+status = "completed"
 description = "Vendor microscope revision ff15ec7 and add KM01 to the offline lesson selecto..."
 role = "production"
 context_files = []
 created_at = "2026-09-02T15:36:45"
+completed_at = "2026-09-02T17:59:26"
 task_type = "rust"
-commits = []
+commits = ["90eaec5bc506de6e957e755024e9dcdf6aff90fe"]
