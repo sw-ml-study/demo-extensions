@@ -1,0 +1,1 @@
+Published the accepted 20-frame audio-spectrum animation and still in the README, documented its derived-capture boundary, and extended compact media validation with a bounded 192 KiB animation ceiling. Full repository checks passed.
