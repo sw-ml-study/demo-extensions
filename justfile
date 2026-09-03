@@ -39,6 +39,14 @@ life-3d:
 life-torus:
     ./scripts/run-life-torus
 
+# Capture compact Life-torus still/animation WebPs from an explicit macOS rectangle.
+capture-life-torus:
+    ./scripts/capture-native-demo life-torus "${CAPTURE_RECT:-}"
+
+# Capture any foreground native demo; NAME controls the output filenames.
+capture-native name frames="16" delay_ms="500":
+    ./scripts/capture-native-demo "{{name}}" "${CAPTURE_RECT:-}" "{{frames}}" "{{delay_ms}}"
+
 # Measure bounded Model Atlas scanning against growing sparse model files.
 model-atlas-memory-evidence:
     ./scripts/run-model-atlas-memory-evidence

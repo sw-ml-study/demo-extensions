@@ -1,6 +1,6 @@
-name = "km01-offline-lesson"
-status = "completed"
+name = "graphical-demo-captures"
+status = "active"
 current_step = 1
-created_at = "2026-09-02T15:36:45"
+created_at = "2026-09-03T09:31:21"
 plan_file = ".agentrail/plan.md"
 retroactive = false

@@ -1,0 +1,63 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+name=${1:-}
+rect=${2:-${CAPTURE_RECT:-}}
+frame_count=${3:-16}
+delay_ms=${4:-500}
+start_delay=${CAPTURE_START_DELAY:-5}
+
+if test "$(uname -s)" != "Darwin"; then
+    echo "native window capture currently requires macOS screencapture" >&2
+    exit 1
+fi
+if test -z "$name" || ! printf '%s' "$rect" | grep -Eq '^[0-9]+,[0-9]+,[1-9][0-9]*,[1-9][0-9]*$'; then
+    echo "usage: $0 NAME X,Y,WIDTH,HEIGHT [FRAME_COUNT] [DELAY_MS]" >&2
+    echo "example: CAPTURE_RECT=415,122,900,732 just capture-life-torus" >&2
+    exit 1
+fi
+case "$frame_count:$delay_ms" in
+    *[!0-9:]* | 0:* | *:0)
+        echo "frame count and delay must be positive integers" >&2
+        exit 1
+        ;;
+esac
+for tool in screencapture ffmpeg cwebp img2webp; do
+    command -v "$tool" >/dev/null || {
+        echo "required capture tool is not available: $tool" >&2
+        exit 1
+    }
+done
+
+temp_root=$(mktemp -d "${TMPDIR:-/tmp}/demo-capture.XXXXXX")
+cleanup() {
+    case "$temp_root" in
+        */demo-capture.*) rm -rf -- "$temp_root" ;;
+    esac
+}
+trap cleanup EXIT HUP INT TERM
+mkdir -p "$temp_root/raw" "$temp_root/scaled" "$repo_root/captures"
+
+echo "Bring the demo window to the foreground; capture starts in $start_delay seconds."
+sleep "$start_delay"
+index=0
+while test "$index" -lt "$frame_count"; do
+    filename=$(printf '%03d.png' "$index")
+    screencapture -x -R"$rect" "$temp_root/raw/$filename"
+    sleep "$(awk -v milliseconds="$delay_ms" 'BEGIN { printf "%.3f", milliseconds / 1000 }')"
+    index=$((index + 1))
+done
+
+ffmpeg -hide_banner -loglevel error -framerate "$(awk -v milliseconds="$delay_ms" 'BEGIN { printf "%.6f", 1000 / milliseconds }')" \
+    -start_number 0 -i "$temp_root/raw/%03d.png" \
+    -vf 'scale=720:-2:flags=lanczos' -y "$temp_root/scaled/%03d.png"
+
+middle=$((frame_count / 2))
+middle_frame=$(printf '%03d.png' "$middle")
+cwebp -quiet -q 76 -m 6 -resize 720 0 "$temp_root/raw/$middle_frame" \
+    -o "$repo_root/captures/$name.webp"
+img2webp -min_size -loop 0 -lossy -q 58 -m 6 -d "$delay_ms" \
+    "$temp_root"/scaled/*.png -o "$repo_root/captures/$name-animated.webp"
+
+echo "Wrote captures/$name.webp and captures/$name-animated.webp"

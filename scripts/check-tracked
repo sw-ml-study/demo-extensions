@@ -13,6 +13,9 @@ done
 
 find .agentrail .agentrail-archive crates docs extensions scripts tests -type f -print |
   while IFS= read -r path; do
+    if git check-ignore -q "$path"; then
+      continue
+    fi
     if ! git ls-files --error-unmatch "$path" >/dev/null 2>&1; then
       echo "project file is not tracked: $path" >&2
       exit 1

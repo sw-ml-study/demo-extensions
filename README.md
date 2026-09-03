@@ -91,6 +91,17 @@ Open Life on a native 3D torus with wrap-around in both grid axes:
 just life-torus
 ```
 
+![A glider advancing across the wrapped native Life torus](captures/life-torus-animated.webp)
+
+The tracked eight-second loop is 720 pixels wide and about 31 KiB. See
+[graphical demo captures](docs/demo-captures.md) to reproduce the still and
+animated WebP with macOS `screencapture`, `ffmpeg`, and WebP tools. Use
+`playwright-cli` for browser-rendered demos; it cannot capture native
+`winit`/`wgpu` windows. The same `just capture-native NAME` workflow works for
+all native demos. The audio-spectrum/MP3 visualizer is the recommended next
+animation, followed by point cloud and Model Atlas; a small representative
+gallery is preferable to capturing every demo. OBS is optional.
+
 Measure bounded Model Atlas range scanning against growing sparse files:
 
 ```sh

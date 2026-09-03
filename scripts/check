@@ -10,6 +10,7 @@ sh -n "$repo_root"/scripts/* "$repo_root/tests/test-layout"
 "$repo_root/scripts/check-sdk-authoring"
 "$repo_root/scripts/check-tracked"
 "$repo_root/scripts/check-mlpl-style"
+"$repo_root/scripts/check-captures"
 cargo fmt --manifest-path "$repo_root/Cargo.toml" --check \
     --package mlpl-extension-abi \
     --package mlpl-extension-loader \
