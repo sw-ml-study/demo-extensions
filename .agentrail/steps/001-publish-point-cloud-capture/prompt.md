@@ -1,0 +1,1 @@
+Add captures/point-cloud-animated.webp to the README beside the point-cloud demo with a concise accurate caption. Track and validate the accepted point-cloud still and animation with a tight bounded size policy. Preserve existing capture guidance, run all repository gates, commit source/media and AgentRail state, complete with --done, commit completion metadata, and push main.

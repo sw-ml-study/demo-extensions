@@ -26,9 +26,12 @@ check_asset life-torus.webp 65536
 check_asset life-torus-animated.webp 65536
 check_asset audio-spectrum.webp 65536
 check_asset audio-spectrum-animated.webp 196608
+check_asset point-cloud.webp 32768
+check_asset point-cloud-animated.webp 32768
 
 grep -q 'captures/life-torus-animated.webp' "$repo_root/README.md"
 grep -q 'captures/audio-spectrum-animated.webp' "$repo_root/README.md"
+grep -q 'captures/point-cloud-animated.webp' "$repo_root/README.md"
 grep -q 'audio-spectrum' "$repo_root/docs/demo-captures.md"
 test -x "$repo_root/scripts/capture-native-demo"
 

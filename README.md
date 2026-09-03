@@ -114,6 +114,18 @@ This 20-frame loop shows the MLPL-owned spectrum geometry responding during
 native playback. The selected recording is demonstration media; the repository
 stores only the derived capture, not the source audio.
 
+Explore deterministic MLPL-owned point arrays with native retained updates,
+stable-ID selection, and camera controls:
+
+```sh
+just point-cloud
+```
+
+![A colored point cloud moving through the native retained renderer](captures/point-cloud-animated.webp)
+
+The lightweight loop shows the same bulk point attributes and generic renderer
+used by the interactive teaching app; application meaning remains in MLPL.
+
 Measure bounded Model Atlas range scanning against growing sparse files:
 
 ```sh
