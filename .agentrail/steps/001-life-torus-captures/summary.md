@@ -1,0 +1,1 @@
+Captured and published a compact Life-torus still and 16-frame animated WebP, added a generic macOS native-demo capture workflow and browser playwright-cli guidance, documented a prioritized gallery led by audio spectrum, and added portable capture validation. Full repository checks passed.

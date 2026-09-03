@@ -1,9 +1,10 @@
 number = 1
 slug = "life-torus-captures"
-status = "in-progress"
+status = "completed"
 description = "Determine the available playwright-cli, native screen-capture, window-control..."
 role = "production"
 context_files = []
 created_at = "2026-09-03T09:31:21"
+completed_at = "2026-09-03T10:07:55"
 task_type = "media"
-commits = []
+commits = ["538a768beb4524aeb589692c4681554ea2dd78ac"]

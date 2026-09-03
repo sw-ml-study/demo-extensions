@@ -1,0 +1,11 @@
+{
+  "task_type": "media",
+  "state": {
+    "number": 1,
+    "step": "life-torus-captures"
+  },
+  "action": "Used macOS screencapture with an explicit Retina-aware crop; compressed frames with cwebp, ffmpeg, and img2webp; previewed the loop locally in Chrome; added capture scripts, recipes, README/docs, ignored-artifact-aware tracking validation, and ran just check.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-03T10:07:55"
+}
