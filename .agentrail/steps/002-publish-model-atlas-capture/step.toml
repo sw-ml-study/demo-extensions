@@ -1,8 +1,9 @@
 number = 2
 slug = "publish-model-atlas-capture"
-status = "in-progress"
+status = "completed"
 description = "Review the already captured captures/model-atlas.webp and captures/model-atla..."
 role = "legacy"
 context_files = []
 created_at = "2026-09-03T10:53:53"
-commits = []
+completed_at = "2026-09-03T11:06:25"
+commits = ["a5300ee8384db3a5de39993dc4f1e6aa44a969ba"]

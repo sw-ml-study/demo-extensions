@@ -1,0 +1,1 @@
+Published the accepted native Model Atlas still and 61,952-byte animated WebP in the README; documented that it uses the bounded seven-tensor fixture; added capture size and README-reference validation; full just check passed.
