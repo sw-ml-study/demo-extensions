@@ -1,0 +1,1 @@
+Published the accepted compact point-cloud still and animated WebP beside the interactive demo instructions, with both assets validated below a strict 32 KiB ceiling. Full repository checks passed.
