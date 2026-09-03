@@ -102,6 +102,18 @@ all native demos. The audio-spectrum/MP3 visualizer is the recommended next
 animation, followed by point cloud and Model Atlas; a small representative
 gallery is preferable to capturing every demo. OBS is optional.
 
+Visualize bounded chunks from a selected MP3 or Ogg file:
+
+```sh
+just audio-spectrum
+```
+
+![A native spectrum view changing as bounded audio chunks play](captures/audio-spectrum-animated.webp)
+
+This 20-frame loop shows the MLPL-owned spectrum geometry responding during
+native playback. The selected recording is demonstration media; the repository
+stores only the derived capture, not the source audio.
+
 Measure bounded Model Atlas range scanning against growing sparse files:
 
 ```sh
