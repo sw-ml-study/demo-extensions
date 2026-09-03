@@ -144,6 +144,13 @@ Open the interactive native Model Atlas tensor city:
 just model-atlas
 ```
 
+![A native tensor city orbiting while one Model Atlas building remains selected](captures/model-atlas-animated.webp)
+
+The compact loop shows the derived seven-tensor fixture, architecture labels,
+variable-height buildings, camera movement, and persistent selected-tensor
+detail. It demonstrates the checked-in interchange fixture rather than claiming
+that an arbitrary model was loaded.
+
 Choose and inspect an actual local Safetensors model without reading its
 tensor payload:
 

@@ -1,6 +1,6 @@
 number = 2
 slug = "publish-model-atlas-capture"
-status = "pending"
+status = "in-progress"
 description = "Review the already captured captures/model-atlas.webp and captures/model-atla..."
 role = "legacy"
 context_files = []
