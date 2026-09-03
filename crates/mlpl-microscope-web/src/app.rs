@@ -7,14 +7,19 @@ pub(crate) const MATRIX_JSON: &str =
     include_str!("../../../integration/ml-microscope/fixtures/yew/matrix-run-v0.json");
 pub(crate) const REGRESSION_JSON: &str =
     include_str!("../../../integration/ml-microscope/fixtures/yew/linear-regression-run-v0.json");
+pub(crate) const KMEANS_JSON: &str =
+    include_str!("../../../integration/ml-microscope/fixtures/yew/kmeans-run-v0.json");
 pub(crate) const MATRIX_SOURCE: &str =
     include_str!("../../../integration/ml-microscope/demos/matrix_microscope.mlpl");
 pub(crate) const REGRESSION_SOURCE: &str =
     include_str!("../../../integration/ml-microscope/demos/linear_regression_microscope.mlpl");
+pub(crate) const KMEANS_SOURCE: &str =
+    include_str!("../../../integration/ml-microscope/demos/kmeans_microscope.mlpl");
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Fixture {
     Matrix,
     Regression,
+    Kmeans,
 }
 
 #[function_component(App)]
@@ -39,7 +44,7 @@ pub fn app() -> Html {
     let keyboard = crate::callbacks::keyboard_callback(&state);
     let edit = crate::callbacks::source_callback(&source);
     let run = crate::callbacks::run_callback(&status);
-    html! {<main class="shell" tabindex="0" onkeydown={keyboard}><header><p class="eyebrow">{"sw-MLPL execution microscope"}</p><h1>{"Inspect the numbers behind each step"}</h1></header><section class="workspace"><aside class="source-panel"><label for="fixture">{"Prerecorded lesson"}</label><select id="fixture" onchange={choose}><option value="matrix">{"Matrix multiplication (MM01)"}</option><option value="regression">{"Linear regression (LR01)"}</option></select><label for="source">{"MLPL source"}</label><textarea id="source" value={(*source).clone()} oninput={edit} spellcheck="false"/><button type="button" onclick={run}>{"Run against configured server"}</button><p class="status" role="status">{(*status).clone()}</p></aside><Viewer state={(*state).clone()} state_handle={state.clone()} motion={motion}/></section><footer>{"Copyright 2026 Software Wrighter LLC · MIT License · github.com/sw-ml-study/demo-extensions · Offline fixture playback; live execution requires an explicit server."}</footer></main>}
+    html! {<main class="shell" tabindex="0" onkeydown={keyboard}><header><p class="eyebrow">{"sw-MLPL execution microscope"}</p><h1>{"Inspect the numbers behind each step"}</h1></header><section class="workspace"><aside class="source-panel"><label for="fixture">{"Prerecorded lesson"}</label><select id="fixture" onchange={choose}><option value="matrix">{"Matrix multiplication (MM01)"}</option><option value="regression">{"Linear regression (LR01)"}</option><option value="kmeans">{"K-means phases (KM01)"}</option></select><label for="source">{"MLPL source"}</label><textarea id="source" value={(*source).clone()} oninput={edit} spellcheck="false"/><button type="button" onclick={run}>{"Run against configured server"}</button><p class="status" role="status">{(*status).clone()}</p></aside><Viewer state={(*state).clone()} state_handle={state.clone()} motion={motion}/></section><footer>{"Copyright 2026 Software Wrighter LLC · MIT License · github.com/sw-ml-study/demo-extensions · Offline fixture playback; live execution requires an explicit server."}</footer></main>}
 }
 
 #[derive(Properties, PartialEq)]

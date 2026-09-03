@@ -258,8 +258,8 @@ The delivered repository proves:
   atomic retained-scene patches across every interactive native demo;
 - native tic-tac-toe, Life plane/torus, Model Atlas, disk usage, audio spectrum,
   and weight-distribution applications with MLPL-owned semantics;
-- an offline-first Rust/Yew microscope over schema-validated, hash-pinned MLPL
-  recordings.
+- an offline-first Rust/Yew microscope over schema-validated, hash-pinned MM01,
+  LR01, and KM01 MLPL recordings with generic rank/shape rendering.
 
 The opt-in wgpu/winit window is connected to the MLPL reducer through sw-MLPL's
 parked-main Port contract. Only owned event and scene values cross between the

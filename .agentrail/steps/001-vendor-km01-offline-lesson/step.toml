@@ -1,0 +1,9 @@
+number = 1
+slug = "vendor-km01-offline-lesson"
+status = "in-progress"
+description = "Vendor microscope revision ff15ec7 and add KM01 to the offline lesson selecto..."
+role = "production"
+context_files = []
+created_at = "2026-09-02T15:36:45"
+task_type = "rust"
+commits = []

@@ -1,5 +1,8 @@
 //! Browser callbacks and fixture loading.
-use crate::app::{Fixture, MATRIX_JSON, MATRIX_SOURCE, REGRESSION_JSON, REGRESSION_SOURCE};
+use crate::app::{
+    Fixture, KMEANS_JSON, KMEANS_SOURCE, MATRIX_JSON, MATRIX_SOURCE, REGRESSION_JSON,
+    REGRESSION_SOURCE,
+};
 use mlpl_microscope_model::{Action, MotionPreference, ViewerState, parse_recording};
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlInputElement, HtmlTextAreaElement, KeyboardEvent};
@@ -41,26 +44,23 @@ pub(crate) fn fixture_callback(
         status.clone(),
     );
     Callback::from(move |event: Event| {
-        let selected = if event.target_unchecked_into::<HtmlInputElement>().value() == "regression"
+        let selected = match event
+            .target_unchecked_into::<HtmlInputElement>()
+            .value()
+            .as_str()
         {
-            Fixture::Regression
-        } else {
-            Fixture::Matrix
+            "regression" => Fixture::Regression,
+            "kmeans" => Fixture::Kmeans,
+            _ => Fixture::Matrix,
         };
         fixture.set(selected);
-        source.set(
-            if selected == Fixture::Matrix {
-                MATRIX_SOURCE
-            } else {
-                REGRESSION_SOURCE
-            }
-            .to_owned(),
-        );
-        state.set(loaded_state(if selected == Fixture::Matrix {
-            MATRIX_JSON
-        } else {
-            REGRESSION_JSON
-        }));
+        let (selected_source, selected_json) = match selected {
+            Fixture::Matrix => (MATRIX_SOURCE, MATRIX_JSON),
+            Fixture::Regression => (REGRESSION_SOURCE, REGRESSION_JSON),
+            Fixture::Kmeans => (KMEANS_SOURCE, KMEANS_JSON),
+        };
+        source.set(selected_source.to_owned());
+        state.set(loaded_state(selected_json));
         status.set("Offline fixture ready".to_owned());
     })
 }

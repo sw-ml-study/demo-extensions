@@ -19,6 +19,8 @@ As of 2026-09-02, the extension foundation, safe SDK, native line renderer,
 pointer/camera contract, tic-tac-toe, Life plane and torus, Model Atlas,
 disk-usage explorer, audio spectrum player, weight-distribution explorer, Yew
 microscope viewer, and repository-wide retained-scene migration are delivered.
+The offline microscope now includes the pinned KM01 K-means phase lesson through
+the same generic rank/shape rendering path as MM01 and LR01.
 The native point-cloud saga has delivered its renderer-neutral bulk-array
 contract, deterministic headless projection/raster slice, and native wgpu/winit
 point pipeline with retained updates and selection delivery. Its deterministic

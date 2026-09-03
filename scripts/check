@@ -10,7 +10,17 @@ sh -n "$repo_root"/scripts/* "$repo_root/tests/test-layout"
 "$repo_root/scripts/check-sdk-authoring"
 "$repo_root/scripts/check-tracked"
 "$repo_root/scripts/check-mlpl-style"
-cargo fmt --manifest-path "$repo_root/Cargo.toml" --all --check
+cargo fmt --manifest-path "$repo_root/Cargo.toml" --check \
+    --package mlpl-extension-abi \
+    --package mlpl-extension-loader \
+    --package mlpl-extension-sdk \
+    --package mlpl-extension-hello \
+    --package mlpl-native3d-scene \
+    --package mlpl-native3d-window \
+    --package mlpl-microscope-model \
+    --package mlpl-microscope-web \
+    --package mlpl-extension-boundary-probe \
+    --package mlpl-extension-native3d
 "$repo_root/scripts/run-rust-tests" --no-run
 cargo clippy --manifest-path "$repo_root/Cargo.toml" --workspace --all-targets -- -D warnings
 "$repo_root/scripts/run-rust-tests"

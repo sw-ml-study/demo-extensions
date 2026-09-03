@@ -4,7 +4,9 @@ Only one saga is active at a time. A later saga may be replanned when the
 previous acceptance report exposes an upstream blocker. Steps are independently
 reviewable and use red/green TDD; no step silently modifies `../sw-mlpl`.
 
-Current status (2026-09-02): `native3d-point-cloud` has delivered its initial
+Current status (2026-09-02): `km01-offline-lesson` vendors the pinned KM01
+producer artifacts and adds the lesson to the generic offline microscope
+selector. `native3d-point-cloud` has delivered its initial
 renderer-neutral contract, headless renderer, and native GPU point pipeline. The
 generic retained-update and stable-ID selection contract is also delivered. The
 deterministic MLPL teaching app and bounded portability, CPU-performance,
@@ -12,6 +14,9 @@ packaging, and limitation acceptance are delivered.
 The `native3d-retained-scene` saga completed through step 015, including Model
 Atlas, disk usage, audio spectrum, weight distribution, the Yew microscope, and
 repository-wide retained-scene migration plus documentation reconciliation.
+The microscope's offline selector also vendors KM01 at producer revision
+`ff15ec7`, using the existing generic shape renderer with no K-means-specific
+Rust. Live browser-to-server execution remains a separate follow-up.
 Embedding/PCA remains the recommended successor after the point-cloud saga.
 
 The mandatory checklist in `AGENTS.md` applies to every step in every saga:
