@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+readme="$repo_root/README.md"
+
+grep -Fq '[sw-MLPL repository](https://github.com/sw-ml-study/sw-mlpl)' "$readme"
+grep -Fq '[sw-MLPL playground](https://sw-ml-study.github.io/sw-mlpl/)' "$readme"
+
+if grep -Fq '[sw-MLPL](../sw-mlpl)' "$readme"; then
+    echo "README uses a local-only sw-MLPL link" >&2
+    exit 1
+fi
+
+echo "PASS public README links"

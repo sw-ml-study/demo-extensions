@@ -1,10 +1,12 @@
 # demo-extensions
 
 `demo-extensions` explores how independently built Rust libraries can add
-native capabilities to [sw-MLPL](../sw-mlpl) without adding each domain to the
-language runtime. The repository now includes the original headless `hello`
-extension foundation plus native interactive line-rendered applications,
-bounded model/media/filesystem demonstrations, and a Rust/Yew ML microscope.
+native capabilities to the [sw-MLPL repository](https://github.com/sw-ml-study/sw-mlpl)
+without adding each domain to the language runtime. Try the core language in
+the [sw-MLPL playground](https://sw-ml-study.github.io/sw-mlpl/). This repository
+now includes the original headless `hello` extension foundation plus native
+interactive line-rendered applications, bounded model/media/filesystem
+demonstrations, and a Rust/Yew ML microscope.
 
 The wireframe cube remains the smallest visual teaching path. All interactive
 native demos now initialize one retained scene, use stable-ID patches for
