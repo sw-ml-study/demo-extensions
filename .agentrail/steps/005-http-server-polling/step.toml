@@ -1,9 +1,10 @@
 number = 5
 slug = "http-server-polling"
-status = "in-progress"
+status = "completed"
 description = "Implement the bounded callback-free HTTP server described in docs/network-db-..."
 role = "production"
 context_files = []
 created_at = "2026-09-06T20:22:09"
+completed_at = "2026-09-07T12:04:49"
 task_type = "rust-http-server"
-commits = []
+commits = ["206863dd120f612c14b93b6c0510ef537286c013"]
