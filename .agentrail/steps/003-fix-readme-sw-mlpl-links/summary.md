@@ -1,0 +1,1 @@
+Replaced the broken README sibling-checkout link with verified public links to the sw-MLPL repository and browser playground. Added an offline regression check requiring both canonical URLs and rejecting the former local-only link. Focused red/green validation and full just check passed.

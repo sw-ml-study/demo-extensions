@@ -1,9 +1,10 @@
 number = 3
 slug = "fix-readme-sw-mlpl-links"
-status = "in-progress"
+status = "completed"
 description = "Replace the broken local sibling sw-MLPL link in README.md with explicit publ..."
 role = "production"
 context_files = []
 created_at = "2026-09-06T19:24:10"
+completed_at = "2026-09-06T19:26:27"
 task_type = "documentation"
-commits = []
+commits = ["2bc84353ce4b1499ac0aac7ee13b6de5f6d98a5e"]

@@ -1,0 +1,11 @@
+{
+  "task_type": "documentation",
+  "state": {
+    "number": 3,
+    "step": "fix-readme-sw-mlpl-links"
+  },
+  "action": "Created the authorized AgentRail fix step, verified both public endpoints returned HTTP 200, added scripts/check-readme-links to the pre-commit gate, updated README.md, ran focused and full checks, and committed as 2bc8435.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-06T19:26:27"
+}
