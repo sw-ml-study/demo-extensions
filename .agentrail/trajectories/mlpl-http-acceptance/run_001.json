@@ -1,0 +1,11 @@
+{
+  "task_type": "mlpl-http-acceptance",
+  "state": {
+    "number": 6,
+    "step": "http-client-mlpl-demo"
+  },
+  "action": "Used focused Rust and native mlplunit red/green tests, the public sw-MLPL C-descriptor registration hook, a loopback TCP fixture, an opt-in HTTPS smoke run, and the full just check gate.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-07T12:17:17"
+}

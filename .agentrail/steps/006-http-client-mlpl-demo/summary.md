@@ -1,0 +1,1 @@
+Added demos/http-client/get.mlpl and a real sw-MLPL static-provider host path with deterministic loopback acceptance. Added bounded _http.get(string) for the current outbound adapter, retained and documented the full request(record) API blocker, added an opt-in time.gov command, and updated README/contracts/checks. Full just check passed; live time.gov returned HTTP 200.
