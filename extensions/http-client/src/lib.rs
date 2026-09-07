@@ -3,10 +3,18 @@
 mod client;
 mod middleware;
 
-pub use client::request_value;
+pub use client::{get_value, request_value};
 pub use middleware::middleware_plan_value;
 
 const METADATA: &str = r#"
+[[functions]]
+name = "get"
+documentation = "Perform one bounded GET with fixed conservative defaults."
+returns = "record"
+[[functions.arguments]]
+name = "url"
+type = "string"
+
 [[functions]]
 name = "request"
 documentation = "Perform one bounded synchronous HTTP or HTTPS request."
@@ -31,6 +39,7 @@ mlpl_extension_sdk::export_extension! {
     version: "0.1.0",
     metadata: crate::METADATA,
     functions: [
+        (get_trampoline, "get", 1, crate::get_value),
         (request_trampoline, "request", 1, crate::request_value),
         (middleware_plan_trampoline, "middleware_plan", 1, crate::middleware_plan_value),
     ]

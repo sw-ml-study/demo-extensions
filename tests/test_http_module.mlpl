@@ -1,18 +1,11 @@
 # Native mlplunit coverage for the public HTTP extension facade.
 include "extensions/http-client/module.mlpl";
 
-@test {name: "HTTP request facade preserves typed records", tags: ["extensions", "http"]}
-def u:test_http_request_facade() {
-  "Keep the public request facade executable while dynamic host import is deferred.";
-  request = {method: "GET", timeout_ms: 1000};
-  u:assert_eq(u:http_request_spec(request), request, "HTTP facade preserves request records")
-}
-
-@test {name: "HTTP middleware facade preserves TOML", tags: ["extensions", "http"]}
-def u:test_http_middleware_facade() {
-  "Keep middleware configuration owned by the MLPL-facing package.";
-  config = "version = 1";
-  u:assert_eq(u:http_middleware_spec(config), config, "HTTP facade preserves middleware TOML")
+@test {name: "HTTP demo selects explicit and default URLs", tags: ["extensions", "http"]}
+def u:test_http_default_url() {
+  "Keep remote endpoint selection deterministic without performing network I/O.";
+  u:assert_eq(u:http_default_url(["http://127.0.0.1:8080/time"]),"http://127.0.0.1:8080/time","explicit endpoint wins")?;
+  u:assert_eq(u:http_default_url(args()),"https://time.gov/","empty arguments select official example")
 }
 
 u:run_registered_tests()

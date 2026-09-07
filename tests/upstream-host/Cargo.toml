@@ -6,6 +6,7 @@ publish = false
 
 [dependencies]
 mlpl-extension-hello = { path = "../../extensions/hello" }
+mlpl-extension-http-client = { path = "../../extensions/http-client" }
 mlpl-extension-boundary-probe = { path = "../../extensions/boundary-probe" }
 mlpl-extension-native3d = { path = "../../extensions/native3d" }
 mlpl-eval = { path = "../../../sw-mlpl/components/eval/crates/mlpl-eval" }

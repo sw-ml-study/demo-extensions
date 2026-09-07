@@ -48,6 +48,7 @@ demos/life-torus/model.mlpl
 demos/life-torus/controls.mlpl
 demos/life-torus/scene.mlpl
 demos/life-torus/live-applet.mlpl
+demos/http-client/get.mlpl
 demos/model-atlas/sparse-scan.mlpl
 demos/model-atlas/contract.mlpl
 demos/model-atlas/architecture.mlpl
@@ -83,6 +84,7 @@ scripts/run-3d-cube
 scripts/run-tic-tac-toe
 scripts/run-life-3d
 scripts/run-life-torus
+scripts/run-http-client
 scripts/run-model-atlas-memory-evidence
 scripts/run-model-atlas-contract
 scripts/run-model-atlas
@@ -121,7 +123,9 @@ tests/test_tic_tac_toe_scene.mlpl
 tests/test_wireframe_cube_scene.mlpl
 tests/test_wireframe_cube_controls.mlpl
 tests/upstream-host/tests/data_boundary.rs
-tests/upstream-host/tests/native3d_provider.rs'
+tests/upstream-host/tests/native3d_provider.rs
+tests/upstream-host/tests/http_client_provider.rs
+tests/upstream-host/src/bin/http_client_demo.rs'
 
 printf '%s\n' "$required_files" | while IFS= read -r path; do
   if [ ! -f "$repo_root/$path" ]; then

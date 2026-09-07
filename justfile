@@ -102,3 +102,7 @@ point-cloud-acceptance:
 # Run the complete pre-commit gate.
 check:
     ./scripts/check
+
+# Run the real MLPL HTTP GET demo (defaults to time.gov).
+http-client url="https://time.gov/":
+    ./scripts/run-http-client "{{url}}"

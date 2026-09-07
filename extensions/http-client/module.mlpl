@@ -1,15 +1,20 @@
 # Public MLPL helpers for the bounded native HTTP extension contract.
-def u:_http_native_request(request) {
-  "Preserve the private native request seam until host package import lands.";
-  request
+def u:_http_native_get(url) {
+  "Cross the private string-only native GET seam.";
+  _http:get(url)
 }
 
-def u:http_request_spec(request) {
-  "Preserve one request record for the private native request seam.";
-  u:_http_native_request(request)
+def u:http_get(url) {
+  "Perform a bounded native GET through the host-registered HTTP provider.";
+  u:_http_native_get(url)
 }
 
-def u:http_middleware_spec(config_toml) {
-  "Preserve middleware TOML for native validation and future server use.";
-  config_toml
+def u:http_request(request) {
+  "Perform a fully configured request when the host supports record arguments.";
+  _http:request(request)
+}
+
+def u:http_default_url(arguments) {
+  "Select a caller URL or the official time.gov teaching endpoint.";
+  unwrap_or(list_get(arguments,0),"https://time.gov/")
 }

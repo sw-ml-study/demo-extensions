@@ -35,7 +35,11 @@ fn dynamic_and_static_providers_publish_the_same_bounded_api() {
         assert_eq!(registry.extension_name(), "_http");
         assert_eq!(
             registry.function_names(),
-            ["_http.middleware_plan", "_http.request"]
+            ["_http.get", "_http.middleware_plan", "_http.request"]
+        );
+        assert_eq!(
+            registry.help("_http.get").unwrap(),
+            "_http.get(url: string) -> record\nPerform one bounded GET with fixed conservative defaults."
         );
         assert_eq!(
             registry.help("_http.request").unwrap(),
@@ -44,6 +48,11 @@ fn dynamic_and_static_providers_publish_the_same_bounded_api() {
         assert!(matches!(
             registry.call("_http.request", &[Value::String("unsafe".into())]),
             Err(CallError::InvalidArgument(message)) if message == "request must be a record"
+        ));
+        assert!(matches!(
+            registry.call("_http.get", &[Value::String("file:///etc/passwd".into())]),
+            Err(CallError::InvalidArgument(message))
+                if message == "url must be an absolute HTTP or HTTPS URL"
         ));
     }
 }

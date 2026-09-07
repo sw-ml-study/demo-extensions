@@ -108,6 +108,19 @@ upstream work. No upstream files are changed by this repository.
 - Downstream Rust harness: proven by `hello_registration.rs`; it is evidence
   for the proposed boundary, not evidence that sw-MLPL already implements it.
 
+### HTTP client argument limitation
+
+The public static C-descriptor hook now runs the real `_http:get(string)`
+provider from `demos/http-client/get.mlpl`; its mandatory acceptance uses a
+loopback server. The same adapter's outbound marshal path currently accepts
+only scalar arrays, dense numeric arrays, strings, and handles. It rejects an
+MLPL record or packed bytes before provider dispatch, so the full
+`_http.request(record)` surface cannot yet be called by interpreted MLPL.
+Upstream acceptance requires recursively marshaling records and packed bytes
+through the existing versioned ABI, with ownership and malformed-input tests.
+The bounded string-only GET is the current non-mock workaround. Package `use`
+resolution and compiled-provider parity remain separate blockers.
+
 See `foundation-acceptance.md` for the complete evidence matrix and limitations.
 See `extensions-blockers.md` for the actionable requirements and acceptance
 criteria for every remaining host capability.

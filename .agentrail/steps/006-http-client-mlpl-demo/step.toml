@@ -1,6 +1,6 @@
 number = 6
 slug = "http-client-mlpl-demo"
-status = "pending"
+status = "in-progress"
 description = "Add an honest executable .mlpl HTTP-client example and real MLPL-to-provider ..."
 role = "production"
 context_files = []

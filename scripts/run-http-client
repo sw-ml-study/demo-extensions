@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+url=${1:-https://time.gov/}
+
+exec env CARGO_TARGET_DIR="$repo_root/target/upstream-host" \
+  cargo run --offline --quiet \
+  --manifest-path "$repo_root/tests/upstream-host/Cargo.toml" \
+  --bin http_client_demo -- "$url"

@@ -16,9 +16,11 @@ The delivery order is:
 4. an MLPL web-framework facade that composes the primitives.
 
 The first client slice is implemented by `extensions/http-client`. It is proven
-through both dynamic and static V1 provider registration. Actual package import
-from an sw-MLPL program remains blocked on the upstream dynamic-provider and
-facade hooks recorded in `docs/upstream-contract.md`.
+through both dynamic and static V1 provider registration. The executable
+`demos/http-client/get.mlpl` source reaches the real provider through sw-MLPL's
+public static C-descriptor hook; `just http-client` runs it against time.gov.
+That public-network command is opt-in, while the mandatory acceptance test runs
+the identical source against a deterministic loopback endpoint.
 
 ## Boundary and capability model
 
@@ -41,6 +43,23 @@ trust decision; capability declarations make its intended authority reviewable
 and prevent an MLPL facade from accidentally using broader ambient authority.
 
 ## Bounded HTTP client V1
+
+The public `_http.get(url)` convenience call is the immediately executable MLPL
+path. It accepts one absolute HTTP/HTTPS URL and fixes the request to GET, no
+headers or body, a 10-second timeout, a 1 MiB response limit, and three
+redirects. These conservative defaults make the common teaching example usable
+through the current host adapter without weakening the full API below.
+
+```mlpl
+# demos/http-client/get.mlpl defaults to this URL when no argument is supplied.
+response = _http:get("https://time.gov/");
+print({status: response.status, body_bytes: tally(response.body)})
+```
+
+Run it with `just http-client`, or select another endpoint with
+`just http-client https://example.com/`. The command performs real network I/O;
+DNS, TLS, the remote service, and local policy can make it fail. It is therefore
+not part of `just check`.
 
 The private `_http.request(request)` provider accepts one exact record:
 
@@ -83,6 +102,13 @@ the underlying client's conservative cross-host behavior.
 Tests use ephemeral loopback listeners and never require the public network.
 TLS support is compiled into the provider, but public certificate/network
 availability is not part of the deterministic gate.
+
+The current sw-MLPL C-provider outbound adapter can marshal scalar and string
+arguments but not an MLPL request record or packed-byte body. Consequently,
+`_http.request(record)` is validated at the extension ABI and loader layers but
+cannot yet be called from interpreted MLPL. `_http.get(string)` is a real,
+non-identity compatibility surface over the same implementation. The remaining
+upstream record/bytes requirement is tracked in `docs/upstream-contract.md`.
 
 Large model weights must not use this buffered API. A later model acquisition
 facade should map a short allowlisted model name to a pinned URL, expected

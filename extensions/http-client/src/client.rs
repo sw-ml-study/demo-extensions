@@ -10,6 +10,9 @@ const MAX_RESPONSE_BYTES: i64 = 16 * 1024 * 1024;
 const MAX_REQUEST_BYTES: usize = 16 * 1024 * 1024;
 const MAX_HEADER_COUNT: usize = 128;
 const MAX_HEADER_BYTES: usize = 64 * 1024;
+const GET_TIMEOUT_MS: u64 = 10_000;
+const GET_MAX_RESPONSE_BYTES: usize = 1024 * 1024;
+const GET_MAX_REDIRECTS: u32 = 3;
 
 struct HttpRequest {
     method: String,
@@ -30,6 +33,37 @@ struct HttpRequest {
 pub fn request_value(arguments: &[Value]) -> Result<Value, OwnedError> {
     let request = HttpRequest::parse(arguments)?;
     execute(&request)
+}
+
+/// Performs a bounded GET for hosts whose V1 outbound adapter cannot yet
+/// marshal request records and packed byte bodies.
+///
+/// This is a stable convenience API, not a substitute for [`request_value`]:
+/// it sends no custom headers or body and applies conservative fixed bounds.
+///
+/// # Errors
+///
+/// Returns an invalid-argument error for a missing or malformed URL and an
+/// extension error for transport or bounded-response failures.
+pub fn get_value(arguments: &[Value]) -> Result<Value, OwnedError> {
+    let url = match arguments {
+        [Value::String(url)] => url.clone(),
+        [_] => return Err(invalid("get URL must be a string")),
+        _ => return Err(invalid("get expects exactly one argument")),
+    };
+    let parsed = Url::parse(&url).map_err(|_| invalid("url must be absolute"))?;
+    if !matches!(parsed.scheme(), "http" | "https") || parsed.host_str().is_none() {
+        return Err(invalid("url must be an absolute HTTP or HTTPS URL"));
+    }
+    execute(&HttpRequest {
+        method: "GET".to_owned(),
+        url,
+        headers: Vec::new(),
+        body: Vec::new(),
+        timeout: Duration::from_millis(GET_TIMEOUT_MS),
+        max_response_bytes: GET_MAX_RESPONSE_BYTES,
+        max_redirects: GET_MAX_REDIRECTS,
+    })
 }
 
 impl HttpRequest {

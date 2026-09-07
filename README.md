@@ -63,6 +63,19 @@ The hello package demonstrates the intended separation:
 The scripts only select existing tools; they never install or overwrite them.
 Environment overrides must be absolute paths.
 
+Run the executable MLPL HTTP-client demo through the real Rust provider:
+
+```sh
+just http-client
+# or: just http-client https://example.com/
+```
+
+The default `https://time.gov/` request is an opt-in live-network example, not
+a test dependency. The mandatory test runs the same
+[`get.mlpl`](demos/http-client/get.mlpl) source against loopback. See the
+[network/database extension plan](docs/network-db-extensions.md) for bounds and
+the current full-request ABI limitation.
+
 ## Build and test
 
 Build the workspace and the independently loadable hello library:

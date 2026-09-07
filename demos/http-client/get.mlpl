@@ -1,0 +1,6 @@
+# Fetch one URL through the native bounded HTTP-client extension.
+url = unwrap_or(list_get(args(),0),"https://time.gov/");
+response = _http:get(url);
+print("MLPL HTTP GET");
+print({url: url,status: response.status,final_url: response.final_url,body_bytes: tally(response.body)});
+[response.status, tally(response.body)]
