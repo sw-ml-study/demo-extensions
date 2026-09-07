@@ -106,3 +106,7 @@ check:
 # Run the real MLPL HTTP GET demo (defaults to time.gov).
 http-client url="https://time.gov/":
     ./scripts/run-http-client "{{url}}"
+
+# Render the deterministic MLPL TodoMVC HTML preview.
+todomvc:
+    ./scripts/run-todomvc

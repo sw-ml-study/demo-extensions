@@ -128,6 +128,14 @@ native mlplunit facade tests, not claimed as an end-to-end interpreter path.
 Once recursive record and packed-byte outbound marshaling lands, its provider
 requires no alternate ABI or application-specific host hook.
 
+The MLPL web framework and TodoMVC use those exact future-ready records for
+`_web.listen`/`respond` and `_sqlite.open`/`execute`/`query`. Their model,
+router, middleware, authorization, encodings, sessions, controllers, views, and
+parameterized persistence plans run under native mlplunit today. A live
+browser-to-server TodoMVC acceptance must wait for the same recursive outbound
+record/bytes support; a special identity facade or domain-specific Rust bridge
+does not satisfy that acceptance.
+
 See `foundation-acceptance.md` for the complete evidence matrix and limitations.
 See `extensions-blockers.md` for the actionable requirements and acceptance
 criteria for every remaining host capability.

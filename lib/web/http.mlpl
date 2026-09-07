@@ -1,0 +1,68 @@
+# Request validation, MLPL-owned authorization, middleware, and response helpers.
+def u:web_validate_request(request,limits) {
+  "Validate the exact native request envelope and application-facing size limits.";
+  expected=["authorization_owner","bearer_token","body","headers","id","method","origin","path","query","token_verified"];
+  if 1-equal(record_keys(request),expected) {
+    err("request fields do not match the V1 contract")
+  } else {
+    if 1-equal(request.authorization_owner,"mlpl") {
+      err("authorization owner must be mlpl")
+    } else {
+      if (1-equal(type_of(request.method),"string"))+(1-equal(type_of(request.path),"string"))+(1-equal(type_of(request.query),"string")) {
+        err("request method path and query must be strings")
+      } else {
+        if (lt(limits.max_path_chars,1))+(lt(limits.max_body_bytes,0)) {
+          err("request limits are invalid")
+        } else {
+          if lt(limits.max_path_chars,str_len(request.path)) {
+            err("request path exceeds max_path_chars")
+          } else {
+            if lt(limits.max_body_bytes,tally(request.body)) {
+              err("request body exceeds max_body_bytes")
+            } else {
+              ok(request)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+def u:web_authorize(context,authorizer) {
+  "Apply one ordinary MLPL authorization function to an exact request context.";
+  decision=call(authorizer,context);
+  ok({request: context.request,identity: context.identity,authorized: decision,marker: context.marker})
+}
+
+def u:web_apply_middleware(context,middleware) {
+  "Apply at most sixteen MLPL middleware functions in declared indexed order.";
+  if (lt(middleware.count,0))+(lt(16,middleware.count)) {
+    err("middleware count must be between zero and sixteen")
+  } else {
+    current=context;
+    index=0;
+    while lt(index,middleware.count) {
+      key=str_concat("item_",to_json(index)?);
+      current=call(record_get(middleware,key)?,current);
+      index=index+1
+    };
+    ok(current)
+  }
+}
+
+def u:web_response_headers(content_type) {
+  "Build one exact response header record.";
+  {count: 1,item_0: {name: "content-type",value: content_type}}
+}
+
+def u:web_json_response(status,value) {
+  "Encode one bounded-compatible JSON response record with a packed byte body.";
+  json=to_json(value)?;
+  ok({status: status,headers: u:web_response_headers("application/json; charset=utf-8"),body: pack(tokenize_bytes(json),"u8")})
+}
+
+def u:web_html_response(status,html) {
+  "Encode one HTML response record with a packed byte body.";
+  ok({status: status,headers: u:web_response_headers("text/html; charset=utf-8"),body: pack(tokenize_bytes(html),"u8")})
+}

@@ -220,7 +220,9 @@ queries return complete indexed records rather than persistent cursors. See
 `sqlite-extension.md` for the exact limits, confinement rules, result shape,
 tests, and the current upstream outbound-record limitation.
 
-The final framework is primarily MLPL:
+The first framework slice is now implemented in `lib/web`, with the standard
+TodoMVC application in `demos/todomvc` and experiment CRUD plans in
+`demos/experiment-dashboard`. The framework is primarily MLPL:
 
 - method/path routing and named parameters;
 - middleware composition around the fixed native security stages;
@@ -256,8 +258,9 @@ still require the specialized streamed, checksum-pinned acquisition path above.
    with fixed middleware ordering and no native callbacks.
 3. `sqlite-extension` — delivered confined SQLite handles, parameters,
    transactions, bounded results, and deterministic cleanup.
-4. `mlpl-web-framework` — build MLPL routes, middleware composition, JSON/form/
-   HTML helpers, and a small experiment dashboard over HTTP plus SQLite.
+4. `mlpl-web-framework` — delivered MLPL routes, middleware composition,
+   JSON/form/HTML/session helpers, standard TodoMVC, and experiment CRUD plans;
+   live provider composition awaits the recorded upstream outbound bridge.
 5. `pinned-model-acquisition` — only after streaming and filesystem capability
    contracts exist, add explicit allowlisted fetch, checksum, cache, and atomic
    publication behavior.

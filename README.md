@@ -64,6 +64,17 @@ The hello package demonstrates the intended separation:
 The scripts only select existing tools; they never install or overwrite them.
 Environment overrides must be absolute paths.
 
+Run the executable MLPL implementation of the standard TodoMVC model,
+controller, parameterized SQLite plans, and escaped server-rendered view:
+
+```sh
+just todomvc
+```
+
+The command prints a deterministic HTML preview. Live HTTP/SQLite composition
+awaits the documented sw-MLPL outbound-record bridge; the framework does not
+fake native calls. See [MLPL web framework and TodoMVC](docs/mlpl-web-framework.md).
+
 Run the executable MLPL HTTP-client demo through the real Rust provider:
 
 ```sh
@@ -350,6 +361,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   downstream descriptor registration and remaining upstream scope.
 - [Confined SQLite extension](docs/sqlite-extension.md) — path confinement,
   parameters, bounded rows/results, transactions, handles, and host limits.
+- [MLPL web framework and TodoMVC](docs/mlpl-web-framework.md) — routes, named
+  parameters, middleware, authorization, encodings, sessions, CRUD, and limits.
 - [sw-MLPL data-boundary acceptance](docs/upstream-data-boundary-acceptance.md)
   — real interpreter proof for arrays, handles, records, and invalid values.
 - [Extension blockers](docs/extensions-blockers.md) — actionable host

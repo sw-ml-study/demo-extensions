@@ -1,0 +1,16 @@
+# Native mlplunit coverage for deterministic experiment-dashboard CRUD plans.
+include "demos/experiment-dashboard/crud.mlpl";
+
+@test {name: "experiment dashboard emits parameterized CRUD plans",tags: ["web","dashboard","sqlite"]}
+def u:test_experiment_dashboard_crud() {
+  "Keep run values out of generic SQLite statement text.";
+  created=u:runs_insert_plan("baseline",0.25);
+  updated=u:runs_update_plan(7,"tuned",0.75);
+  deleted=u:runs_delete_plan(7);
+  u:assert_eq(created.params,{count: 2,item_0: "baseline",item_1: 0.25},"create parameters")?;
+  u:assert_eq(updated.params.count,3,"update parameters")?;
+  u:assert_eq(deleted.params,{count: 1,item_0: 7},"delete parameters")?;
+  u:assert_true(1-eq(str_find(u:runs_select_plan().sql,"ORDER BY"),-1),"read ordering is deterministic")
+}
+
+u:run_registered_tests()

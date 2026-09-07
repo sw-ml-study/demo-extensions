@@ -1,0 +1,86 @@
+# MLPL-owned TodoMVC routes and controller dispatch over generic web/SQLite primitives.
+def u:todo_filter(query) {
+  "Select a supported TodoMVC filter from one URL query string.";
+  if eq(str_find(query,"filter="),-1) {
+    "all"
+  } else {
+    selected=u:web_form_value(query,"filter")?;
+    if equal(selected,"active") {
+      "active"
+    } else {
+      if equal(selected,"completed") {
+        "completed"
+      } else {
+        "all"
+      }
+    }
+  }
+}
+
+def u:todo_render_result(state,filter,plan) {
+  "Build one controller result with state, HTML response, and SQLite plan.";
+  html=u:todo_render(state,filter)?;
+  response=u:web_html_response(200,html)?;
+  ok({state: state,response: response,db_plan: plan})
+}
+
+def u:todo_id_parameter(params) {
+  "Parse the first named route parameter as a positive numeric ID.";
+  if (1-eq(params.count,1))+(1-equal(params.item_0.name,"id")) {
+    err("todo route requires named id")
+  } else {
+    id=to_number(params.item_0.value)?;
+    if lt(id,1) {
+      err("todo ID must be positive")
+    } else {
+      ok(id)
+    }
+  }
+}
+
+def u:todo_dispatch(state,request) {
+  "Dispatch standard TodoMVC CRUD routes and return an explicit persistence plan.";
+  home=u:web_route_match(request.method,request.path,"GET","/")?;
+  create=u:web_route_match(request.method,request.path,"POST","/todos")?;
+  toggle=u:web_route_match(request.method,request.path,"POST","/todos/:id/toggle")?;
+  edit=u:web_route_match(request.method,request.path,"POST","/todos/:id/edit")?;
+  remove=u:web_route_match(request.method,request.path,"POST","/todos/:id/delete")?;
+  clear=u:web_route_match(request.method,request.path,"POST","/todos/clear")?;
+  if home.matched {
+    u:todo_render_result(state,u:todo_filter(request.query)?,u:todo_select_plan())
+  } else {
+    if create.matched {
+      title=u:web_form_value(decode_bytes(request.body),"title")?;
+      next=u:todo_add(state,title)?;
+      u:todo_render_result(next,"all",u:todo_insert_plan(title))
+    } else {
+      if toggle.matched {
+        id=u:todo_id_parameter(toggle.params)?;
+        next=u:todo_toggle(state,id)?;
+        slot=u:todo_find(next,id)?;
+        u:todo_render_result(next,"all",u:todo_toggle_plan(id,take(next.completed,0,slot)))
+      } else {
+        if edit.matched {
+          id=u:todo_id_parameter(edit.params)?;
+          title=u:web_form_value(decode_bytes(request.body),"title")?;
+          next=u:todo_edit(state,id,title)?;
+          u:todo_render_result(next,"all",u:todo_edit_plan(id,title))
+        } else {
+          if remove.matched {
+            id=u:todo_id_parameter(remove.params)?;
+            next=u:todo_delete(state,id)?;
+            u:todo_render_result(next,"all",u:todo_delete_plan(id))
+          } else {
+            if clear.matched {
+              next=u:todo_clear_completed(state);
+              u:todo_render_result(next,"all",u:todo_clear_plan())
+            } else {
+              response=u:web_html_response(404,"<h1>Not Found</h1>")?;
+              ok({state: state,response: response,db_plan: {sql: "",params: {count: 0}}})
+            }
+          }
+        }
+      }
+    }
+  }
+}

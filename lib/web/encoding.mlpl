@@ -1,0 +1,105 @@
+# Bounded HTML escaping and ASCII form decoding helpers.
+def u:web_html_escape(text) {
+  "Escape the five HTML-sensitive characters in one string.";
+  output="";
+  index=0;
+  while lt(index,str_len(text)) {
+    character=str_slice(text,index,1);
+    escaped=if equal(character,"&") {
+      "&amp;"
+    } else {
+      if equal(character,"<") {
+        "&lt;"
+      } else {
+        if equal(character,">") {
+          "&gt;"
+        } else {
+          if equal(character,"\"") {
+            "&quot;"
+          } else {
+            if equal(character,"'") {
+              "&#39;"
+            } else {
+              character
+            }
+          }
+        }
+      }
+    };
+    output=str_concat(output,escaped);
+    index=index+1
+  };
+  output
+}
+
+def u:web_hex_value(character) {
+  "Decode one ASCII hexadecimal character.";
+  digits="0123456789ABCDEF";
+  upper=if 1-eq(str_find("abcdef",character),-1) {
+    str_slice("ABCDEF",str_find("abcdef",character),1)
+  } else {
+    character
+  };
+  found=str_find(digits,upper);
+  if eq(found,-1) {
+    err("invalid percent escape")
+  } else {
+    ok(found)
+  }
+}
+
+def u:web_form_decode(component) {
+  "Decode plus and ASCII percent escapes from one form component.";
+  output="";
+  index=0;
+  while lt(index,str_len(component)) {
+    character=str_slice(component,index,1);
+    if equal(character,"+") {
+      output=str_concat(output," ");
+      index=index+1
+    } else {
+      if equal(character,"%") {
+        if lt(str_len(component),index+3) {
+          return err("truncated percent escape")
+        };
+        high=u:web_hex_value(str_slice(component,index+1,1))?;
+        low=u:web_hex_value(str_slice(component,index+2,1))?;
+        byte=high*16+low;
+        if lt(127,byte) {
+          return err("V1 form decoder accepts ASCII percent escapes only")
+        };
+        output=str_concat(output,decode_bytes([byte]));
+        index=index+3
+      } else {
+        output=str_concat(output,character);
+        index=index+1
+      }
+    }
+  };
+  ok(output)
+}
+
+def u:web_form_value(body,wanted_name) {
+  "Return one named field from a bounded application/x-www-form-urlencoded body.";
+  if lt(16384,str_len(body)) {
+    err("form body exceeds 16384 characters")
+  } else {
+    pairs=str_split(body,"&");
+    if lt(64,list_len(pairs)) {
+      err("form field count exceeds 64")
+    } else {
+      index=0;
+      while lt(index,list_len(pairs)) {
+        parts=str_split(list_get(pairs,index)?,"=");
+        if eq(list_len(parts),2) {
+          name=u:web_form_decode(list_get(parts,0)?)?;
+          if equal(name,wanted_name) {
+            return u:web_form_decode(list_get(parts,1)?)
+          }
+        };
+        index=index+1
+      };
+      err("form field is missing")
+    }
+  }
+}

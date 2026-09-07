@@ -1,0 +1,13 @@
+# Executable deterministic TodoMVC model and server-rendered HTML preview.
+include "../../lib/web/encoding.mlpl";
+include "model.mlpl";
+include "view.mlpl";
+
+state=u:todo_empty();
+state=u:todo_add(state,"Learn array programming")?;
+state=u:todo_add(state,"Build a Rails-like MLPL app")?;
+state=u:todo_toggle(state,1)?;
+html=u:todo_render(state,"all")?;
+print("MLPL TodoMVC deterministic HTML preview");
+print(html);
+ok({todos: reduce(:add,state.alive),remaining: u:todo_remaining(state),html_chars: str_len(html)})

@@ -1,0 +1,72 @@
+# Method-aware route matching with bounded named path parameters.
+def u:web_empty_params() {
+  "Build an empty named-parameter record.";
+  {count: 0}
+}
+
+def u:web_route_miss() {
+  "Build the canonical non-matching route result.";
+  ok({matched: 0,params: u:web_empty_params()})
+}
+
+def u:web_route_match(method,path,route_method,pattern) {
+  "Match one method/path pattern and capture at most two colon-prefixed segments.";
+  if (1-equal(type_of(method),"string"))+(1-equal(type_of(path),"string"))+(1-equal(type_of(route_method),"string"))+(1-equal(type_of(pattern),"string")) {
+    err("route method path and pattern must be strings")
+  } else {
+    if 1-equal(method,route_method) {
+      u:web_route_miss()
+    } else {
+      actual=str_split(path,"/");
+      expected=str_split(pattern,"/");
+      if 1-eq(list_len(actual),list_len(expected)) {
+        u:web_route_miss()
+      } else {
+        index=0;
+        matched=1;
+        count=0;
+        name0="";
+        value0="";
+        name1="";
+        value1="";
+        while lt(index,list_len(expected)) {
+          wanted=list_get(expected,index)?;
+          found=list_get(actual,index)?;
+          named=equal(str_slice(wanted,0,1),":");
+          if named {
+            if (eq(str_len(found),0))+(1-lt(count,2)) {
+              matched=0
+            } else {
+              if eq(count,0) {
+                name0=str_slice(wanted,1,str_len(wanted));
+                value0=found
+              } else {
+                name1=str_slice(wanted,1,str_len(wanted));
+                value1=found
+              };
+              count=count+1
+            }
+          } else {
+            if 1-equal(wanted,found) {
+              matched=0
+            }
+          };
+          index=index+1
+        };
+        if 1-matched {
+          u:web_route_miss()
+        } else {
+          if eq(count,0) {
+            ok({matched: 1,params: {count: 0}})
+          } else {
+            if eq(count,1) {
+              ok({matched: 1,params: {count: 1,item_0: {name: name0,value: value0}}})
+            } else {
+              ok({matched: 1,params: {count: 2,item_0: {name: name0,value: value0},item_1: {name: name1,value: value1}}})
+            }
+          }
+        }
+      }
+    }
+  }
+}

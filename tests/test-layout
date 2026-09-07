@@ -49,6 +49,11 @@ demos/life-torus/controls.mlpl
 demos/life-torus/scene.mlpl
 demos/life-torus/live-applet.mlpl
 demos/http-client/get.mlpl
+demos/todomvc/model.mlpl
+demos/todomvc/view.mlpl
+demos/todomvc/app.mlpl
+demos/todomvc/demo.mlpl
+demos/experiment-dashboard/crud.mlpl
 demos/model-atlas/sparse-scan.mlpl
 demos/model-atlas/contract.mlpl
 demos/model-atlas/architecture.mlpl
@@ -81,6 +86,10 @@ lib/native3d/camera.mlpl
 lib/native3d/geometry.mlpl
 lib/model-atlas/bounded_scan.mlpl
 lib/model-atlas/interchange.mlpl
+lib/web/router.mlpl
+lib/web/http.mlpl
+lib/web/encoding.mlpl
+lib/web/session.mlpl
 mlplunit.conf
 scripts/check
 scripts/check-gitignore
@@ -92,6 +101,7 @@ scripts/run-tic-tac-toe
 scripts/run-life-3d
 scripts/run-life-torus
 scripts/run-http-client
+scripts/run-todomvc
 scripts/run-model-atlas-memory-evidence
 scripts/run-model-atlas-contract
 scripts/run-model-atlas
@@ -100,6 +110,9 @@ scripts/run-tests
 scripts/select-mlpl
 scripts/select-mlplunit
 tests/test_hello_module.mlpl
+tests/test_web_framework.mlpl
+tests/test_todomvc.mlpl
+tests/test_experiment_dashboard.mlpl
 tests/test_sqlite_module.mlpl
 tests/test_native3d_library.mlpl
 tests/test_tic_tac_toe_model.mlpl
@@ -118,6 +131,7 @@ docs/life-controls.md
 docs/life-acceptance.md
 docs/life-torus.md
 docs/sqlite-extension.md
+docs/mlpl-web-framework.md
 docs/retained-scene-patches.md
 docs/model-atlas-bounded-scan.md
 docs/model-atlas-interchange.md

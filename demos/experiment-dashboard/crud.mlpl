@@ -1,0 +1,25 @@
+# Parameterized SQLite CRUD plans for a deterministic experiment dashboard.
+def u:runs_schema_plan() {
+  "Return the generic experiment-run table schema plan.";
+  {sql: "CREATE TABLE IF NOT EXISTS experiment_runs (id INTEGER PRIMARY KEY, name TEXT NOT NULL, metric REAL NOT NULL)",params: {count: 0}}
+}
+
+def u:runs_select_plan() {
+  "Return deterministic experiment-run ordering.";
+  {sql: "SELECT id, name, metric FROM experiment_runs ORDER BY id",params: {count: 0}}
+}
+
+def u:runs_insert_plan(name,metric) {
+  "Return a parameterized experiment-run create plan.";
+  {sql: "INSERT INTO experiment_runs(name, metric) VALUES (?1, ?2)",params: {count: 2,item_0: name,item_1: metric}}
+}
+
+def u:runs_update_plan(id,name,metric) {
+  "Return a parameterized experiment-run update plan.";
+  {sql: "UPDATE experiment_runs SET name = ?1, metric = ?2 WHERE id = ?3",params: {count: 3,item_0: name,item_1: metric,item_2: id}}
+}
+
+def u:runs_delete_plan(id) {
+  "Return a parameterized experiment-run delete plan.";
+  {sql: "DELETE FROM experiment_runs WHERE id = ?1",params: {count: 1,item_0: id}}
+}

@@ -1,0 +1,59 @@
+# Secure cookie serialization for opaque application-owned session IDs.
+def u:web_cookie_value(header,wanted_name) {
+  "Read one exact cookie name from a bounded Cookie header.";
+  if lt(8192,str_len(header)) {
+    err("cookie header exceeds 8192 characters")
+  } else {
+    pairs=str_split(header,";");
+    index=0;
+    while lt(index,list_len(pairs)) {
+      pair=list_get(pairs,index)?;
+      if equal(str_slice(pair,0,1)," ") {
+        pair=str_slice(pair,1,str_len(pair))
+      };
+      parts=str_split(pair,"=");
+      if eq(list_len(parts),2) {
+        if equal(list_get(parts,0)?,wanted_name) {
+          return ok(list_get(parts,1)?)
+        }
+      };
+      index=index+1
+    };
+    err("cookie is missing")
+  }
+}
+
+def u:web_session_cookie(session_id,max_age) {
+  "Serialize one constrained opaque session ID as a secure host-only cookie.";
+  unsafe=(eq(str_len(session_id),0))+(lt(128,str_len(session_id)))+(1-eq(str_find(session_id,";"),-1))+(1-eq(str_find(session_id," "),-1))+(1-eq(str_find(session_id,"\r"),-1))+(1-eq(str_find(session_id,"\n"),-1));
+  if unsafe {
+    err("session ID contains an unsafe cookie character")
+  } else {
+    if (lt(max_age,0))+(lt(31536000,max_age)) {
+      err("session max_age must be between zero and 31536000")
+    } else {
+      age=to_json(max_age)?;
+      ok(str_concat("__Host-mlpl_session=",str_concat(session_id,str_concat("; Path=/; Max-Age=",str_concat(age,"; Secure; HttpOnly; SameSite=Lax")))))
+    }
+  }
+}
+
+def u:web_session_schema_plan() {
+  "Return a generic opaque-session SQLite schema plan.";
+  {sql: "CREATE TABLE IF NOT EXISTS web_sessions (id TEXT PRIMARY KEY, subject TEXT NOT NULL, expires_at INTEGER NOT NULL)",params: {count: 0}}
+}
+
+def u:web_session_lookup_plan(session_id,now_epoch) {
+  "Return a parameterized unexpired-session lookup plan.";
+  {sql: "SELECT subject, expires_at FROM web_sessions WHERE id = ?1 AND expires_at > ?2",params: {count: 2,item_0: session_id,item_1: now_epoch}}
+}
+
+def u:web_session_insert_plan(session_id,subject,expires_at) {
+  "Return a parameterized opaque-session creation plan.";
+  {sql: "INSERT INTO web_sessions(id, subject, expires_at) VALUES (?1, ?2, ?3)",params: {count: 3,item_0: session_id,item_1: subject,item_2: expires_at}}
+}
+
+def u:web_session_delete_plan(session_id) {
+  "Return a parameterized session deletion plan.";
+  {sql: "DELETE FROM web_sessions WHERE id = ?1",params: {count: 1,item_0: session_id}}
+}

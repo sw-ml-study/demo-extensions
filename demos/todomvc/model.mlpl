@@ -1,0 +1,214 @@
+# Standard TodoMVC state transitions and parameterized SQLite persistence plans.
+def u:todo_empty_titles() {
+  "Build the fixed-capacity empty title store.";
+  {item_0: "",item_1: "",item_2: "",item_3: "",item_4: "",item_5: "",item_6: "",item_7: ""}
+}
+
+def u:todo_empty() {
+  "Build an empty deterministic eight-item TodoMVC state.";
+  {capacity: 8,next_id: 1,ids: fill([8],0),titles: u:todo_empty_titles(),completed: fill([8],0),alive: fill([8],0)}
+}
+
+def u:todo_title_at(titles,index) {
+  "Read one title from the fixed-capacity title store.";
+  if eq(index,0) {
+    titles.item_0
+  } else {
+    if eq(index,1) {
+      titles.item_1
+    } else {
+      if eq(index,2) {
+        titles.item_2
+      } else {
+        if eq(index,3) {
+          titles.item_3
+        } else {
+          if eq(index,4) {
+            titles.item_4
+          } else {
+            if eq(index,5) {
+              titles.item_5
+            } else {
+              if eq(index,6) {
+                titles.item_6
+              } else {
+                titles.item_7
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+def u:todo_titles_set(titles,index,title) {
+  "Replace one title while preserving all other fixed-capacity slots.";
+  {item_0: if eq(index,0) {
+      title
+    } else {
+      titles.item_0
+    },item_1: if eq(index,1) {
+      title
+    } else {
+      titles.item_1
+    },item_2: if eq(index,2) {
+      title
+    } else {
+      titles.item_2
+    },item_3: if eq(index,3) {
+      title
+    } else {
+      titles.item_3
+    },item_4: if eq(index,4) {
+      title
+    } else {
+      titles.item_4
+    },item_5: if eq(index,5) {
+      title
+    } else {
+      titles.item_5
+    },item_6: if eq(index,6) {
+      title
+    } else {
+      titles.item_6
+    },item_7: if eq(index,7) {
+      title
+    } else {
+      titles.item_7
+    }}
+}
+
+def u:todo_state(state,ids,titles,completed,alive,next_id) {
+  "Rebuild one TodoMVC state after an immutable transition.";
+  {capacity: state.capacity,next_id: next_id,ids: ids,titles: titles,completed: completed,alive: alive}
+}
+
+def u:todo_validate_title(title) {
+  "Accept a nonempty title of at most two hundred characters.";
+  if 1-equal(type_of(title),"string") {
+    err("todo title must be a string")
+  } else {
+    if (eq(str_len(title),0))+(lt(200,str_len(title))) {
+      err("todo title must contain 1..200 characters")
+    } else {
+      ok(title)
+    }
+  }
+}
+
+def u:todo_find(state,id) {
+  "Find the live slot for one stable todo ID.";
+  index=0;
+  found=0-1;
+  while lt(index,state.capacity) {
+    if eq(take(state.alive,0,index),1)*eq(take(state.ids,0,index),id) {
+      found=index
+    };
+    index=index+1
+  };
+  if eq(found,0-1) {
+    err("todo ID is not live")
+  } else {
+    ok(found)
+  }
+}
+
+def u:todo_add(state,title) {
+  "Add one active todo in the first free slot with a stable increasing ID.";
+  valid=u:todo_validate_title(title)?;
+  index=0;
+  slot=0-1;
+  while lt(index,state.capacity) {
+    if eq(slot,0-1)*eq(take(state.alive,0,index),0) {
+      slot=index
+    };
+    index=index+1
+  };
+  if eq(slot,0-1) {
+    err("todo capacity is exhausted")
+  } else {
+    ok(u:todo_state(state,scatter(state.ids,slot,state.next_id),u:todo_titles_set(state.titles,slot,valid),scatter(state.completed,slot,0),scatter(state.alive,slot,1),state.next_id+1))
+  }
+}
+
+def u:todo_toggle(state,id) {
+  "Toggle the completed flag for one live todo.";
+  slot=u:todo_find(state,id)?;
+  ok(u:todo_state(state,state.ids,state.titles,scatter(state.completed,slot,1-take(state.completed,0,slot)),state.alive,state.next_id))
+}
+
+def u:todo_edit(state,id,title) {
+  "Replace the title of one live todo.";
+  valid=u:todo_validate_title(title)?;
+  slot=u:todo_find(state,id)?;
+  ok(u:todo_state(state,state.ids,u:todo_titles_set(state.titles,slot,valid),state.completed,state.alive,state.next_id))
+}
+
+def u:todo_delete(state,id) {
+  "Delete one live todo without reusing its stable ID.";
+  slot=u:todo_find(state,id)?;
+  ok(u:todo_state(state,state.ids,state.titles,state.completed,scatter(state.alive,slot,0),state.next_id))
+}
+
+def u:todo_clear_completed(state) {
+  "Delete all completed todos in one deterministic transition.";
+  u:todo_state(state,state.ids,state.titles,state.completed,state.alive*(1-state.completed),state.next_id)
+}
+
+def u:todo_remaining(state) {
+  "Count live todos that are not completed.";
+  reduce(:add,state.alive*(1-state.completed))
+}
+
+def u:todo_visible(state,filter) {
+  "Return an eight-slot visibility mask for all active or completed filters.";
+  if equal(filter,"all") {
+    state.alive
+  } else {
+    if equal(filter,"active") {
+      state.alive*(1-state.completed)
+    } else {
+      if equal(filter,"completed") {
+        state.alive*state.completed
+      } else {
+        fill([state.capacity],0)
+      }
+    }
+  }
+}
+
+def u:todo_schema_plan() {
+  "Return the TodoMVC SQLite schema without application values.";
+  {sql: "CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY, title TEXT NOT NULL, completed INTEGER NOT NULL CHECK (completed IN (0,1)))",params: {count: 0}}
+}
+
+def u:todo_select_plan() {
+  "Return the deterministic TodoMVC read plan.";
+  {sql: "SELECT id, title, completed FROM todos ORDER BY id",params: {count: 0}}
+}
+
+def u:todo_insert_plan(title) {
+  "Return a parameterized TodoMVC create plan.";
+  {sql: "INSERT INTO todos(title, completed) VALUES (?1, 0)",params: {count: 1,item_0: title}}
+}
+
+def u:todo_toggle_plan(id,completed) {
+  "Return a parameterized TodoMVC completion-update plan.";
+  {sql: "UPDATE todos SET completed = ?1 WHERE id = ?2",params: {count: 2,item_0: completed,item_1: id}}
+}
+
+def u:todo_edit_plan(id,title) {
+  "Return a parameterized TodoMVC title-update plan.";
+  {sql: "UPDATE todos SET title = ?1 WHERE id = ?2",params: {count: 2,item_0: title,item_1: id}}
+}
+
+def u:todo_delete_plan(id) {
+  "Return a parameterized TodoMVC delete plan.";
+  {sql: "DELETE FROM todos WHERE id = ?1",params: {count: 1,item_0: id}}
+}
+
+def u:todo_clear_plan() {
+  "Return the parameter-free completed-todo deletion plan.";
+  {sql: "DELETE FROM todos WHERE completed = 1",params: {count: 0}}
+}

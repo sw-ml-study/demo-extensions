@@ -1,0 +1,51 @@
+# Native mlplunit coverage for the standard TodoMVC domain behavior.
+include "lib/web/encoding.mlpl";
+include "lib/web/router.mlpl";
+include "lib/web/http.mlpl";
+include "demos/todomvc/model.mlpl";
+include "demos/todomvc/view.mlpl";
+include "demos/todomvc/app.mlpl";
+
+@test {name: "TodoMVC supports add edit toggle delete and filters",tags: ["web","todomvc","crud"]}
+def u:test_todomvc_crud() {
+  "Exercise the standard deterministic TodoMVC state transitions.";
+  state=u:todo_empty();
+  state=u:todo_add(state,"Learn MLPL")?;
+  state=u:todo_add(state,"Build the demo")?;
+  first=take(state.ids,0,0);
+  second=take(state.ids,0,1);
+  state=u:todo_toggle(state,first)?;
+  u:assert_eq(u:todo_remaining(state),1,"one active todo remains")?;
+  u:assert_eq(u:todo_visible(state,"completed"),[1,0,0,0,0,0,0,0],"completed filter")?;
+  state=u:todo_edit(state,second,"Ship TodoMVC")?;
+  u:assert_eq(state.titles.item_1,"Ship TodoMVC","edit replaces title")?;
+  state=u:todo_delete(state,first)?;
+  u:assert_eq(u:todo_visible(state,"all"),[0,1,0,0,0,0,0,0],"delete removes one todo")?;
+  state=u:todo_toggle(state,second)?;
+  state=u:todo_clear_completed(state);
+  u:assert_eq(reduce(:add,state.alive),0,"clear completed removes completed todos")
+}
+
+@test {name: "TodoMVC renders escaped HTML and parameterized persistence plans",tags: ["web","todomvc","html","sqlite"]}
+def u:test_todomvc_render_and_sql() {
+  "Keep user text escaped and SQL values outside statement text.";
+  state=u:todo_add(u:todo_empty(),"<script>alert(1)</script>")?;
+  html=u:todo_render(state,"all")?;
+  u:assert_true(eq(str_find(html,"<script>"),-1),"raw script tag is absent")?;
+  u:assert_true(1-eq(str_find(html,"&lt;script&gt;"),-1),"escaped title is visible")?;
+  plan=u:todo_insert_plan("buy milk");
+  u:assert_eq(plan.params,{count: 1,item_0: "buy milk"},"insert binds title")?;
+  u:assert_true(eq(str_find(plan.sql,"buy milk"),-1),"title is absent from SQL text")
+}
+
+@test {name: "TodoMVC controller routes a form create request",tags: ["web","todomvc","controller"]}
+def u:test_todomvc_controller() {
+  "Route one native-shaped request through an MLPL-owned TodoMVC controller.";
+  request={method: "POST",path: "/todos",query: "",body: tokenize_bytes("title=Write+tests")};
+  result=u:todo_dispatch(u:todo_empty(),request)?;
+  u:assert_eq(result.state.titles.item_0,"Write tests","form creates todo")?;
+  u:assert_eq(result.response.status,200,"controller renders success")?;
+  u:assert_eq(result.db_plan.params.item_0,"Write tests","controller emits bound persistence value")
+}
+
+u:run_registered_tests()

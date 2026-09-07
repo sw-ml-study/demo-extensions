@@ -1,0 +1,60 @@
+# Native mlplunit coverage for routing, validation, middleware, and web encodings.
+include "lib/web/router.mlpl";
+include "lib/web/http.mlpl";
+include "lib/web/encoding.mlpl";
+include "lib/web/session.mlpl";
+
+def u:test_require_subject(context) {
+  "Authorize only the expected deterministic test identity.";
+  equal(context.identity.subject,"learner-1")
+}
+
+def u:test_mark_middleware(context) {
+  "Mark one context to prove ordered MLPL middleware execution.";
+  {request: context.request,identity: context.identity,authorized: context.authorized,marker: str_concat(context.marker,"A")}
+}
+
+def u:test_mark_second_middleware(context) {
+  "Append a second marker to prove deterministic middleware order.";
+  {request: context.request,identity: context.identity,authorized: context.authorized,marker: str_concat(context.marker,"B")}
+}
+
+@test {name: "router matches methods and named path parameters",tags: ["web","router"]}
+def u:test_web_router() {
+  "Match static and named segments without confusing method or length mismatches.";
+  matched=u:web_route_match("PATCH","/todos/42","PATCH","/todos/:id")?;
+  u:assert_true(matched.matched,"matching route is selected")?;
+  u:assert_eq(matched.params.count,1,"one named parameter")?;
+  u:assert_eq(matched.params.item_0,{name: "id",value: "42"},"named ID is preserved")?;
+  missed=u:web_route_match("GET","/todos/42","DELETE","/todos/:id")?;
+  u:assert_true(1-missed.matched,"method mismatch does not route")
+}
+
+@test {name: "validation authorization and middleware remain MLPL-owned",tags: ["web","security","middleware"]}
+def u:test_web_security_pipeline() {
+  "Validate the native request shape before MLPL-owned identity authorization.";
+  request={id: 1,method: "GET",path: "/todos",query: "",headers: {count: 0},body: [1,2],origin: [],bearer_token: "token",token_verified: 1,authorization_owner: "mlpl"};
+  validated=u:web_validate_request(request,{max_body_bytes: 8,max_path_chars: 64})?;
+  context={request: validated,identity: {authenticated: 1,subject: "learner-1"},authorized: 0,marker: ""};
+  authorized=u:web_authorize(context,:u:test_require_subject)?;
+  final=u:web_apply_middleware(authorized,{count: 2,item_0: :u:test_mark_middleware,item_1: :u:test_mark_second_middleware})?;
+  u:assert_true(final.authorized,"authorizer result is retained")?;
+  u:assert_eq(final.marker,"AB","middleware runs in declared order")
+}
+
+@test {name: "JSON forms HTML and session cookies are bounded and encoded",tags: ["web","encoding","session"]}
+def u:test_web_encodings() {
+  "Encode common web formats without delegating application semantics to Rust.";
+  u:assert_eq(u:web_html_escape("<&\"'>"),"&lt;&amp;&quot;&#39;&gt;","HTML metacharacters are escaped")?;
+  u:assert_eq(u:web_form_value("title=Learn+MLPL&done=0","title")?,"Learn MLPL","form field is decoded")?;
+  response=u:web_json_response(201,{created: 1})?;
+  u:assert_eq(response.status,201,"JSON status")?;
+  u:assert_eq(response.headers.item_0.value,"application/json; charset=utf-8","JSON content type")?;
+  cookie=u:web_session_cookie("abc-123",3600)?;
+  u:assert_true(1-eq(str_find(cookie,"HttpOnly"),-1),"session cookie is HTTP-only")?;
+  u:assert_eq(u:web_cookie_value("theme=dark; mlpl_session=abc-123","mlpl_session")?,"abc-123","cookie lookup uses exact name")?;
+  session=u:web_session_lookup_plan("abc-123",1000);
+  u:assert_eq(session.params,{count: 2,item_0: "abc-123",item_1: 1000},"session lookup is parameterized")
+}
+
+u:run_registered_tests()

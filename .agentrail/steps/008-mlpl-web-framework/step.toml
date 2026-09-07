@@ -1,6 +1,6 @@
 number = 8
 slug = "mlpl-web-framework"
-status = "pending"
+status = "in-progress"
 description = "Build the small MLPL web framework described in docs/network-db-extensions.md..."
 role = "production"
 context_files = []

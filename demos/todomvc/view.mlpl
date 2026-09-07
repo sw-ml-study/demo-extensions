@@ -1,0 +1,35 @@
+# Server-rendered, escaped TodoMVC HTML view.
+def u:todo_render_item(state,index) {
+  "Render one visible todo list item with escaped user text.";
+  id=to_json(take(state.ids,0,index))?;
+  title=u:web_html_escape(u:todo_title_at(state.titles,index));
+  class=if eq(take(state.completed,0,index),1) {
+    "completed"
+  } else {
+    "active"
+  };
+  checked=if eq(take(state.completed,0,index),1) {
+    " checked"
+  } else {
+    ""
+  };
+  html=str_concat("<li class=\"",str_concat(class,str_concat("\" data-id=\"",str_concat(id,str_concat("\"><input class=\"toggle\" type=\"checkbox\"",str_concat(checked,str_concat("><label>",str_concat(title,"</label></li>"))))))));
+  ok(html)
+}
+
+def u:todo_render(state,filter) {
+  "Render the standard TodoMVC shell, filtered list, count, and clear action.";
+  visible=u:todo_visible(state,filter);
+  items="";
+  index=0;
+  while lt(index,state.capacity) {
+    if eq(take(visible,0,index),1) {
+      items=str_concat(items,u:todo_render_item(state,index)?)
+    };
+    index=index+1
+  };
+  remaining=to_json(u:todo_remaining(state))?;
+  head="<!doctype html><html><head><meta charset=\"utf-8\"><title>MLPL TodoMVC</title></head><body><main class=\"todoapp\"><header><h1>todos</h1><form method=\"post\" action=\"/todos\"><input name=\"title\" class=\"new-todo\" placeholder=\"What needs to be done?\" autofocus></form></header><section class=\"main\"><ul class=\"todo-list\">";
+  foot=str_concat("</ul></section><footer><span class=\"todo-count\"><strong>",str_concat(remaining,"</strong> items left</span><nav><a href=\"/?filter=all\">All</a> <a href=\"/?filter=active\">Active</a> <a href=\"/?filter=completed\">Completed</a></nav><form method=\"post\" action=\"/todos/clear\"><button>Clear completed</button></form></footer></main></body></html>"));
+  ok(str_concat(head,str_concat(items,foot)))
+}
