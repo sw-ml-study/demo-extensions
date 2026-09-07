@@ -11,6 +11,7 @@ members = [
     "extensions/hello",
     "extensions/http-client",
     "extensions/http-server",
+    "extensions/sqlite",
     "extensions/boundary-probe",
     "extensions/native3d",
 ]

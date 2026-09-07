@@ -1,0 +1,11 @@
+# Native mlplunit coverage for SQLite facade record construction.
+include "extensions/sqlite/module.mlpl";
+
+@test {name: "SQLite facade builds exact indexed parameter records",tags: ["extensions","sqlite"]}
+def u:test_sqlite_parameter_records() {
+  "Keep SQL values separate from SQL text at the MLPL facade boundary.";
+  u:assert_eq(u:sqlite_params0(),{count: 0},"zero parameters use an exact empty record")?;
+  u:assert_eq(u:sqlite_params2("run-1",0.75),{count: 2,item_0: "run-1",item_1: 0.75},"parameter order is explicit")
+}
+
+u:run_registered_tests()

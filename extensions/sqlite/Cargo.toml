@@ -1,0 +1,20 @@
+[package]
+name = "mlpl-extension-sqlite"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mlpl-extension-sdk = { path = "../../crates/mlpl-extension-sdk" }
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+[dev-dependencies]
+mlpl-extension-loader = { path = "../../crates/mlpl-extension-loader" }
+tempfile = "3"
+
+[lints]
+workspace = true

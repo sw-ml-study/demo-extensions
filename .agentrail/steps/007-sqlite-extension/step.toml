@@ -1,6 +1,6 @@
 number = 7
 slug = "sqlite-extension"
-status = "pending"
+status = "in-progress"
 description = "Implement the confined SQLite extension described in docs/network-db-extensio..."
 role = "production"
 context_files = []

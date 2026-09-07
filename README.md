@@ -35,6 +35,7 @@ demos/life-plane/                 MLPL finite-grid Life model and presets
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
 extensions/http-client/         Bounded HTTP/HTTPS and middleware-policy provider
 extensions/http-server/         Callback-free bounded local HTTP server provider
+extensions/sqlite/              Confined parameterized SQLite provider
 extensions/boundary-probe/      Public-SDK array/handle/record host probe
 extensions/native3d/            Generic headless viewer and bulk line provider
 tests/                          Native mlplunit and structural tests
@@ -347,6 +348,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   descriptor/trampoline contract.
 - [C provider host acceptance](docs/c-provider-host-acceptance.md) — direct
   downstream descriptor registration and remaining upstream scope.
+- [Confined SQLite extension](docs/sqlite-extension.md) — path confinement,
+  parameters, bounded rows/results, transactions, handles, and host limits.
 - [sw-MLPL data-boundary acceptance](docs/upstream-data-boundary-acceptance.md)
   — real interpreter proof for arrays, handles, records, and invalid values.
 - [Extension blockers](docs/extensions-blockers.md) — actionable host

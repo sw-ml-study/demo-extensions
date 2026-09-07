@@ -1,0 +1,55 @@
+# Public MLPL facade for confined, bounded SQLite operations.
+def u:_sqlite_native_open(config) {
+  "Cross the private native connection-open seam.";
+  _sqlite:open(config)
+}
+
+def u:sqlite_open(root,path,busy_timeout_ms,max_rows,max_result_bytes) {
+  "Open a database beneath an explicit sandbox root with fixed query budgets.";
+  u:_sqlite_native_open({root: root,path: path,busy_timeout_ms: busy_timeout_ms,max_rows: max_rows,max_result_bytes: max_result_bytes})
+}
+
+def u:sqlite_execute(connection,sql,parameters) {
+  "Execute one parameterized non-query statement.";
+  _sqlite:execute(connection,sql,parameters)
+}
+
+def u:sqlite_query(connection,sql,parameters) {
+  "Run one parameterized query and return bounded indexed rows.";
+  _sqlite:query(connection,sql,parameters)
+}
+
+def u:sqlite_begin(connection) {
+  "Begin an explicit transaction on one connection.";
+  _sqlite:begin(connection)
+}
+
+def u:sqlite_commit(connection) {
+  "Commit the connection's active explicit transaction.";
+  _sqlite:commit(connection)
+}
+
+def u:sqlite_rollback(connection) {
+  "Roll back the connection's active explicit transaction.";
+  _sqlite:rollback(connection)
+}
+
+def u:sqlite_close(connection) {
+  "Roll back if needed, close, and invalidate one connection.";
+  _sqlite:close(connection)
+}
+
+def u:sqlite_params0() {
+  "Build an empty indexed SQL parameter record.";
+  {count: 0}
+}
+
+def u:sqlite_params1(first) {
+  "Build a one-value indexed SQL parameter record.";
+  {count: 1,item_0: first}
+}
+
+def u:sqlite_params2(first,second) {
+  "Build a two-value indexed SQL parameter record.";
+  {count: 2,item_0: first,item_1: second}
+}

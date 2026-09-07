@@ -64,6 +64,13 @@ extensions/hello/Cargo.toml
 extensions/hello/extension.toml
 extensions/hello/module.mlpl
 extensions/hello/src/lib.rs
+extensions/sqlite/Cargo.toml
+extensions/sqlite/extension.toml
+extensions/sqlite/module.mlpl
+extensions/sqlite/src/lib.rs
+extensions/sqlite/src/database.rs
+extensions/sqlite/tests/provider_contract.rs
+extensions/sqlite/tests/sqlite_contract.rs
 extensions/boundary-probe/Cargo.toml
 extensions/boundary-probe/src/lib.rs
 extensions/native3d/Cargo.toml
@@ -93,6 +100,7 @@ scripts/run-tests
 scripts/select-mlpl
 scripts/select-mlplunit
 tests/test_hello_module.mlpl
+tests/test_sqlite_module.mlpl
 tests/test_native3d_library.mlpl
 tests/test_tic_tac_toe_model.mlpl
 tests/test_tic_tac_toe_controls.mlpl
@@ -109,6 +117,7 @@ docs/life-model.md
 docs/life-controls.md
 docs/life-acceptance.md
 docs/life-torus.md
+docs/sqlite-extension.md
 docs/retained-scene-patches.md
 docs/model-atlas-bounded-scan.md
 docs/model-atlas-interchange.md

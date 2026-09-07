@@ -72,4 +72,27 @@ if rg -q 'u:_web_' "$repo_root/tests"/*.mlpl; then
   exit 1
 fi
 
+sqlite_manifest=$repo_root/extensions/sqlite/extension.toml
+sqlite_module=$repo_root/extensions/sqlite/module.mlpl
+rg -q '^name = "sqlite"$' "$sqlite_manifest" || {
+  echo "SQLite public package name changed" >&2
+  exit 1
+}
+rg -q '^native_namespace = "_sqlite"$' "$sqlite_manifest" || {
+  echo "SQLite private native namespace changed" >&2
+  exit 1
+}
+rg -q '^def u:_sqlite_' "$sqlite_module" || {
+  echo "SQLite facade has no private native seam" >&2
+  exit 1
+}
+rg -q '^def u:sqlite_' "$sqlite_module" || {
+  echo "SQLite facade has no public function" >&2
+  exit 1
+}
+if rg -q 'u:_sqlite_' "$repo_root/tests"/*.mlpl; then
+  echo "MLPL tests bypass the public SQLite facade" >&2
+  exit 1
+fi
+
 echo "PASS public/private namespace policy"

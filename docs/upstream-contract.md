@@ -121,6 +121,13 @@ through the existing versioned ABI, with ownership and malformed-input tests.
 The bounded string-only GET is the current non-mock workaround. Package `use`
 resolution and compiled-provider parity remain separate blockers.
 
+The same outbound record limitation currently blocks interpreted calls to
+`_sqlite.open(config)`, `execute(..., params)`, and `query(..., params)`. The
+SQLite package is therefore proven through the public downstream ABI/loader and
+native mlplunit facade tests, not claimed as an end-to-end interpreter path.
+Once recursive record and packed-byte outbound marshaling lands, its provider
+requires no alternate ABI or application-specific host hook.
+
 See `foundation-acceptance.md` for the complete evidence matrix and limitations.
 See `extensions-blockers.md` for the actionable requirements and acceptance
 criteria for every remaining host capability.

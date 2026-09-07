@@ -207,12 +207,18 @@ middleware, lifecycle, overload, and acceptance contracts.
 
 ## SQLite and framework layer
 
-SQLite is the first database because it needs neither a network service nor a
-background pool. The Rust package owns confined connections, prepared
+SQLite is implemented in `extensions/sqlite` because it needs neither a network
+service nor a background pool. The Rust package owns confined connections, prepared
 statements, transactions, type conversion, row/result budgets, busy timeouts,
 and cleanup. MLPL receives records and uses explicit parameter arrays; SQL text
 must never be assembled as an authentication shortcut. Connections,
 statements, transactions, and cursors are typed generational handles.
+
+V1 needs only typed generational connection handles: prepared statements are
+call-scoped, explicit transaction state belongs to its connection, and bounded
+queries return complete indexed records rather than persistent cursors. See
+`sqlite-extension.md` for the exact limits, confinement rules, result shape,
+tests, and the current upstream outbound-record limitation.
 
 The final framework is primarily MLPL:
 
@@ -248,8 +254,8 @@ still require the specialized streamed, checksum-pinned acquisition path above.
    packaging, middleware-policy validation, and loopback evidence.
 2. `http-server-polling` — implement bounded listen/poll/respond/close handles
    with fixed middleware ordering and no native callbacks.
-3. `sqlite-extension` — implement confined SQLite handles, parameters,
-   transactions, and bounded results.
+3. `sqlite-extension` — delivered confined SQLite handles, parameters,
+   transactions, bounded results, and deterministic cleanup.
 4. `mlpl-web-framework` — build MLPL routes, middleware composition, JSON/form/
    HTML helpers, and a small experiment dashboard over HTTP plus SQLite.
 5. `pinned-model-acquisition` — only after streaming and filesystem capability
