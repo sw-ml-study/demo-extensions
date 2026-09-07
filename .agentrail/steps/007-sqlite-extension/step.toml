@@ -1,9 +1,10 @@
 number = 7
 slug = "sqlite-extension"
-status = "in-progress"
+status = "completed"
 description = "Implement the confined SQLite extension described in docs/network-db-extensio..."
 role = "production"
 context_files = []
 created_at = "2026-09-06T20:22:21"
+completed_at = "2026-09-07T12:31:54"
 task_type = "rust-database-extension"
-commits = []
+commits = ["d6b13b6a8f4128cd00947d9c73ec74d4597e7291"]
