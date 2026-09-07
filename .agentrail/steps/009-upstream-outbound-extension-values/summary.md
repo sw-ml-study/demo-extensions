@@ -1,0 +1,1 @@
+Implemented and pushed the sw-MLPL outbound record/packed-byte bridge through revision 635e085b, including recursive C-ABI ownership and malformed-value tests; updated downstream evidence and queued live TodoMVC next. Full just check passed. Downstream source commit 258311a; upstream source be3a8a5b with metadata and CHANGES follow-ups.
