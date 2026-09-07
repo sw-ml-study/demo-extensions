@@ -8,6 +8,7 @@ members = [
     "crates/mlpl-microscope-model",
     "crates/mlpl-microscope-web",
     "extensions/hello",
+    "extensions/http-client",
     "extensions/boundary-probe",
     "extensions/native3d",
 ]

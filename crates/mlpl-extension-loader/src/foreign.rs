@@ -13,10 +13,16 @@ pub(crate) unsafe fn decode_result(
             unsafe { copy_foreign_value(value) }.map_err(|_| CallError::InvalidResult)
         }
         code if code == ErrorCode::Panic as u32 => Err(CallError::ExtensionPanicked),
-        code if code == ErrorCode::ExtensionFailure as u32 => {
+        code if code == ErrorCode::InvalidArgument as u32
+            || code == ErrorCode::ExtensionFailure as u32 =>
+        {
             let owned =
                 unsafe { copy_foreign_error(error) }.map_err(|_| CallError::InvalidError)?;
-            Err(CallError::Extension(owned.message().to_owned()))
+            if code == ErrorCode::InvalidArgument as u32 {
+                Err(CallError::InvalidArgument(owned.message().to_owned()))
+            } else {
+                Err(CallError::Extension(owned.message().to_owned()))
+            }
         }
         _ => Err(CallError::InvalidError),
     }

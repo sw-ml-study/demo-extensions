@@ -1,0 +1,16 @@
+version = 1
+
+[limits]
+max_header_bytes = 16384
+max_body_bytes = 1048576
+
+[cors]
+allowed_origins = ["https://sw-ml-study.github.io"]
+allowed_methods = ["GET", "POST"]
+
+[token]
+source = "authorization_bearer"
+verification = "none"
+
+[authorization]
+owner = "mlpl"

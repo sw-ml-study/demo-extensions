@@ -1,0 +1,18 @@
+# Native mlplunit coverage for the public HTTP extension facade.
+include "extensions/http-client/module.mlpl";
+
+@test {name: "HTTP request facade preserves typed records", tags: ["extensions", "http"]}
+def u:test_http_request_facade() {
+  "Keep the public request facade executable while dynamic host import is deferred.";
+  request = {method: "GET", timeout_ms: 1000};
+  u:assert_eq(u:http_request_spec(request), request, "HTTP facade preserves request records")
+}
+
+@test {name: "HTTP middleware facade preserves TOML", tags: ["extensions", "http"]}
+def u:test_http_middleware_facade() {
+  "Keep middleware configuration owned by the MLPL-facing package.";
+  config = "version = 1";
+  u:assert_eq(u:http_middleware_spec(config), config, "HTTP facade preserves middleware TOML")
+}
+
+u:run_registered_tests()

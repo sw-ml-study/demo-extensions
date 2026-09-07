@@ -1,0 +1,15 @@
+# Public MLPL helpers for the bounded native HTTP extension contract.
+def u:_http_native_request(request) {
+  "Preserve the private native request seam until host package import lands.";
+  request
+}
+
+def u:http_request_spec(request) {
+  "Preserve one request record for the private native request seam.";
+  u:_http_native_request(request)
+}
+
+def u:http_middleware_spec(config_toml) {
+  "Preserve middleware TOML for native validation and future server use.";
+  config_toml
+}

@@ -1,0 +1,9 @@
+number = 6
+slug = "sqlite-extension"
+status = "pending"
+description = "Implement the confined SQLite extension described in docs/network-db-extensio..."
+role = "production"
+context_files = []
+created_at = "2026-09-06T20:22:21"
+task_type = "rust-database-extension"
+commits = []

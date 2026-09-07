@@ -22,6 +22,7 @@ pub enum CallError {
     UnsupportedArguments,
     InvalidResult,
     InvalidError,
+    InvalidArgument(String),
     Extension(String),
     ExtensionPanicked,
 }

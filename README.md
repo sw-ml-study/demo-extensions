@@ -32,6 +32,7 @@ demos/wireframe-cube/            MLPL-owned bulk-array cube scene
 demos/tic-tac-toe/               MLPL rules, minimax, and generic line scene
 demos/life-plane/                 MLPL finite-grid Life model and presets
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
+extensions/http-client/         Bounded HTTP/HTTPS and middleware-policy provider
 extensions/boundary-probe/      Public-SDK array/handle/record host probe
 extensions/native3d/            Generic headless viewer and bulk line provider
 tests/                          Native mlplunit and structural tests
@@ -397,6 +398,9 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   concise MLPL wrapper design and exact upstream compile/package requirements.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
+- [Network and database extensions](docs/network-db-extensions.md) — bounded
+  HTTP, fixed middleware ordering, callback-free serving, SQLite, and the MLPL
+  framework roadmap.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and
   repository commands.
 - [Implementation plan](docs/plan.md) — recommended architecture, capability

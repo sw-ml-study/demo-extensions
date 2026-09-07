@@ -114,6 +114,12 @@ fn typed_errors_and_panics_do_not_escape_the_boundary() {
                 actual: 1,
             })
         );
+        assert_eq!(
+            registry.call("_hello.sum_positions", &[Value::I64(1)]),
+            Err(CallError::InvalidArgument(
+                "positions must be a dense array".into()
+            ))
+        );
     }
 }
 

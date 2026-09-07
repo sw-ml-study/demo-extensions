@@ -1,0 +1,9 @@
+number = 8
+slug = "pinned-model-acquisition"
+status = "pending"
+description = "Implement the explicit pinned model-acquisition layer described in docs/netwo..."
+role = "production"
+context_files = []
+created_at = "2026-09-06T20:22:21"
+task_type = "model-download-extension"
+commits = []

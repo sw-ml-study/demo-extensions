@@ -4,7 +4,7 @@ Only one saga is active at a time. A later saga may be replanned when the
 previous acceptance report exposes an upstream blocker. Steps are independently
 reviewable and use red/green TDD; no step silently modifies `../sw-mlpl`.
 
-Current status (2026-09-02): `km01-offline-lesson` vendors the pinned KM01
+Current status (2026-09-06): `km01-offline-lesson` vendors the pinned KM01
 producer artifacts and adds the lesson to the generic offline microscope
 selector. `native3d-point-cloud` has delivered its initial
 renderer-neutral contract, headless renderer, and native GPU point pipeline. The
@@ -18,6 +18,10 @@ The microscope's offline selector also vendors KM01 at producer revision
 `ff15ec7`, using the existing generic shape renderer with no K-means-specific
 Rust. Live browser-to-server execution remains a separate follow-up.
 Embedding/PCA remains the recommended successor after the point-cloud saga.
+The network/database extension track now starts with a bounded synchronous
+HTTP/HTTPS client and fixed middleware-policy validation; callback-free serving,
+SQLite, an MLPL framework, and pinned model acquisition follow as explicit
+steps documented in `network-db-extensions.md`.
 
 The mandatory checklist in `AGENTS.md` applies to every step in every saga:
 pre-commit tests, affected documentation, `.gitignore` audit, tracked-file

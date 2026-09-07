@@ -26,4 +26,27 @@ if rg -q 'u:_hello_' "$repo_root/tests"/*.mlpl; then
   exit 1
 fi
 
+http_manifest=$repo_root/extensions/http-client/extension.toml
+http_module=$repo_root/extensions/http-client/module.mlpl
+rg -q '^name = "http"$' "$http_manifest" || {
+  echo "HTTP public package name changed" >&2
+  exit 1
+}
+rg -q '^native_namespace = "_http"$' "$http_manifest" || {
+  echo "HTTP private native namespace changed" >&2
+  exit 1
+}
+rg -q '^def u:_http_' "$http_module" || {
+  echo "HTTP facade has no private native seam" >&2
+  exit 1
+}
+rg -q '^def u:http_' "$http_module" || {
+  echo "HTTP facade has no public function" >&2
+  exit 1
+}
+if rg -q 'u:_http_' "$repo_root/tests"/*.mlpl; then
+  echo "MLPL tests bypass the public HTTP facade" >&2
+  exit 1
+fi
+
 echo "PASS public/private namespace policy"
