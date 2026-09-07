@@ -49,4 +49,27 @@ if rg -q 'u:_http_' "$repo_root/tests"/*.mlpl; then
   exit 1
 fi
 
+web_manifest=$repo_root/extensions/http-server/extension.toml
+web_module=$repo_root/extensions/http-server/module.mlpl
+rg -q '^name = "web"$' "$web_manifest" || {
+  echo "web public package name changed" >&2
+  exit 1
+}
+rg -q '^native_namespace = "_web"$' "$web_manifest" || {
+  echo "web private native namespace changed" >&2
+  exit 1
+}
+rg -q '^def u:_web_' "$web_module" || {
+  echo "web facade has no private native seam" >&2
+  exit 1
+}
+rg -q '^def u:web_' "$web_module" || {
+  echo "web facade has no public function" >&2
+  exit 1
+}
+if rg -q 'u:_web_' "$repo_root/tests"/*.mlpl; then
+  echo "MLPL tests bypass the public web facade" >&2
+  exit 1
+fi
+
 echo "PASS public/private namespace policy"

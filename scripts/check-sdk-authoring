@@ -6,7 +6,9 @@ for source_file in \
   "$repo_root/extensions/hello/src/lib.rs" \
   "$repo_root/extensions/http-client/src/lib.rs" \
   "$repo_root/extensions/http-client/src/client.rs" \
-  "$repo_root/extensions/http-client/src/middleware.rs"
+  "$repo_root/extensions/http-client/src/middleware.rs" \
+  "$repo_root/extensions/http-server/src/lib.rs" \
+  "$repo_root/extensions/http-server/src/server.rs"
 do
   if rg -n '\bunsafe\b|mlpl_extension_abi' "$source_file"; then
     echo "extension bypasses the safe SDK authoring surface: $source_file" >&2
@@ -16,4 +18,5 @@ done
 
 rg -q 'mlpl_extension_sdk::export_extension!' "$repo_root/extensions/hello/src/lib.rs"
 rg -q 'mlpl_extension_sdk::export_extension!' "$repo_root/extensions/http-client/src/lib.rs"
+rg -q 'mlpl_extension_sdk::export_extension!' "$repo_root/extensions/http-server/src/lib.rs"
 echo "PASS safe SDK authoring policy"

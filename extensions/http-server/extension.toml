@@ -1,0 +1,22 @@
+[extension]
+name = "web"
+version = "0.1.0"
+abi = 1
+module = "module.mlpl"
+native_namespace = "_web"
+
+[[native]]
+target = "aarch64-apple-darwin"
+library = "native/aarch64-apple-darwin/libmlpl_extension_http_server.dylib"
+
+[[native]]
+target = "x86_64-apple-darwin"
+library = "native/x86_64-apple-darwin/libmlpl_extension_http_server.dylib"
+
+[[native]]
+target = "aarch64-unknown-linux-gnu"
+library = "native/aarch64-unknown-linux-gnu/libmlpl_extension_http_server.so"
+
+[[native]]
+target = "x86_64-unknown-linux-gnu"
+library = "native/x86_64-unknown-linux-gnu/libmlpl_extension_http_server.so"

@@ -18,6 +18,8 @@ cargo fmt --manifest-path "$repo_root/Cargo.toml" --check \
     --package mlpl-extension-sdk \
     --package mlpl-extension-hello \
     --package mlpl-extension-http-client \
+    --package mlpl-extension-http-server \
+    --package mlpl-http-contract \
     --package mlpl-native3d-scene \
     --package mlpl-native3d-window \
     --package mlpl-microscope-model \

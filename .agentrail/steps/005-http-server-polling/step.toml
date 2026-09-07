@@ -1,6 +1,6 @@
 number = 5
 slug = "http-server-polling"
-status = "pending"
+status = "in-progress"
 description = "Implement the bounded callback-free HTTP server described in docs/network-db-..."
 role = "production"
 context_files = []

@@ -1997,10 +1997,18 @@ version = "0.0.0"
 dependencies = [
  "mlpl-extension-loader 0.0.0",
  "mlpl-extension-sdk",
- "serde",
- "toml",
+ "mlpl-http-contract",
  "ureq",
  "url",
+]
+
+[[package]]
+name = "mlpl-extension-http-server"
+version = "0.0.0"
+dependencies = [
+ "mlpl-extension-loader 0.0.0",
+ "mlpl-extension-sdk",
+ "mlpl-http-contract",
 ]
 
 [[package]]
@@ -2053,6 +2061,15 @@ version = "0.20.0"
 dependencies = [
  "mlpl-array",
  "mlpl-runtime-core",
+]
+
+[[package]]
+name = "mlpl-http-contract"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "toml",
+ "url",
 ]
 
 [[package]]

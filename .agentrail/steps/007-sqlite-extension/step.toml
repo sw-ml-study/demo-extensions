@@ -1,4 +1,4 @@
-number = 6
+number = 7
 slug = "sqlite-extension"
 status = "pending"
 description = "Implement the confined SQLite extension described in docs/network-db-extensio..."

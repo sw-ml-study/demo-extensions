@@ -1,0 +1,23 @@
+# Native mlplunit coverage for the public callback-free web facade.
+include "extensions/http-server/module.mlpl";
+
+def u:test_web_handler(request) {
+  "Return the path supplied by one owned request record.";
+  request.path
+}
+
+@test {name: "web dispatch invokes MLPL only after polling", tags: ["extensions", "http", "server"]}
+def u:test_web_dispatch() {
+  "Keep application dispatch in ordinary MLPL rather than a native callback.";
+  request = {path: "/runs"};
+  u:assert_eq(u:web_dispatch_request(request, :u:test_web_handler), "/runs", "MLPL owns dispatch")
+}
+
+@test {name: "web response uses the shared bounded record shape", tags: ["extensions", "http", "server"]}
+def u:test_web_response() {
+  "Build a deterministic response record for native serialization.";
+  expected = {status: 200, headers: {count: 0}, body: "ok"};
+  u:assert_eq(u:web_response(200, "ok"), expected, "response record")
+}
+
+u:run_registered_tests()

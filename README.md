@@ -26,6 +26,7 @@ dynamic loading and compiled-provider startup remain tracked contracts.
 crates/mlpl-extension-abi/      Versioned C-compatible ABI and validation
 crates/mlpl-extension-loader/   Package resolver, dynamic loader, and registry
 crates/mlpl-extension-sdk/      Safe author-facing SDK scaffold
+crates/mlpl-http-contract/       Shared HTTP middleware policy validation
 crates/mlpl-native3d-scene/      Generic line/point scenes and headless planning
 lib/native3d/                    Reusable MLPL camera, picking, geometry, app loop
 demos/wireframe-cube/            MLPL-owned bulk-array cube scene
@@ -33,6 +34,7 @@ demos/tic-tac-toe/               MLPL rules, minimax, and generic line scene
 demos/life-plane/                 MLPL finite-grid Life model and presets
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
 extensions/http-client/         Bounded HTTP/HTTPS and middleware-policy provider
+extensions/http-server/         Callback-free bounded local HTTP server provider
 extensions/boundary-probe/      Public-SDK array/handle/record host probe
 extensions/native3d/            Generic headless viewer and bulk line provider
 tests/                          Native mlplunit and structural tests
@@ -401,6 +403,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
 - [Network and database extensions](docs/network-db-extensions.md) — bounded
   HTTP, fixed middleware ordering, callback-free serving, SQLite, and the MLPL
   framework roadmap.
+- [Callback-free HTTP server](docs/http-server.md) — polling, handles, CORS,
+  token extraction, bounds, lifecycle, and deliberate protocol limits.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and
   repository commands.
 - [Implementation plan](docs/plan.md) — recommended architecture, capability

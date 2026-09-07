@@ -148,8 +148,9 @@ from records, but it must pass through the identical native validator.
 
 ## Callback-free HTTP server
 
-Rust will own sockets, HTTP framing, connection deadlines, and bounded request
-queues. It must not invoke MLPL functions from a Rust or async-runtime thread.
+The first server slice is now implemented in `extensions/http-server`. Rust
+owns sockets, HTTP framing, connection deadlines, and bounded request queues.
+It does not invoke MLPL functions from a Rust or async-runtime thread.
 Purity of a function does not make the evaluator reentrant or thread-safe.
 
 The first server therefore uses polling:
@@ -172,6 +173,11 @@ CORS, limits, token extraction, and a future configured token verifier are
 mechanical native stages. Authorization, routes, controller decisions, and
 response content remain MLPL. No middleware may smuggle a native-to-MLPL
 callback around the polling boundary.
+
+V1 is IPv4-loopback-only, uses one request per connection, accepts bounded
+`Content-Length` bodies, rejects transfer encoding, and has no TLS termination,
+keep-alive, streaming, or callbacks. See `http-server.md` for the exact record,
+middleware, lifecycle, overload, and acceptance contracts.
 
 ## SQLite and framework layer
 

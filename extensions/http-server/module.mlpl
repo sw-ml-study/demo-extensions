@@ -1,0 +1,15 @@
+# Public MLPL helpers for the callback-free native HTTP server contract.
+def u:_web_native_request(request) {
+  "Preserve the private polling seam until host package import lands.";
+  request
+}
+
+def u:web_dispatch_request(request, handler) {
+  "Call one MLPL handler after native polling returns an owned request.";
+  call(handler, u:_web_native_request(request))
+}
+
+def u:web_response(status, body) {
+  "Build one response record with no application-supplied headers.";
+  {status: status, headers: {count: 0}, body: body}
+}

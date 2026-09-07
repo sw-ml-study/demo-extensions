@@ -4,7 +4,7 @@ set -eu
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$repo_root"
 
-for path in Cargo.toml Cargo.lock AGENTS.md mlplunit.conf extensions/hello/extension.toml extensions/hello/module.mlpl tests/test_hello_module.mlpl extensions/http-client/extension.toml extensions/http-client/middleware.example.toml extensions/http-client/module.mlpl tests/test_http_module.mlpl; do
+for path in Cargo.toml Cargo.lock AGENTS.md mlplunit.conf extensions/hello/extension.toml extensions/hello/module.mlpl tests/test_hello_module.mlpl extensions/http-client/extension.toml extensions/http-client/middleware.example.toml extensions/http-client/module.mlpl tests/test_http_module.mlpl extensions/http-server/extension.toml extensions/http-server/middleware.example.toml extensions/http-server/module.mlpl tests/test_http_server_module.mlpl; do
   if git check-ignore -q "$path"; then
     echo "required project file is ignored: $path" >&2
     exit 1
