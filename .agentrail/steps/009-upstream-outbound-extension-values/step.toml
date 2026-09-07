@@ -1,0 +1,9 @@
+number = 9
+slug = "upstream-outbound-extension-values"
+status = "in-progress"
+description = "With the user's explicit authorization to modify ../sw-mlpl, implement recurs..."
+role = "production"
+context_files = []
+created_at = "2026-09-07T13:02:43"
+task_type = "upstream-extension-bridge"
+commits = []

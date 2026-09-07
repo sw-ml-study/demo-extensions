@@ -108,33 +108,28 @@ upstream work. No upstream files are changed by this repository.
 - Downstream Rust harness: proven by `hello_registration.rs`; it is evidence
   for the proposed boundary, not evidence that sw-MLPL already implements it.
 
-### HTTP client argument limitation
+### Outbound records and packed bytes -- resolved
 
 The public static C-descriptor hook now runs the real `_http:get(string)`
 provider from `demos/http-client/get.mlpl`; its mandatory acceptance uses a
-loopback server. The same adapter's outbound marshal path currently accepts
-only scalar arrays, dense numeric arrays, strings, and handles. It rejects an
-MLPL record or packed bytes before provider dispatch, so the full
-`_http.request(record)` surface cannot yet be called by interpreted MLPL.
-Upstream acceptance requires recursively marshaling records and packed bytes
-through the existing versioned ABI, with ownership and malformed-input tests.
-The bounded string-only GET is the current non-mock workaround. Package `use`
-resolution and compiled-provider parity remain separate blockers.
+loopback server. sw-MLPL revision `635e085b` now recursively marshals MLPL
+records and packed bytes through the existing ABI V1 record tag. Upstream tests
+cover interpreter dispatch, a real C-provider invocation, borrowed-view
+ownership, a 1,024-field per-level cap, and a 64-level nesting cap. No ABI
+layout change or application-specific hook was needed. Package `use` resolution
+and compiled-provider parity remain separate blockers.
 
-The same outbound record limitation currently blocks interpreted calls to
-`_sqlite.open(config)`, `execute(..., params)`, and `query(..., params)`. The
-SQLite package is therefore proven through the public downstream ABI/loader and
-native mlplunit facade tests, not claimed as an end-to-end interpreter path.
-Once recursive record and packed-byte outbound marshaling lands, its provider
-requires no alternate ABI or application-specific host hook.
+The same bridge unblocks interpreted calls to `_http.request(record)`,
+`_sqlite.open(config)`, `execute(..., params)`, and `query(..., params)`.
+End-to-end downstream composition is separate acceptance work; the providers
+require no alternate ABI or application-specific host hook.
 
 The MLPL web framework and TodoMVC use those exact future-ready records for
 `_web.listen`/`respond` and `_sqlite.open`/`execute`/`query`. Their model,
 router, middleware, authorization, encodings, sessions, controllers, views, and
-parameterized persistence plans run under native mlplunit today. A live
-browser-to-server TodoMVC acceptance must wait for the same recursive outbound
-record/bytes support; a special identity facade or domain-specific Rust bridge
-does not satisfy that acceptance.
+parameterized persistence plans run under native mlplunit today. The upstream
+value blocker is closed; live browser-to-server TodoMVC composition and
+acceptance is the next downstream step.
 
 See `foundation-acceptance.md` for the complete evidence matrix and limitations.
 See `extensions-blockers.md` for the actionable requirements and acceptance
