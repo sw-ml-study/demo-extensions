@@ -1,9 +1,10 @@
 number = 10
 slug = "live-todomvc-server"
-status = "in-progress"
+status = "completed"
 description = "Wire the existing MLPL TodoMVC framework to the accepted callback-free HTTP s..."
 role = "production"
 context_files = []
 created_at = "2026-09-07T13:02:43"
+completed_at = "2026-09-08T09:18:52"
 task_type = "live-todomvc-acceptance"
-commits = []
+commits = ["9604c3bbb31af67795ff84490765e86d3e26ca3c"]
