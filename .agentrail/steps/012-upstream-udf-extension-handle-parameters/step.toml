@@ -1,0 +1,9 @@
+number = 12
+slug = "upstream-udf-extension-handle-parameters"
+status = "pending"
+description = "After separate explicit authorization to modify ../sw-mlpl, allow typed exten..."
+role = "production"
+context_files = []
+created_at = "2026-09-08T09:16:36"
+task_type = "upstream-contract"
+commits = []

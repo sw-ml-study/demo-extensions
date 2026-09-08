@@ -64,16 +64,19 @@ The hello package demonstrates the intended separation:
 The scripts only select existing tools; they never install or overwrite them.
 Environment overrides must be absolute paths.
 
-Run the executable MLPL implementation of the standard TodoMVC model,
-controller, parameterized SQLite plans, and escaped server-rendered view:
+Start the persistent MLPL TodoMVC browser application:
 
 ```sh
-just todomvc
+just todomvc-server
+# Browse to http://127.0.0.1:3000/
 ```
 
-The command prints a deterministic HTML preview. Live HTTP/SQLite composition
-awaits the documented sw-MLPL outbound-record bridge; the framework does not
-fake native calls. See [MLPL web framework and TodoMVC](docs/mlpl-web-framework.md).
+The first start creates `var/todomvc/todos.sqlite3` and its `todos` table;
+later starts retain the same rows. Set `TODOMVC_PORT`, `TODOMVC_DATA_DIR`
+(absolute), or `TODOMVC_DB_NAME` (confined relative path) to override the
+defaults. Stop with Control-C. `just todomvc-reset` drops the table explicitly;
+the next start recreates it empty. `just todomvc` remains the no-server HTML
+preview. See [MLPL web framework and TodoMVC](docs/mlpl-web-framework.md).
 
 Run the executable MLPL HTTP-client demo through the real Rust provider:
 
@@ -86,7 +89,7 @@ The default `https://time.gov/` request is an opt-in live-network example, not
 a test dependency. The mandatory test runs the same
 [`get.mlpl`](demos/http-client/get.mlpl) source against loopback. See the
 [network/database extension plan](docs/network-db-extensions.md) for bounds and
-the current full-request ABI limitation.
+the full request-record contract.
 
 ## Build and test
 

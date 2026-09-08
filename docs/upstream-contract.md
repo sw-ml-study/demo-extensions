@@ -127,9 +127,25 @@ require no alternate ABI or application-specific host hook.
 The MLPL web framework and TodoMVC use those exact future-ready records for
 `_web.listen`/`respond` and `_sqlite.open`/`execute`/`query`. Their model,
 router, middleware, authorization, encodings, sessions, controllers, views, and
-parameterized persistence plans run under native mlplunit today. The upstream
-value blocker is closed; live browser-to-server TodoMVC composition and
-acceptance is the next downstream step.
+parameterized persistence plans run under native mlplunit. The upstream value
+blocker is closed, and `scripts/check-todomvc-live` now proves browser-to-server
+composition, persisted restart state, and explicit reset downstream.
+
+### Extension handles through user functions
+
+Live TodoMVC regression against sw-MLPL `f569defa` found that a native
+extension handle can be stored in a top-level MLPL binding and passed directly
+to another extension call, but cannot bind to an ordinary `u:` function
+parameter. The evaluator rejects that parameter kind before the function body.
+This does not block TodoMVC: `server.mlpl` keeps listener/connection operations
+in its top-level application loop while all routes, state, SQL plans, and HTML
+remain in MLPL functions. General handle-accepting library helpers require the
+separately authorized upstream follow-up recorded in AgentRail step 012.
+
+The same checkout's freshly rebuilt executables report older commit IDs from
+`mlpl-repl --version` (`01fd675a` debug, `2b11c6b9` release) rather than
+`f569defa`. Source-linked and live regressions pass, so this is build-metadata
+freshness evidence rather than a runtime blocker.
 
 See `foundation-acceptance.md` for the complete evidence matrix and limitations.
 See `extensions-blockers.md` for the actionable requirements and acceptance

@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+runtime_root=${TODOMVC_DATA_DIR:-$repo_root/var/todomvc}
+database_path=${TODOMVC_DB_NAME:-todos.sqlite3}
+
+case $runtime_root in
+  /*) ;;
+  *) echo "TODOMVC_DATA_DIR must be an absolute path: $runtime_root" >&2; exit 1 ;;
+esac
+case $database_path in
+  /*|../*|*/../*|*/..) echo "TODOMVC_DB_NAME must be a confined relative path: $database_path" >&2; exit 1 ;;
+esac
+
+mkdir -p "$runtime_root"
+cargo build --offline --quiet --manifest-path "$repo_root/Cargo.toml" -p mlpl-extension-sqlite
+mlpl=$($repo_root/scripts/select-mlpl)
+suffix=so
+if [ "$(uname -s)" = Darwin ]; then suffix=dylib; fi
+sqlite_library=$repo_root/target/debug/libmlpl_extension_sqlite.$suffix
+
+exec "$mlpl" --source-dir "$repo_root" -f "$repo_root/demos/todomvc/reset.mlpl" -- \
+  "$sqlite_library" "$runtime_root" "$database_path"

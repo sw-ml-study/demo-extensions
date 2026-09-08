@@ -33,9 +33,24 @@ def u:test_todomvc_render_and_sql() {
   html=u:todo_render(state,"all")?;
   u:assert_true(eq(str_find(html,"<script>"),-1),"raw script tag is absent")?;
   u:assert_true(1-eq(str_find(html,"&lt;script&gt;"),-1),"escaped title is visible")?;
+  u:assert_true(1-eq(str_find(html,"action=\"/todos\""),-1),"add form is visible")?;
+  u:assert_true(1-eq(str_find(html,"action=\"/todos/1/toggle\""),-1),"toggle control is visible")?;
+  u:assert_true(1-eq(str_find(html,"action=\"/todos/1/edit\""),-1),"editor is visible")?;
+  u:assert_true(1-eq(str_find(html,"action=\"/todos/1/delete\""),-1),"delete control is visible")?;
   plan=u:todo_insert_plan("buy milk");
   u:assert_eq(plan.params,{count: 1,item_0: "buy milk"},"insert binds title")?;
   u:assert_true(eq(str_find(plan.sql,"buy milk"),-1),"title is absent from SQL text")
+}
+
+@test {name: "TodoMVC reconstructs persisted rows with stable IDs",tags: ["web","todomvc","sqlite"]}
+def u:test_todomvc_persisted_rows() {
+  "Rebuild bounded application state from the SQLite provider row contract.";
+  rows={count: 2,columns: {count: 3,item_0: "id",item_1: "title",item_2: "completed"},row_0: {count: 3,item_0: 2,item_1: "older",item_2: 1},row_1: {count: 3,item_0: 7,item_1: "newer",item_2: 0}};
+  state=u:todo_from_query(rows)?;
+  u:assert_eq(state.ids,[2,7,0,0,0,0,0,0],"database IDs remain stable")?;
+  u:assert_eq(state.completed,[1,0,0,0,0,0,0,0],"completion state is restored")?;
+  u:assert_eq(state.titles.item_1,"newer","titles are restored")?;
+  u:assert_eq(state.next_id,8,"next in-memory ID follows the database maximum")
 }
 
 @test {name: "TodoMVC controller routes a form create request",tags: ["web","todomvc","controller"]}
@@ -46,6 +61,15 @@ def u:test_todomvc_controller() {
   u:assert_eq(result.state.titles.item_0,"Write tests","form creates todo")?;
   u:assert_eq(result.response.status,200,"controller renders success")?;
   u:assert_eq(result.db_plan.params.item_0,"Write tests","controller emits bound persistence value")
+}
+
+@test {name: "web framework builds post-redirect-get responses",tags: ["web","todomvc","http"]}
+def u:test_todomvc_redirect() {
+  "Keep browser refreshes from resubmitting TodoMVC mutations.";
+  response=u:web_redirect_response("/")?;
+  u:assert_eq(response.status,303,"mutation redirect status")?;
+  u:assert_eq(response.headers.item_0,{name: "location",value: "/"},"redirect location")?;
+  u:assert_eq(size_bytes(response.body),0,"redirect has an empty packed body")
 }
 
 u:run_registered_tests()

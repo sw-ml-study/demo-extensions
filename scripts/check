@@ -32,6 +32,7 @@ cargo clippy --manifest-path "$repo_root/Cargo.toml" --workspace --all-targets -
 "$repo_root/scripts/run-rust-tests"
 "$repo_root/scripts/check-upstream-provider"
 "$repo_root/scripts/run-tests" --format tap >/dev/null
+"$repo_root/scripts/check-todomvc-live"
 git -C "$repo_root" diff --check
 
 echo "PASS pre-commit"

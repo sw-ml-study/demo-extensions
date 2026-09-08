@@ -88,7 +88,7 @@ each returned scalar/text/blob payload; fixed record-key/container overhead is
 not included. Queries are also limited to 256 columns. Crossing either bound
 fails the whole call—no partial result is returned.
 
-## Acceptance and current host limitation
+## Acceptance
 
 `extensions/sqlite/tests/sqlite_contract.rs` covers parameter binding, typed
 results, commit/rollback, rollback-on-close, stale handles, row/byte limits,
@@ -96,9 +96,7 @@ path traversal, and symlink escape. `provider_contract.rs` proves matching
 dynamic and static packages. `tests/test_sqlite_module.mlpl` covers the public
 facade's parameter records with native mlplunit.
 
-The current sw-MLPL static-provider outbound adapter still cannot marshal MLPL
-records or packed bytes. Therefore the native provider is proven at the ABI and
-loader layers, but an interpreted program cannot yet call `sqlite:open` through
-the package facade. This is the same upstream record/bytes blocker documented
-for full HTTP requests in `docs/upstream-contract.md`; no identity facade is
-presented as native execution.
+The persistent TodoMVC server additionally proves interpreted open, idempotent
+schema creation, parameterized query/execute, state across process restarts,
+and explicit table reset. `scripts/check-todomvc-live` performs this acceptance
+against an ephemeral confined database without external network access.

@@ -50,16 +50,51 @@ predictable IDs must never be used in deployment.
 - parameterized create/read/update/delete SQLite plans.
 
 The deterministic model has eight slots so every operation remains visibly
-bounded. Production persistence uses the returned SQL/parameter records rather
-than the in-memory test state. User text never appears in SQL, and rendered
-titles are escaped. Run the executable HTML preview with:
+bounded. Persistence uses the returned SQL/parameter records rather than the
+in-memory test state. User text never appears in SQL, and rendered titles are
+escaped.
+
+## Run the persistent browser application
+
+One command builds the two generic providers, creates the confined data
+directory and missing table, starts the loopback server, and prints its URL:
+
+```sh
+just todomvc-server
+# MLPL TodoMVC listening at http://127.0.0.1:3000/
+```
+
+Browse to `http://127.0.0.1:3000/`. Stop the server with Control-C. A restart
+opens the same database and uses `CREATE TABLE IF NOT EXISTS`, so existing
+items remain visible to the next browser session.
+
+Defaults and overrides:
+
+| Setting | Default | Contract |
+|---|---|---|
+| `TODOMVC_PORT` | `3000` | Integer `1..65535`; listener remains IPv4 loopback-only |
+| `TODOMVC_DATA_DIR` | `<repo>/var/todomvc` | Existing/created absolute SQLite confinement root |
+| `TODOMVC_DB_NAME` | `todos.sqlite3` | Relative path confined beneath the data root |
+
+For example, `TODOMVC_PORT=4567 just todomvc-server` is available at
+`http://127.0.0.1:4567/`. To remove all TodoMVC state, stop the server and run:
+
+```sh
+just todomvc-reset
+```
+
+The reset runs `DROP TABLE IF EXISTS todos` through the SQLite extension. It
+does not delete unrelated files or tables. The next server start recreates an
+empty `todos` table. The data directory is intentionally ignored by Git.
+
+The separate deterministic preview remains available with:
 
 ```sh
 just todomvc
 ```
 
-This prints a complete server-rendered TodoMVC document and summary. It does
-not claim to start a live server yet; see the host limitation below.
+This prints a complete server-rendered TodoMVC document and summary without
+opening a socket or database.
 
 ## Experiment dashboard example
 
@@ -68,19 +103,21 @@ the delivery plan. It defines deterministic schema, ordered read, insert,
 update, and delete plans for experiment names and numeric metrics. It shares
 the exact generic SQLite interface and contains no native domain behavior.
 
-## Acceptance and limitation
+## Source ownership and acceptance
 
 Native mlplunit suites cover route mismatches and named parameters, request
 validation, two-stage middleware order, MLPL authorization, JSON, forms, HTML
 escaping, cookies/session lookup plans, all TodoMVC transitions, its controller
-and escaped view, and both domains' parameterized CRUD plans. `just todomvc` is
-also an executable no-network preview.
+and escaped view, and both domains' parameterized CRUD plans.
 
-The currently pinned sw-MLPL static-provider adapter can receive native records
-but cannot send MLPL records or packed bytes to an extension. `_web.listen`,
-`_web.respond`, `_sqlite.open`, and parameterized database calls therefore
-cannot yet be composed by the interpreter. The accepted Rust providers cover
-their mechanics independently; this step does not insert identity shims or move
-application logic into a special Rust host. When recursive outbound record and
-bytes marshaling lands upstream, these MLPL modules already target the public
-provider contracts and should require no application redesign.
+`model.mlpl` owns state transitions, SQL/schema plans, and reconstruction from
+query rows. `app.mlpl` owns routes and controller behavior. `view.mlpl` owns the
+list, add form, per-item toggle/editor/delete controls, filters, and escaped
+HTML. `server.mlpl` composes those files with the generic `_web` and `_sqlite`
+providers. Rust contains socket/HTTP/SQLite mechanics but no TodoMVC routes,
+schema, HTML, or application decisions.
+
+`scripts/check-todomvc-live` performs deterministic loopback acceptance with a
+temporary database: create, edit, toggle, completed filter, stop/restart,
+persistence verification, reset, and empty-schema recreation. It requires no
+external network.

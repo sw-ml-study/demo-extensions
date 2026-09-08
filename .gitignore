@@ -13,6 +13,7 @@
 /reports/
 /tmp/
 /local-media/
+/var/todomvc/
 
 # Local environment and tool overrides
 .env

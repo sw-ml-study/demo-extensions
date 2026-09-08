@@ -13,7 +13,15 @@ def u:todo_render_item(state,index) {
   } else {
     ""
   };
-  html=str_concat("<li class=\"",str_concat(class,str_concat("\" data-id=\"",str_concat(id,str_concat("\"><input class=\"toggle\" type=\"checkbox\"",str_concat(checked,str_concat("><label>",str_concat(title,"</label></li>"))))))));
+  prefix=str_concat("<li class=\"",str_concat(class,str_concat("\" data-id=\"",str_concat(id,"\">"))));
+  toggle=str_concat("<form class=\"toggle-form\" method=\"post\" action=\"/todos/",str_concat(id,str_concat("/toggle\"><button class=\"toggle\" type=\"submit\" aria-label=\"Toggle todo\">",str_concat(if equal(checked,"") {
+            "[ ]"
+          } else {
+            "[x]"
+          },"</button></form>"))));
+  edit=str_concat("<form class=\"edit-form\" method=\"post\" action=\"/todos/",str_concat(id,str_concat("/edit\"><input name=\"title\" value=\"",str_concat(title,"\" aria-label=\"Edit todo\"><button type=\"submit\">Save</button></form>"))));
+  remove=str_concat("<form class=\"delete-form\" method=\"post\" action=\"/todos/",str_concat(id,"/delete\"><button class=\"destroy\" type=\"submit\" aria-label=\"Delete todo\">Delete</button></form>"));
+  html=str_concat(prefix,str_concat(toggle,str_concat(edit,str_concat(remove,"</li>"))));
   ok(html)
 }
 
@@ -29,7 +37,7 @@ def u:todo_render(state,filter) {
     index=index+1
   };
   remaining=to_json(u:todo_remaining(state))?;
-  head="<!doctype html><html><head><meta charset=\"utf-8\"><title>MLPL TodoMVC</title></head><body><main class=\"todoapp\"><header><h1>todos</h1><form method=\"post\" action=\"/todos\"><input name=\"title\" class=\"new-todo\" placeholder=\"What needs to be done?\" autofocus></form></header><section class=\"main\"><ul class=\"todo-list\">";
+  head="<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>MLPL TodoMVC</title><style>body{font:16px system-ui;background:#f5f5f5;color:#222}.todoapp{max-width:720px;margin:3rem auto;background:white;padding:2rem;box-shadow:0 2px 14px #bbb}h1{font-size:4rem;text-align:center;color:#b83f45}.new-todo{font-size:1.2rem;padding:.7rem;width:70%}button{margin:.25rem;padding:.55rem}.todo-list{list-style:none;padding:0}.todo-list li{display:flex;gap:.5rem;align-items:center;border-bottom:1px solid #ddd;padding:.5rem}.edit-form{display:flex;flex:1;gap:.4rem}.edit-form input{flex:1;padding:.5rem}.completed .edit-form input{text-decoration:line-through;color:#777}nav{display:inline-block;margin:0 1rem}</style></head><body><main class=\"todoapp\"><header><h1>todos</h1><form method=\"post\" action=\"/todos\"><input name=\"title\" class=\"new-todo\" placeholder=\"What needs to be done?\" maxlength=\"200\" required autofocus><button type=\"submit\">Add</button></form></header><section class=\"main\"><ul class=\"todo-list\">";
   foot=str_concat("</ul></section><footer><span class=\"todo-count\"><strong>",str_concat(remaining,"</strong> items left</span><nav><a href=\"/?filter=all\">All</a> <a href=\"/?filter=active\">Active</a> <a href=\"/?filter=completed\">Completed</a></nav><form method=\"post\" action=\"/todos/clear\"><button>Clear completed</button></form></footer></main></body></html>"));
   ok(str_concat(head,str_concat(items,foot)))
 }

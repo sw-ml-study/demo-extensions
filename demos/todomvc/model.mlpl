@@ -212,3 +212,35 @@ def u:todo_clear_plan() {
   "Return the parameter-free completed-todo deletion plan.";
   {sql: "DELETE FROM todos WHERE completed = 1",params: {count: 0}}
 }
+
+def u:todo_from_query(rows) {
+  "Rebuild bounded TodoMVC state from indexed SQLite query rows.";
+  if lt(8,rows.count) {
+    err("TodoMVC database contains more than eight rows")
+  } else {
+    state=u:todo_empty();
+    index=0;
+    next_id=1;
+    while lt(index,rows.count) {
+      key=str_concat("row_",to_string(index));
+      row=record_get(rows,key)?;
+      id=row.item_0;
+      title=u:todo_validate_title(row.item_1)?;
+      completed=row.item_2;
+      if (lt(id,1))+(1-eq(completed,0))*(1-eq(completed,1)) {
+        return err("TodoMVC database row is invalid")
+      };
+      state=u:todo_state(state,scatter(state.ids,index,id),u:todo_titles_set(state.titles,index,title),scatter(state.completed,index,completed),scatter(state.alive,index,1),next_id);
+      if lt(next_id,id+1) {
+        next_id=id+1
+      };
+      index=index+1
+    };
+    ok(u:todo_state(state,state.ids,state.titles,state.completed,state.alive,next_id))
+  }
+}
+
+def u:todo_drop_plan() {
+  "Return the explicit destructive reset statement for TodoMVC.";
+  {sql: "DROP TABLE IF EXISTS todos",params: {count: 0}}
+}

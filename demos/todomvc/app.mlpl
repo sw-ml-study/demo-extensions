@@ -2,16 +2,16 @@
 def u:todo_filter(query) {
   "Select a supported TodoMVC filter from one URL query string.";
   if eq(str_find(query,"filter="),-1) {
-    "all"
+    ok("all")
   } else {
     selected=u:web_form_value(query,"filter")?;
     if equal(selected,"active") {
-      "active"
+      ok("active")
     } else {
       if equal(selected,"completed") {
-        "completed"
+        ok("completed")
       } else {
-        "all"
+        ok("all")
       }
     }
   }

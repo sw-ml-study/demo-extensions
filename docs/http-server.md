@@ -113,7 +113,8 @@ handles. The same five-function descriptor is loaded dynamically and
 statically through the public extension registry. MLPL unit tests prove the
 public facade performs handler dispatch in MLPL.
 
-This is not yet `use web` execution in the stock sw-MLPL REPL. Package/facade
-dynamic-provider integration remains the upstream blocker. The next queued
-step adds the closest honest MLPL client execution path and opt-in HTTPS time
-example rather than disguising an identity facade as native invocation.
+The persistent TodoMVC application dynamically loads this provider and the
+SQLite provider in the stock native sw-MLPL interpreter. Its callback-free
+poll/respond loop is in `demos/todomvc/server.mlpl`; deterministic live
+acceptance is `scripts/check-todomvc-live`. Package-level `use web` resolution
+and compiled-provider parity remain separate concerns.

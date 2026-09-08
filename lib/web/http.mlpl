@@ -66,3 +66,9 @@ def u:web_html_response(status,html) {
   "Encode one HTML response record with a packed byte body.";
   ok({status: status,headers: u:web_response_headers("text/html; charset=utf-8"),body: pack(tokenize_bytes(html),"u8")})
 }
+
+def u:web_redirect_response(location) {
+  "Build a 303 See Other response for post-redirect-get browser flows.";
+  headers={count: 1,item_0: {name: "location",value: location}};
+  ok({status: 303,headers: headers,body: pack([],"u8")})
+}

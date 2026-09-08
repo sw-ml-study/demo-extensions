@@ -1,0 +1,12 @@
+# Explicit destructive reset for the persistent TodoMVC database.
+include "../../extensions/sqlite/module.mlpl";
+include "model.mlpl";
+
+sqlite_library=list_get(args(),0)?;
+database_root=list_get(args(),1)?;
+database_path=list_get(args(),2)?;
+load_extension(sqlite_library);
+connection=_sqlite:open({root: database_root,path: database_path,busy_timeout_ms: 5000,max_rows: 8,max_result_bytes: 262144});
+_sqlite:execute(connection,u:todo_drop_plan().sql,u:sqlite_params0());
+_sqlite:close(connection);
+"TodoMVC tables dropped; the next server start will recreate an empty schema"

@@ -110,3 +110,11 @@ http-client url="https://time.gov/":
 # Render the deterministic MLPL TodoMVC HTML preview.
 todomvc:
     ./scripts/run-todomvc
+
+# Start persistent TodoMVC on loopback (TODOMVC_PORT defaults to 3000).
+todomvc-server:
+    ./scripts/run-todomvc-server
+
+# Drop the TodoMVC table in the configured confined database.
+todomvc-reset:
+    ./scripts/reset-todomvc

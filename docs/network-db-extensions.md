@@ -103,12 +103,11 @@ Tests use ephemeral loopback listeners and never require the public network.
 TLS support is compiled into the provider, but public certificate/network
 availability is not part of the deterministic gate.
 
-The current sw-MLPL C-provider outbound adapter can marshal scalar and string
-arguments but not an MLPL request record or packed-byte body. Consequently,
-`_http.request(record)` is validated at the extension ABI and loader layers but
-cannot yet be called from interpreted MLPL. `_http.get(string)` is a real,
-non-identity compatibility surface over the same implementation. The remaining
-upstream record/bytes requirement is tracked in `docs/upstream-contract.md`.
+sw-MLPL now marshals request records and packed-byte bodies through the
+versioned C-provider boundary. `_http.request(record)` and the smaller
+`_http.get(string)` compatibility surface therefore use the same real native
+implementation from interpreted MLPL. Package import and compiled-provider
+parity remain separate concerns.
 
 Large model weights must not use this buffered API. A later model acquisition
 facade should map a short allowlisted model name to a pinned URL, expected
@@ -218,7 +217,7 @@ V1 needs only typed generational connection handles: prepared statements are
 call-scoped, explicit transaction state belongs to its connection, and bounded
 queries return complete indexed records rather than persistent cursors. See
 `sqlite-extension.md` for the exact limits, confinement rules, result shape,
-tests, and the current upstream outbound-record limitation.
+tests, and live TodoMVC composition evidence.
 
 The first framework slice is now implemented in `lib/web`, with the standard
 TodoMVC application in `demos/todomvc` and experiment CRUD plans in
@@ -259,8 +258,9 @@ still require the specialized streamed, checksum-pinned acquisition path above.
 3. `sqlite-extension` — delivered confined SQLite handles, parameters,
    transactions, bounded results, and deterministic cleanup.
 4. `mlpl-web-framework` — delivered MLPL routes, middleware composition,
-   JSON/form/HTML/session helpers, standard TodoMVC, and experiment CRUD plans;
-   live provider composition awaits the recorded upstream outbound bridge.
-5. `pinned-model-acquisition` — only after streaming and filesystem capability
+   JSON/form/HTML/session helpers, standard TodoMVC, and experiment CRUD plans.
+5. `live-todomvc-server` — delivered persistent browser CRUD by composing the
+   callback-free HTTP server and confined SQLite providers in MLPL.
+6. `pinned-model-acquisition` — only after streaming and filesystem capability
    contracts exist, add explicit allowlisted fetch, checksum, cache, and atomic
    publication behavior.

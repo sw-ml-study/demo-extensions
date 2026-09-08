@@ -1,0 +1,64 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+work=$(mktemp -d "${TMPDIR:-/tmp}/todomvc-live.XXXXXX")
+port=$((40000 + $$ % 20000))
+server_pid=
+
+stop_server() {
+  if [ -n "$server_pid" ]; then
+    kill "$server_pid" 2>/dev/null || true
+    wait "$server_pid" 2>/dev/null || true
+    server_pid=
+  fi
+}
+cleanup() {
+  stop_server
+  rm -rf "$work"
+}
+trap cleanup EXIT HUP INT TERM
+
+start_server() {
+  TODOMVC_DATA_DIR=$work TODOMVC_PORT=$port "$repo_root/scripts/run-todomvc-server" >"$work/server.log" 2>&1 &
+  server_pid=$!
+  attempts=0
+  while ! curl --max-time 1 --silent --fail "http://127.0.0.1:$port/" >"$work/page.html"; do
+    attempts=$((attempts + 1))
+    if [ "$attempts" -ge 30 ]; then
+      sed -n '1,120p' "$work/server.log" >&2
+      return 1
+    fi
+    sleep 1
+  done
+}
+
+post() {
+  path=$1
+  data=$2
+  curl --max-time 5 --silent --fail -X POST +    -H 'Content-Type: application/x-www-form-urlencoded' +    --data "$data" "http://127.0.0.1:$port$path"
+}
+
+start_server
+post /todos 'title=Persist+across+restart' >"$work/created.html"
+post /todos/1/edit 'title=Edited+persistently' >"$work/edited.html"
+post /todos/1/toggle '' >"$work/toggled.html"
+curl --max-time 5 --silent --fail "http://127.0.0.1:$port/?filter=completed" >"$work/completed.html"
+rg -q 'Edited persistently' "$work/completed.html"
+stop_server
+
+start_server
+curl --max-time 5 --silent --fail "http://127.0.0.1:$port/" >"$work/restarted.html"
+rg -q 'Edited persistently' "$work/restarted.html"
+stop_server
+
+TODOMVC_DATA_DIR=$work "$repo_root/scripts/reset-todomvc" >"$work/reset.log"
+start_server
+curl --max-time 5 --silent --fail "http://127.0.0.1:$port/" >"$work/reset-page.html"
+if rg -q 'Edited persistently' "$work/reset-page.html"; then
+  echo "TodoMVC reset retained a deleted row" >&2
+  exit 1
+fi
+rg -q '<strong>0</strong> items left' "$work/reset-page.html"
+
+echo "PASS persistent browser TodoMVC CRUD, restart, and reset"
