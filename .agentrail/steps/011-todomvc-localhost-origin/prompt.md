@@ -1,0 +1,1 @@
+Reproduce and fix the browser HTTP 403 when a user opens TodoMVC at http://localhost:3000 and submits /todos. Align loopback origin middleware with every documented/usable browser URL, add deterministic acceptance for localhost Origin on POST without weakening loopback binding, update docs, run full gate, commit, complete, and push main.

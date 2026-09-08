@@ -68,7 +68,7 @@ Start the persistent MLPL TodoMVC browser application:
 
 ```sh
 just todomvc-server
-# Browse to http://127.0.0.1:3000/
+# Browse to http://localhost:3000/ (http://127.0.0.1:3000/ also works)
 ```
 
 The first start creates `var/todomvc/todos.sqlite3` and its `todos` table;

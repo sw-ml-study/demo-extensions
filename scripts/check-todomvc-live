@@ -14,8 +14,11 @@ stop_server() {
   fi
 }
 cleanup() {
+  status=$?
   stop_server
   rm -rf "$work"
+  trap - EXIT HUP INT TERM
+  exit "$status"
 }
 trap cleanup EXIT HUP INT TERM
 
@@ -36,7 +39,7 @@ start_server() {
 post() {
   path=$1
   data=$2
-  curl --max-time 5 --silent --fail -X POST +    -H 'Content-Type: application/x-www-form-urlencoded' +    --data "$data" "http://127.0.0.1:$port$path"
+  curl --resolve "localhost:$port:127.0.0.1" --max-time 5 --silent --fail -X POST -H 'Content-Type: application/x-www-form-urlencoded' -H "Origin: http://localhost:$port" --data "$data" "http://localhost:$port$path"
 }
 
 start_server

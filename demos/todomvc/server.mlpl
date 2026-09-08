@@ -17,11 +17,12 @@ load_extension(web_library);
 load_extension(sqlite_library);
 connection=_sqlite:open({root: database_root,path: database_path,busy_timeout_ms: 5000,max_rows: 8,max_result_bytes: 262144});
 _sqlite:execute(connection,u:todo_schema_plan().sql,u:sqlite_params0());
-origin=str_concat("http://127.0.0.1:",to_string(port));
-policy=str_concat("version = 1\n[limits]\nmax_header_bytes = 16384\nmax_body_bytes = 1048576\n[cors]\nallowed_origins = [\"",str_concat(origin,"\"]\nallowed_methods = [\"GET\", \"POST\"]\n[token]\nsource = \"none\"\nverification = \"none\"\n[authorization]\nowner = \"mlpl\"\n"));
+policy=u:todo_middleware_policy(port);
 server=_web:listen({address: "127.0.0.1",port: port,max_pending: 16},policy);
 address=_web:local_address(server);
-print(str_concat("MLPL TodoMVC listening at http://",str_concat(address,"/")));
+numeric_url=str_concat("http://",str_concat(address,"/"));
+localhost_url=str_concat("http://localhost:",str_concat(to_string(port),"/"));
+print(str_concat("MLPL TodoMVC listening at ",str_concat(numeric_url,str_concat(" (also ",str_concat(localhost_url,")")))));
 while 1 {
   request=_web:next_request(server,1000);
   if equal(type_of(request),"record") {

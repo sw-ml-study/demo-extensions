@@ -1,4 +1,14 @@
 # MLPL-owned TodoMVC routes and controller dispatch over generic web/SQLite primitives.
+def u:todo_middleware_policy(port) {
+  "Build the bounded server policy for both conventional loopback browser origins.";
+  numeric=str_concat("http://127.0.0.1:",to_string(port));
+  localhost=str_concat("http://localhost:",to_string(port));
+  prefix="version = 1\n[limits]\nmax_header_bytes = 16384\nmax_body_bytes = 1048576\n[cors]\nallowed_origins = [\"";
+  origins=str_concat(numeric,str_concat("\", \"",str_concat(localhost,"\"]\n")));
+  suffix="allowed_methods = [\"GET\", \"POST\"]\n[token]\nsource = \"none\"\nverification = \"none\"\n[authorization]\nowner = \"mlpl\"\n";
+  str_concat(prefix,str_concat(origins,suffix))
+}
+
 def u:todo_filter(query) {
   "Select a supported TodoMVC filter from one URL query string.";
   if eq(str_find(query,"filter="),-1) {

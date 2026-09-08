@@ -61,10 +61,12 @@ directory and missing table, starts the loopback server, and prints its URL:
 
 ```sh
 just todomvc-server
-# MLPL TodoMVC listening at http://127.0.0.1:3000/
+# MLPL TodoMVC listening at http://127.0.0.1:3000/ (also http://localhost:3000/)
 ```
 
-Browse to `http://127.0.0.1:3000/`. Stop the server with Control-C. A restart
+Browse to `http://localhost:3000/` or `http://127.0.0.1:3000/`. Both loopback
+origins are explicitly allowed by the server middleware, while the listener
+remains bound only to `127.0.0.1`. Stop the server with Control-C. A restart
 opens the same database and uses `CREATE TABLE IF NOT EXISTS`, so existing
 items remain visible to the next browser session.
 

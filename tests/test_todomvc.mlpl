@@ -72,4 +72,12 @@ def u:test_todomvc_redirect() {
   u:assert_eq(size_bytes(response.body),0,"redirect has an empty packed body")
 }
 
+@test {name: "TodoMVC permits both loopback browser origins",tags: ["web","todomvc","cors"]}
+def u:test_todomvc_loopback_origins() {
+  "Keep localhost and numeric loopback browser sessions inside the narrow CORS allowlist.";
+  policy=u:todo_middleware_policy(3000);
+  u:assert_true(1-eq(str_find(policy,"http://127.0.0.1:3000"),-1),"numeric loopback origin is allowed")?;
+  u:assert_true(1-eq(str_find(policy,"http://localhost:3000"),-1),"localhost origin is allowed")
+}
+
 u:run_registered_tests()
