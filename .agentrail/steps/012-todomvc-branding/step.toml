@@ -1,8 +1,9 @@
 number = 12
 slug = "todomvc-branding"
-status = "in-progress"
+status = "completed"
 description = "Polish the persistent MLPL TodoMVC browser demo with sw-MLPL Demo: TodoMVC pa..."
 role = "production"
 context_files = []
 created_at = "2026-09-08T09:51:44"
-commits = []
+completed_at = "2026-09-08T09:56:57"
+commits = ["f43698691e96238e0f0b8d656750ac8e70159f3e"]

@@ -1,0 +1,1 @@
+Branded the persistent browser demo as sw-MLPL Demo: TodoMVC, added an accessible inline Octocat corner linking to the public repository, added the project copyright and MIT License footer, documented the presentation, and added MLPL render assertions. Full just check and live CRUD/persistence acceptance passed.
