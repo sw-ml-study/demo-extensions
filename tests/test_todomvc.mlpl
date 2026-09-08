@@ -37,6 +37,12 @@ def u:test_todomvc_render_and_sql() {
   u:assert_true(1-eq(str_find(html,"action=\"/todos/1/toggle\""),-1),"toggle control is visible")?;
   u:assert_true(1-eq(str_find(html,"action=\"/todos/1/edit\""),-1),"editor is visible")?;
   u:assert_true(1-eq(str_find(html,"action=\"/todos/1/delete\""),-1),"delete control is visible")?;
+  u:assert_true(1-eq(str_find(html,"<title>sw-MLPL Demo: TodoMVC</title>"),-1),"browser title identifies the demo")?;
+  u:assert_true(1-eq(str_find(html,"<h1>sw-MLPL Demo</h1><h2>TodoMVC</h2>"),-1),"page headings identify the demo")?;
+  u:assert_true(1-eq(str_find(html,"aria-label=\"View demo-extensions on GitHub\""),-1),"repository corner is accessible")?;
+  u:assert_true(1-eq(str_find(html,"https://github.com/sw-ml-study/demo-extensions"),-1),"repository corner uses the public URL")?;
+  u:assert_true(1-eq(str_find(html,"Copyright &copy; 2026 Michael A Wright"),-1),"copyright is visible")?;
+  u:assert_true(1-eq(str_find(html,"href=\"https://github.com/sw-ml-study/demo-extensions/blob/main/LICENSE\""),-1),"license link is visible")?;
   plan=u:todo_insert_plan("buy milk");
   u:assert_eq(plan.params,{count: 1,item_0: "buy milk"},"insert binds title")?;
   u:assert_true(eq(str_find(plan.sql,"buy milk"),-1),"title is absent from SQL text")

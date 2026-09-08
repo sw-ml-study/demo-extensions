@@ -71,6 +71,9 @@ just todomvc-server
 # Browse to http://localhost:3000/ (http://127.0.0.1:3000/ also works)
 ```
 
+The server-rendered page identifies itself as **sw-MLPL Demo: TodoMVC** and
+links back to this repository and its MIT license directly from the interface.
+
 The first start creates `var/todomvc/todos.sqlite3` and its `todos` table;
 later starts retain the same rows. Set `TODOMVC_PORT`, `TODOMVC_DATA_DIR`
 (absolute), or `TODOMVC_DB_NAME` (confined relative path) to override the

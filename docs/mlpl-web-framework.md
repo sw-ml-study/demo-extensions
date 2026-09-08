@@ -70,6 +70,11 @@ remains bound only to `127.0.0.1`. Stop the server with Control-C. A restart
 opens the same database and uses `CREATE TABLE IF NOT EXISTS`, so existing
 items remain visible to the next browser session.
 
+The server-rendered **sw-MLPL Demo: TodoMVC** shell includes
+an accessible Octocat corner linking to the public repository and a copyright
+and MIT-license footer; these are emitted by `demos/todomvc/view.mlpl` without
+external asset requests.
+
 Defaults and overrides:
 
 | Setting | Default | Contract |
