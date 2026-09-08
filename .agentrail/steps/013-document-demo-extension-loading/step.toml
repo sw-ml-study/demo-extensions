@@ -1,9 +1,10 @@
 number = 13
 slug = "document-demo-extension-loading"
-status = "in-progress"
+status = "completed"
 description = "Add a focused user-facing document under docs/ explaining exactly how the dem..."
 role = "production"
 context_files = []
 created_at = "2026-09-08T11:27:07"
+completed_at = "2026-09-08T11:38:45"
 task_type = "docs"
-commits = []
+commits = ["dc3d322709d5dd50ee375cd9dc3596cab9aa3ba4"]

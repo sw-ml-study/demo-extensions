@@ -1,0 +1,11 @@
+{
+  "task_type": "docs",
+  "state": {
+    "number": 13,
+    "step": "document-demo-extension-loading"
+  },
+  "action": "Inspected every just recipe, run script, MLPL entry point, provider manifest, host registration path, and upstream load_extension resolver; authored docs/demo-extension-loading.md, ran focused documentation/tracking gates and just check, and committed as dc3d322.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-08T11:38:45"
+}
