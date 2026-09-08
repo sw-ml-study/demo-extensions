@@ -435,6 +435,9 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   concise MLPL wrapper design and exact upstream compile/package requirements.
 - [Extension packages](docs/extension-packages.md) — manifest, platform,
   path-security, and namespace contracts.
+- [How demos load native code](docs/demo-extension-loading.md) — per-demo
+  build artifacts, dynamic loading, static providers, custom hosts, Ports, and
+  extension-free failure behavior.
 - [Network and database extensions](docs/network-db-extensions.md) — bounded
   HTTP, fixed middleware ordering, callback-free serving, SQLite, and the MLPL
   framework roadmap.

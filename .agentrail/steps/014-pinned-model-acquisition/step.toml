@@ -1,4 +1,4 @@
-number = 13
+number = 14
 slug = "pinned-model-acquisition"
 status = "pending"
 description = "Implement the explicit pinned model-acquisition layer described in docs/netwo..."
