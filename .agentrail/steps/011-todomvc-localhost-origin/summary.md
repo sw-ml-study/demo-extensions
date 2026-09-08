@@ -1,0 +1,1 @@
+Fixed TodoMVC localhost browser POSTs by permitting both conventional loopback origins while keeping the listener bound to 127.0.0.1; added MLPL policy coverage, deterministic localhost live CRUD/persistence coverage, corrected cleanup exit-status propagation, and updated browser instructions. Full just check passed.

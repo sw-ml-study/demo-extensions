@@ -1,9 +1,10 @@
 number = 11
 slug = "todomvc-localhost-origin"
-status = "in-progress"
+status = "completed"
 description = "Reproduce and fix the browser HTTP 403 when a user opens TodoMVC at http://lo..."
 role = "production"
 context_files = []
 created_at = "2026-09-08T09:37:50"
+completed_at = "2026-09-08T09:43:40"
 task_type = "live-todomvc-regression"
-commits = []
+commits = ["2afefcffbaf0afa518be6990cca6bbd4c6f22839"]
