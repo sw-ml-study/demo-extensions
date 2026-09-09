@@ -1,8 +1,9 @@
 number = 14
 slug = "dynamic-array-canvas"
-status = "in-progress"
+status = "completed"
 description = "Implement the smallest honest graphical demo that follows TodoMVC's dynamic-l..."
 role = "production"
 context_files = []
 created_at = "2026-09-09T07:30:05"
-commits = []
+completed_at = "2026-09-09T11:50:38"
+commits = ["0e045246f74e1be1e9c7366cf90f337aad2a9624"]
