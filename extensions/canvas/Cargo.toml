@@ -1,0 +1,22 @@
+[package]
+name = "mlpl-extension-canvas"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+bytemuck = { version = "1", features = ["derive"] }
+mlpl-extension-sdk = { path = "../../crates/mlpl-extension-sdk" }
+pollster = "0.4"
+wgpu = "24"
+winit = "0.30"
+
+[dev-dependencies]
+mlpl-extension-loader = { path = "../../crates/mlpl-extension-loader" }
+
+[lints]
+workspace = true

@@ -37,6 +37,7 @@ extensions/http-client/         Bounded HTTP/HTTPS and middleware-policy provide
 extensions/http-server/         Callback-free bounded local HTTP server provider
 extensions/sqlite/              Confined parameterized SQLite provider
 extensions/boundary-probe/      Public-SDK array/handle/record host probe
+extensions/canvas/              Dynamically loaded blocking winit/wgpu canvas
 extensions/native3d/            Generic headless viewer and bulk line provider
 tests/                          Native mlplunit and structural tests
 docs/                           Architecture, contracts, plans, and evidence
@@ -63,6 +64,17 @@ The hello package demonstrates the intended separation:
 
 The scripts only select existing tools; they never install or overwrite them.
 Environment overrides must be absolute paths.
+
+Open the smallest stock-interpreter graphical extension demo:
+
+```sh
+just array-canvas
+```
+
+MLPL computes a 720-point colored spiral, dynamically loads the separately
+built canvas `.dylib`/`.so`, and blocks in one generic native presentation call
+until the window closes. No custom evaluator host or injected Port is used. See
+[Dynamic Array Canvas](docs/canvas-extension.md).
 
 Start the persistent MLPL TodoMVC browser application:
 
@@ -438,6 +450,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
 - [How demos load native code](docs/demo-extension-loading.md) — per-demo
   build artifacts, dynamic loading, static providers, custom hosts, Ports, and
   extension-free failure behavior.
+- [Dynamic Array Canvas](docs/canvas-extension.md) — the minimal stock-MLPL
+  `load_extension` path to a blocking native winit/wgpu window.
 - [Network and database extensions](docs/network-db-extensions.md) — bounded
   HTTP, fixed middleware ordering, callback-free serving, SQLite, and the MLPL
   framework roadmap.

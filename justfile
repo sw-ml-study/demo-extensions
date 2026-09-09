@@ -23,6 +23,10 @@ mlpl-path:
 mlplunit-path:
     ./scripts/select-mlplunit
 
+# Open an MLPL-computed spiral through a dynamically loaded native canvas.
+array-canvas:
+    ./scripts/run-array-canvas
+
 # Open the interactive MLPL-driven native cube window.
 cube-3d:
     ./scripts/run-3d-cube

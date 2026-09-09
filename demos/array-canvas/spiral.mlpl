@@ -1,0 +1,11 @@
+# Dynamically load the native canvas and display MLPL-computed bulk arrays.
+include "model.mlpl";
+include "../../extensions/canvas/module.mlpl";
+
+library=list_get(args(),0)?;
+load_extension(library);
+scene=u:array_spiral(720);
+print("MLPL computed [720,2] spiral points; close the native canvas to return.");
+result=u:canvas_show("sw-MLPL Dynamic Array Canvas",900,700,scene.points,scene.colors,scene.thicknesses);
+print(result);
+result

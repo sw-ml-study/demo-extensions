@@ -13,6 +13,7 @@ members = [
     "extensions/http-server",
     "extensions/sqlite",
     "extensions/boundary-probe",
+    "extensions/canvas",
     "extensions/native3d",
 ]
 resolver = "2"

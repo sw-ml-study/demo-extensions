@@ -31,6 +31,7 @@ build places the loadable file directly under `target/debug/`:
 | `mlpl-extension-sqlite` | `libmlpl_extension_sqlite.dylib` | `libmlpl_extension_sqlite.so` | `_sqlite` |
 | `mlpl-extension-native3d` | `libmlpl_extension_native3d.dylib` | `libmlpl_extension_native3d.so` | `_native3d` |
 | `mlpl-extension-boundary-probe` | `libmlpl_extension_boundary_probe.dylib` | `libmlpl_extension_boundary_probe.so` | `_boundary` |
+| `mlpl-extension-canvas` | `libmlpl_extension_canvas.dylib` | `libmlpl_extension_canvas.so` | `_canvas` |
 
 Release builds use the same filenames beneath `target/release/`. The
 `extensions/*/extension.toml` files describe a future distributable package
@@ -96,6 +97,11 @@ calling `_web:*`/`_sqlite:*` without successful `load_extension` calls, fails
 because those private native functions are not registered.
 
 ## Interactive graphics: MLPL inside a custom Rust host
+
+The small `just array-canvas` example is the exception: it follows TodoMVC's
+dynamic-loading path and calls one blocking canvas function from stock
+`mlpl-repl`. See [Dynamic Array Canvas](canvas-extension.md). The richer demos
+below require the custom host because they exchange ongoing input and frames.
 
 The graphics commands all build and run the release binary
 `target/release/mlpl-native3d-window`:

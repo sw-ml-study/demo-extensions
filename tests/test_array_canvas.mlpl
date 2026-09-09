@@ -1,0 +1,14 @@
+# Native mlplunit coverage for MLPL-owned array-canvas geometry.
+include "demos/array-canvas/model.mlpl";
+
+@test {name: "array canvas spiral owns bulk geometry and styles in MLPL",tags: ["canvas","graphics","arrays"]}
+def u:test_array_canvas_spiral() {
+  "Prove deterministic normalized shapes before the generic native boundary.";
+  scene=u:array_spiral(64);
+  u:assert_eq(shape(scene.points),[64,2],"point matrix shape")?;
+  u:assert_eq(shape(scene.colors),[63,4],"parallel color matrix shape")?;
+  u:assert_eq(shape(scene.thicknesses),[63],"parallel thickness shape")?;
+  u:assert_true(reduce(:mul,le(abs(scene.points),1)),"points remain normalized")
+}
+
+u:run_registered_tests()

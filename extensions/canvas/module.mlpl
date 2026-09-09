@@ -1,0 +1,10 @@
+# Public MLPL facade for a generic blocking native polyline canvas.
+def u:canvas_validate(title,width,height,points,colors,thicknesses) {
+  "Validate bounded canvas arrays without opening a native window.";
+  _canvas:validate(title,width,height,points,colors,thicknesses)
+}
+
+def u:canvas_show(title,width,height,points,colors,thicknesses) {
+  "Display MLPL-owned arrays until the user closes the native canvas.";
+  _canvas:show(title,width,height,points,colors,thicknesses)
+}

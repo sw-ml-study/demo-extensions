@@ -1,0 +1,8 @@
+number = 14
+slug = "dynamic-array-canvas"
+status = "in-progress"
+description = "Implement the smallest honest graphical demo that follows TodoMVC's dynamic-l..."
+role = "production"
+context_files = []
+created_at = "2026-09-09T07:30:05"
+commits = []

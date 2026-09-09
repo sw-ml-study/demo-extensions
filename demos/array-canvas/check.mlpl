@@ -1,0 +1,4 @@
+# Headless dynamic-loading acceptance for the native array canvas provider.
+library=list_get(args(),0)?;
+load_extension(library);
+_canvas:validate("canvas check",320,240,[[-1,0],[0,1],[1,0]],[[1,0,0,1],[0,1,1,1]],[2,3])

@@ -1,0 +1,23 @@
+# Deterministic MLPL array geometry and styling for the dynamic canvas demo.
+def u:array_spiral(count) {
+  "Build a normalized parametric spiral and one RGBA style per segment.";
+  t=range(count);
+  phase=t*0.075;
+  radius=0.08+t*0.82/(count-1);
+  x=radius*cos(phase);
+  y=radius*sin(phase);
+  points=[];
+  index=0;
+  while lt(index,count) {
+    points=concat(points,[take(x,0,index),take(y,0,index)]);
+    index=index+1
+  };
+  colors=[];
+  index=0;
+  while lt(index,count-1) {
+    fraction=index/(count-1);
+    colors=concat(colors,[0.25+0.75*fraction,0.9-0.55*fraction,1-0.2*fraction,1]);
+    index=index+1
+  };
+  {points: reshape(points,[count,2]),colors: reshape(colors,[count-1,4]),thicknesses: fill([count-1],3)}
+}

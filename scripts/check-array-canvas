@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cargo build --offline --quiet --manifest-path "$repo_root/Cargo.toml" -p mlpl-extension-canvas
+mlpl=$($repo_root/scripts/select-mlpl)
+suffix=so
+if [ "$(uname -s)" = Darwin ]; then suffix=dylib; fi
+library=$repo_root/target/debug/libmlpl_extension_canvas.$suffix
+
+output=$("$mlpl" --source-dir "$repo_root" -f "$repo_root/demos/array-canvas/check.mlpl" -- "$library")
+printf '%s\n' "$output" | rg -q 'lines: 2'
+if "$mlpl" --source-dir "$repo_root" -e '_canvas:validate("missing",64,64,[[-1,0],[1,0]],[[1,1,1,1]],[1])' >/dev/null 2>&1; then
+  echo "canvas call unexpectedly succeeded without loading its extension" >&2
+  exit 1
+fi
+echo "PASS dynamic canvas load and extension-free failure"
