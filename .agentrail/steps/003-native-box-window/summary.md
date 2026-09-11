@@ -1,0 +1,1 @@
+Integrated generic filled boxes into the native winit/wgpu window with reusable identity-retaining GPU vertices, Depth32Float rendering, resize-safe depth recreation, semantic-color-preserving selection outlines, bounded fixture loading, and an opt-in smoke recipe.
