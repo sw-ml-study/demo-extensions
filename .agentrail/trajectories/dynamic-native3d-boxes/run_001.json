@@ -1,0 +1,11 @@
+{
+  "task_type": "dynamic-native3d-boxes",
+  "state": {
+    "number": 7,
+    "step": "dynamic-box-extension-api"
+  },
+  "action": "Used provider-first TDD, reused the pure native3d scene validator, tested malformed arrays/IDs/stale handles/deactivation, loaded the actual dylib, exercised it through stock mlpl-repl and the real upstream interpreter, updated package/loading docs and the pre-commit gate.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-11T10:38:33"
+}

@@ -1,9 +1,10 @@
 number = 7
 slug = "dynamic-box-extension-api"
-status = "in-progress"
+status = "completed"
 description = "Expose the proven box, picking/highlight, and view-mode capabilities through ..."
 role = "production"
 context_files = []
 created_at = "2026-09-11T09:08:44"
+completed_at = "2026-09-11T10:38:33"
 task_type = "dynamic-native3d-boxes"
-commits = []
+commits = ["8afaf8c54b0db2e662a5893b5574da1398b36511"]
