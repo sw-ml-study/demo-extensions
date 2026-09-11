@@ -19,6 +19,7 @@ crates/mlpl-native3d-scene/src/box_renderer.rs
 crates/mlpl-native3d-scene/src/renderer.rs
 crates/mlpl-native3d-scene/tests/box_scene_contract.rs
 crates/mlpl-native3d-scene/tests/box_headless_renderer.rs
+crates/mlpl-native3d-scene/tests/box_interaction.rs
 crates/mlpl-native3d-scene/tests/interaction_contract.rs
 crates/mlpl-native3d-window/Cargo.toml
 crates/mlpl-native3d-window/src/lib.rs
@@ -34,6 +35,7 @@ crates/mlpl-native3d-window/tests/input_contract.rs
 crates/mlpl-native3d-window/tests/camera_command.rs
 crates/mlpl-native3d-window/tests/line_vertices.rs
 crates/mlpl-native3d-window/tests/box_vertices.rs
+crates/mlpl-native3d-window/tests/box_selection.rs
 crates/mlpl-native3d-window/tests/model_atlas_applet.rs
 crates/mlpl-native3d-window/tests/file_applet_root.rs
 crates/mlpl-native3d-window/tests/model_atlas_file_applet.rs

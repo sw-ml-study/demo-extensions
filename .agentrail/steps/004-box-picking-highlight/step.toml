@@ -1,6 +1,6 @@
 number = 4
 slug = "box-picking-highlight"
-status = "pending"
+status = "in-progress"
 description = "Add generic stable-ID ray picking and selection highlighting for filled boxes..."
 role = "production"
 context_files = []

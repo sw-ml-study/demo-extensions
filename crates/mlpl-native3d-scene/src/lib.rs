@@ -10,7 +10,7 @@ mod point_renderer;
 mod renderer;
 
 pub use box_renderer::{BoxRenderPlan, PlannedScreenTriangle};
-pub use box_scene::{BoxLimits, BoxScene, BoxSceneError, BoxTriangle, BoxTrianglePlan};
+pub use box_scene::{BoxHit, BoxLimits, BoxScene, BoxSceneError, BoxTriangle, BoxTrianglePlan};
 pub use interaction::{InteractionError, OrbitCamera, Ray3};
 pub use point::{PlannedPoint, PointLimits, PointScene, PointSceneError, PointUploadPlan};
 pub use point_renderer::{PlannedScreenPoint, PointRenderPlan};

@@ -49,10 +49,25 @@ the depth attachment is recreated whenever the surface is resized. Boxes draw
 before existing point, line, help, and status overlays.
 
 A selected ID leaves its semantic RGBA unchanged and draws a thin gold edge in
-the fragment shader. This provides deterministic selection visibility for an
-ID supplied by the caller; interactive ray picking is the next contract step.
+the fragment shader. A stationary left-button click now builds a ray through
+the existing orbit-camera contract and selects the nearest box; a drag beyond
+four physical pixels remains a camera gesture and never selects. Clicking empty
+space clears the outline.
 The current simple transparent path writes depth, so it is intended for opaque
 or mostly opaque teaching layouts rather than order-independent transparency.
+
+Picking inverse-rotates the ray into the scene and intersects each positive-size
+axis-aligned box with a slab test. The smallest nonnegative distance wins;
+exact-distance ties choose the lowest stable ID. A successful or empty click
+emits `{kind:"box_selection", hit:0|1, id:"...", revision:"..."}`. IDs and
+revisions are decimal strings so values above MLPL/JavaScript's exact numeric
+range survive unchanged. The static fixture uses revision zero; retained scene
+revisions arrive with the dynamic API in a later step.
+
+`--selected-box` is rejected when no box scene is present or when its ID is
+absent, rather than silently displaying stale state. Selection events use the
+same bounded channel and click/drag arbitration as existing input. The native
+host assigns no meaning to the selected ID and does not mutate box colors.
 
 On a graphical macOS or Linux session, run:
 
@@ -60,7 +75,8 @@ On a graphical macOS or Linux session, run:
 just box-scene-smoke
 ```
 
-The command opens the synthetic neutral box fixture and outlines ID 17. It does
+The command opens the synthetic neutral box fixture and initially outlines ID
+17; click another box or empty space to change or clear the outline. It does
 not yet consume the columnar SWTOS artifact: `sw-mlpl` owns the array mapping,
 and the later dynamic-API/integration steps will connect its `set_boxes`
 output without placing storage meanings in Rust.

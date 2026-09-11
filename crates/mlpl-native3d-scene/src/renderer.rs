@@ -1,6 +1,6 @@
 //! Pure transform, projection, clipping, and deterministic CPU rasterization.
 
-use crate::LineScene;
+use crate::{InteractionError, LineScene, OrbitCamera, Ray3};
 
 const MAX_VIEWPORT_EDGE: u32 = 8_192;
 const BACKGROUND: [u8; 4] = [8, 10, 16, 255];
@@ -94,6 +94,23 @@ impl Camera {
     #[must_use]
     pub const fn distance(self) -> f32 {
         self.distance
+    }
+
+    /// Builds a world-space pick ray using the same orbit projection as rendering.
+    ///
+    /// # Errors
+    ///
+    /// Rejects an invalid screen point or camera basis.
+    pub fn pick_ray(self, viewport: Viewport, point: [f32; 2]) -> Result<Ray3, InteractionError> {
+        OrbitCamera::new(
+            self.target,
+            self.yaw,
+            self.pitch,
+            self.distance,
+            self.vertical_fov_radians,
+            self.near,
+        )?
+        .pick_ray(viewport, point)
     }
 
     pub(crate) const fn vertical_fov_radians(self) -> f32 {

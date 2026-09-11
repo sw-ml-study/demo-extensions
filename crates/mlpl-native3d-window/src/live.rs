@@ -673,6 +673,40 @@ pub fn point_selection_event(
     ]))
 }
 
+/// Projects a pointer ray and returns an exact stable-ID box-selection event.
+///
+/// # Errors
+///
+/// Rejects invalid camera, viewport, position, rotation, or picking state.
+pub fn box_selection_event(
+    scene: &mlpl_native3d_scene::BoxScene,
+    camera: Camera,
+    viewport: Viewport,
+    rotation_y: f32,
+    position: [f64; 2],
+    revision: u64,
+) -> Result<Value, String> {
+    let position = [
+        to_f32(position[0], "box selection x")?,
+        to_f32(position[1], "box selection y")?,
+    ];
+    let ray = camera
+        .pick_ray(viewport, position)
+        .map_err(|error| format!("box selection ray failed: {error:?}"))?;
+    let selected = scene
+        .pick(ray, rotation_y)
+        .map_err(|error| format!("box selection failed: {error:?}"))?;
+    Ok(record([
+        ("kind", Value::Str("box_selection".into())),
+        ("hit", scalar(bool_number(selected.is_some()))),
+        (
+            "id",
+            Value::Str(selected.map_or_else(String::new, |hit| hit.id().to_string())),
+        ),
+        ("revision", Value::Str(revision.to_string())),
+    ]))
+}
+
 fn modifier_fields(modifiers: Modifiers) -> [(&'static str, Value); 4] {
     [
         (

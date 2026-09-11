@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{BoxRenderPlan, Camera, HeadlessImage, NumericArray, RenderError, Viewport};
+use crate::{BoxRenderPlan, Camera, HeadlessImage, NumericArray, Ray3, RenderError, Viewport};
 
 const BOX_SCHEMA: &str = "sw-ml-study.native3d.box-scene";
 const BOX_VERSION: u32 = 1;
@@ -74,6 +74,25 @@ pub struct BoxTrianglePlan {
     byte_len: usize,
 }
 
+/// The nearest generic box hit along a world-space ray.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct BoxHit {
+    id: u64,
+    distance: f32,
+}
+
+impl BoxHit {
+    #[must_use]
+    pub const fn id(self) -> u64 {
+        self.id
+    }
+
+    #[must_use]
+    pub const fn distance(self) -> f32 {
+        self.distance
+    }
+}
+
 impl BoxTrianglePlan {
     #[must_use]
     pub fn triangles(&self) -> &[BoxTriangle] {
@@ -98,6 +117,7 @@ pub enum BoxSceneError {
     ParallelLength,
     BoxColor,
     DuplicateId(u64),
+    UnknownId(u64),
     BoxBudget { actual: usize, limit: usize },
     ByteBudget { actual: usize, limit: usize },
 }
@@ -161,6 +181,66 @@ impl BoxScene {
     #[must_use]
     pub fn ids(&self) -> &[u64] {
         &self.ids
+    }
+
+    /// Validates an optional caller-owned selection against current stable IDs.
+    ///
+    /// # Errors
+    ///
+    /// Rejects an ID absent from this immutable scene.
+    pub fn validate_selection(&self, selected_id: Option<u64>) -> Result<(), BoxSceneError> {
+        if let Some(id) = selected_id
+            && !self.ids.contains(&id)
+        {
+            return Err(BoxSceneError::UnknownId(id));
+        }
+        Ok(())
+    }
+
+    /// Returns the nearest filled-box intersection with a deterministic ID tie break.
+    ///
+    /// The scene rotation is inverted onto the ray, preserving axis-aligned slab
+    /// tests without changing caller geometry.
+    ///
+    /// # Errors
+    ///
+    /// Rejects a non-finite scene rotation.
+    pub fn pick(&self, ray: Ray3, rotation_y: f32) -> Result<Option<BoxHit>, RenderError> {
+        if !rotation_y.is_finite() {
+            return Err(RenderError::NonFiniteRotation);
+        }
+        let ray = inverse_rotate_ray(ray, rotation_y);
+        let mut nearest: Option<BoxHit> = None;
+        for (((center, size), _color), id) in self
+            .centers
+            .values
+            .chunks_exact(3)
+            .zip(self.sizes.values.chunks_exact(3))
+            .zip(&self.colors)
+            .zip(&self.ids)
+        {
+            let half = [size[0] / 2.0, size[1] / 2.0, size[2] / 2.0];
+            let minimum = [
+                center[0] - half[0],
+                center[1] - half[1],
+                center[2] - half[2],
+            ];
+            let maximum = [
+                center[0] + half[0],
+                center[1] + half[1],
+                center[2] + half[2],
+            ];
+            if let Some(distance) = intersect_aabb(ray, minimum, maximum) {
+                let candidate = BoxHit { id: *id, distance };
+                if nearest.is_none_or(|current| {
+                    distance.total_cmp(&current.distance).is_lt()
+                        || (distance.total_cmp(&current.distance).is_eq() && *id < current.id)
+                }) {
+                    nearest = Some(candidate);
+                }
+            }
+        }
+        Ok(nearest)
     }
 
     /// Expands each box to twelve consistently wound owned triangles.
@@ -293,6 +373,41 @@ impl BoxScene {
         }
         Ok(())
     }
+}
+
+fn inverse_rotate_ray(ray: Ray3, angle: f32) -> Ray3 {
+    let (sin, cos) = angle.sin_cos();
+    let rotate = |value: [f32; 3]| {
+        [
+            value[0].mul_add(cos, -value[2] * sin),
+            value[1],
+            value[0].mul_add(sin, value[2] * cos),
+        ]
+    };
+    Ray3::new(rotate(ray.origin()), rotate(ray.direction())).expect("rotation preserves valid ray")
+}
+
+fn intersect_aabb(ray: Ray3, minimum: [f32; 3], maximum: [f32; 3]) -> Option<f32> {
+    let mut near = 0.0_f32;
+    let mut far = f32::INFINITY;
+    for axis in 0..3 {
+        let origin = ray.origin()[axis];
+        let direction = ray.direction()[axis];
+        if direction.abs() <= f32::EPSILON {
+            if origin < minimum[axis] || origin > maximum[axis] {
+                return None;
+            }
+            continue;
+        }
+        let first = (minimum[axis] - origin) / direction;
+        let second = (maximum[axis] - origin) / direction;
+        near = near.max(first.min(second));
+        far = far.min(first.max(second));
+        if near > far {
+            return None;
+        }
+    }
+    (far >= 0.0).then_some(near)
 }
 
 fn append_box(

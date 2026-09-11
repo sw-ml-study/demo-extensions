@@ -262,6 +262,13 @@ fn load_box_options(
         .and_then(|index| arguments.get(index + 1))
         .map(|value| value.parse::<u64>())
         .transpose()?;
+    match (&scene, selected) {
+        (Some(scene), selected) => scene
+            .validate_selection(selected)
+            .map_err(|error| format!("box selection rejected: {error:?}"))?,
+        (None, Some(_)) => return Err("--selected-box requires --box-scene".into()),
+        (None, None) => {}
+    }
     Ok((scene, selected))
 }
 
@@ -616,6 +623,27 @@ impl Application {
         }
     }
 
+    fn send_box_selection(&mut self, event_loop: &ActiveEventLoop) {
+        let Some(scene) = self.box_scene.as_ref() else {
+            return;
+        };
+        let Some(viewport) = self.graphics.as_ref().and_then(Graphics::viewport) else {
+            return;
+        };
+        let Ok(event) = mlpl_native3d_window::live::box_selection_event(
+            scene,
+            self.camera,
+            viewport,
+            self.angle,
+            self.pointer_position,
+            0,
+        ) else {
+            return;
+        };
+        self.selected_box_id = selected_box_id(&event);
+        self.send(event, event_loop);
+    }
+
     fn note_point_motion(&mut self) {
         if let Some(press) = self.point_press_position {
             let distance =
@@ -807,6 +835,16 @@ impl Application {
     }
 }
 
+fn selected_box_id(event: &Value) -> Option<u64> {
+    let Value::Record { fields } = event else {
+        return None;
+    };
+    let Value::Str(id) = fields.get("id")? else {
+        return None;
+    };
+    id.parse().ok()
+}
+
 impl ApplicationHandler for Application {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.graphics.is_some() {
@@ -900,7 +938,11 @@ impl ApplicationHandler for Application {
                         event_loop,
                     );
                     if point_activation {
-                        self.send_point_selection(event_loop);
+                        if self.box_scene.is_some() {
+                            self.send_box_selection(event_loop);
+                        } else {
+                            self.send_point_selection(event_loop);
+                        }
                     }
                 }
             }
@@ -1413,6 +1455,29 @@ mod tests {
             .join("../../fixtures/native3d-box-scene.json");
         let scene = load_box_scene(&path).unwrap();
         assert_eq!(scene.ids(), &[17, 23]);
+    }
+
+    #[test]
+    fn box_options_reject_missing_and_orphaned_selection_ids() {
+        let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/native3d-box-scene.json");
+        let valid = vec![
+            "viewer".to_owned(),
+            "--box-scene".to_owned(),
+            fixture.display().to_string(),
+            "--selected-box".to_owned(),
+            "17".to_owned(),
+        ];
+        assert!(super::load_box_options(&valid).is_ok());
+        let missing = [
+            "viewer".to_owned(),
+            "--selected-box".to_owned(),
+            "17".to_owned(),
+        ];
+        assert!(super::load_box_options(&missing).is_err());
+        let mut stale = valid;
+        *stale.last_mut().unwrap() = "999".to_owned();
+        assert!(super::load_box_options(&stale).is_err());
     }
 
     #[test]
