@@ -1,9 +1,10 @@
 number = 2
 slug = "generic-filled-box-scene"
-status = "in-progress"
+status = "completed"
 description = "Add renderer-neutral bulk filled-box scene support for external MLPL consumer..."
 role = "production"
 context_files = []
 created_at = "2026-09-11T09:08:44"
+completed_at = "2026-09-11T09:36:32"
 task_type = "native3d-boxes"
-commits = []
+commits = ["2c89fe1f3831be64c329ccf6e180e2c39b1c36d1"]

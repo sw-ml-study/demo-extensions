@@ -1,0 +1,1 @@
+Added bounded generic filled-box scenes with owned bulk arrays, stable IDs, deterministic twelve-triangle expansion, perspective projection, far-to-near ordering, CPU raster evidence, fixture, and ownership documentation.
