@@ -1,0 +1,1 @@
+Publish the accepted compact point-cloud animated WebP in the README, validate both tracked point-cloud media files, and preserve the generic capture workflow for the remaining Model Atlas recording.

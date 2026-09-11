@@ -1,0 +1,9 @@
+number = 1
+slug = "interchange-contract"
+status = "pending"
+description = "Define and document the renderer-neutral versioned system-layout interchange ..."
+role = "production"
+context_files = []
+created_at = "2026-09-11T09:08:44"
+task_type = "system-layout-contract"
+commits = []

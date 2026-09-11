@@ -1,0 +1,9 @@
+number = 6
+slug = "dynamic-box-extension-api"
+status = "pending"
+description = "Expose the proven box, picking/highlight, and view-mode capabilities through ..."
+role = "production"
+context_files = []
+created_at = "2026-09-11T09:08:44"
+task_type = "dynamic-native3d-boxes"
+commits = []
