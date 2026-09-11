@@ -177,6 +177,19 @@ pub fn text_vertices_colored(
     origin: [f32; 2],
     color: [f32; 4],
 ) -> Vec<GpuVertex> {
+    text_vertices_colored_scaled(text, viewport, origin, color, 1.0)
+}
+
+/// Rasterizes compact ASCII text at a screen-space origin and scale.
+#[must_use]
+#[allow(clippy::cast_precision_loss)]
+pub fn text_vertices_colored_scaled(
+    text: &str,
+    viewport: Viewport,
+    origin: [f32; 2],
+    color: [f32; 4],
+    scale: f32,
+) -> Vec<GpuVertex> {
     let [width, height] = viewport.dimensions();
     let (width, height) = (width as f32, height as f32);
     let mut output = Vec::new();
@@ -184,7 +197,7 @@ pub fn text_vertices_colored(
     for character in text.chars() {
         if character == '\n' {
             x = origin[0];
-            y += 18.0;
+            y += 18.0 * scale;
             continue;
         }
         for (row, bits) in glyph(character).into_iter().enumerate() {
@@ -192,16 +205,17 @@ pub fn text_vertices_colored(
                 if bits & (1 << (4 - column)) != 0 {
                     push_quad(
                         &mut output,
-                        x + column as f32 * 2.0,
-                        y + row as f32 * 2.0,
+                        x + column as f32 * 2.0 * scale,
+                        y + row as f32 * 2.0 * scale,
                         width,
                         height,
                         color,
+                        scale,
                     );
                 }
             }
         }
-        x += 12.0;
+        x += 12.0 * scale;
     }
     output
 }
@@ -213,6 +227,7 @@ fn push_quad(
     width: f32,
     height: f32,
     color: [f32; 4],
+    scale: f32,
 ) {
     let point = |px: f32, py: f32| GpuVertex {
         position: [px / width * 2.0 - 1.0, 1.0 - py / height * 2.0],
@@ -220,9 +235,9 @@ fn push_quad(
     };
     let corners = [
         point(x, y),
-        point(x, y + 2.0),
-        point(x + 2.0, y),
-        point(x + 2.0, y + 2.0),
+        point(x, y + 2.0 * scale),
+        point(x + 2.0 * scale, y),
+        point(x + 2.0 * scale, y + 2.0 * scale),
     ];
     output.extend_from_slice(&[
         corners[0], corners[1], corners[2], corners[2], corners[1], corners[3],

@@ -20,4 +20,4 @@ presentation=$preview_dir/box-presentation.json
 sed -n '1p' "$raw" >"$scene"
 sed -n '2p' "$raw" >"$presentation"
 cargo run --release --manifest-path "$repo_root/Cargo.toml" -p mlpl-native3d-window -- \
-  --box-scene "$scene" --box-presentation "$presentation" --selected-box 106
+  --box-scene "$scene" --box-presentation "$presentation" --selected-box 106000000

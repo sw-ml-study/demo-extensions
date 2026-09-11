@@ -20,7 +20,7 @@ use mlpl_native3d_window::live::{
 };
 use mlpl_native3d_window::{
     GpuBoxVertex, GpuPointVertex, GpuVertex, box_vertices, line_vertices, point_vertices,
-    text_vertices, text_vertices_colored,
+    text_vertices, text_vertices_colored, text_vertices_colored_scaled,
 };
 use wgpu::util::DeviceExt;
 use winit::{
@@ -578,7 +578,10 @@ impl Application {
             .box_viewer
             .as_ref()
             .map_or(command.help, BoxViewer::overlay);
-        self.status = command.status;
+        self.status = self
+            .box_viewer
+            .as_ref()
+            .map_or(command.status, BoxViewer::selection_overlay);
         self.suppress_line_scene_for_box_viewer();
         true
     }
@@ -704,6 +707,7 @@ impl Application {
         if let Some(viewer) = self.box_viewer.as_mut() {
             viewer.select(self.selected_box_id);
             self.help = viewer.overlay();
+            self.status = viewer.selection_overlay();
         }
         self.send(event, event_loop);
     }
@@ -728,6 +732,7 @@ impl Application {
         );
         self.rotation_speed = viewer.rotation_speed();
         self.help = viewer.overlay();
+        self.status = viewer.selection_overlay();
         self.box_legend = viewer.legend();
         self.scene = None;
         Ok(())
@@ -1243,12 +1248,24 @@ fn frame_vertices(content: &RenderContent<'_>, viewport: Viewport) -> FrameVerti
         });
     lines.extend(text_vertices(content.help, viewport));
     let help_line_count = content.help.lines().fold(0.0_f32, |count, _| count + 1.0);
-    lines.extend(text_vertices_colored(
-        content.status,
-        viewport,
-        [14.0, 14.0 + help_line_count * 18.0],
-        [1.0, 0.9, 0.15, 1.0],
-    ));
+    if content.boxes.is_some() {
+        let status_lines = content.status.lines().fold(0.0_f32, |count, _| count + 1.0);
+        let bottom = f32::from(u16::try_from(viewport.dimensions()[1]).unwrap_or(u16::MAX));
+        lines.extend(text_vertices_colored_scaled(
+            content.status,
+            viewport,
+            [18.0, (bottom - status_lines * 27.0 - 18.0).max(18.0)],
+            [1.0, 0.78, 0.08, 1.0],
+            1.5,
+        ));
+    } else {
+        lines.extend(text_vertices_colored(
+            content.status,
+            viewport,
+            [14.0, 14.0 + help_line_count * 18.0],
+            [1.0, 0.9, 0.15, 1.0],
+        ));
+    }
     let legend_x =
         f32::from(u16::try_from(viewport.dimensions()[0].saturating_sub(190)).unwrap_or(u16::MAX));
     lines.extend(text_vertices_colored(

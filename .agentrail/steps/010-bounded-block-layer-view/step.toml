@@ -1,6 +1,6 @@
 number = 10
 slug = "bounded-block-layer-view"
-status = "pending"
+status = "in-progress"
 description = "Add a generic bounded block/layer visualization for system-layout boxes inspi..."
 role = "production"
 context_files = []

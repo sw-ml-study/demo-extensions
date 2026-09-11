@@ -6,19 +6,20 @@ repository's MLPL consumer and generic renderer against real producer data.
 
 The current SWTOS artifact contains one external W25Q32 `flash` space. Its
 4,194,304-byte capacity is storage, not the system's RAM address space. The
-default `Overview log` view uses normalized `log(byte length + 1)` bar heights
-so all eight real regions remain visible despite only 372 bytes being used.
-The `Physical` view retains proportional eight-byte-block geometry for honest
-capacity comparison. Region ID 106 (`embedded-hello`) starts selected. Click
-any box to select it.
+viewer expands the 49 occupied or padding eight-byte blocks into small cubes
+arranged in 4-by-4 layers. It does not generate 524,242 empty cubes: the free
+region is one separate logarithmically sized summary. An `embedded-hello`
+block starts selected. Click any cube or the free summary to select its region.
 
 The viewer is stationary by default. Click the visible `Rotate` control or
 press `R` to toggle automatic rotation. Click the `Kind` or `Owner`
 controls (or press `1` or `2`) to recolor every box. Press `H` repeatedly to
-isolate legend categories in the current mode, and `C` to restore all regions. The colored legend
-at the right changes with the selected mode. Click `Overview log` or `Physical`,
-or press `V` to cycle views. Drag to orbit, Shift-drag to pan, use the wheel to
-zoom, and press Escape to close the window.
+isolate legend categories in the current mode, and `C` to restore all regions.
+The colored legend at the right changes with the selected mode. The top overlay
+documents every shortcut. Selection details appear separately in a 1.5-times
+scale amber callout at bottom-left. Use Left/Right arrows or `[`/`]` to walk
+through visible blocks with wraparound. Drag to orbit, Shift-drag to pan, use
+the wheel to zoom, and press Escape to close the window.
 
 ## Run it
 
@@ -29,6 +30,22 @@ just system-layout-swtos
 ```
 
 The older `just system-layout-preview` name remains as a compatibility alias.
+
+For a repeatable recording, leave the viewer running and use a second terminal:
+
+```sh
+just system-layout-swtos-tour
+```
+
+Focus the viewer during the three-second countdown. On macOS, the tour sends
+`1`, `2`, then `R` to rotate while it cycles `H`, `H`, `H`, Right, Right,
+Right. A final `R` stops rotation on a stable frame. Steps are one second apart,
+with two seconds after rotation starts. The terminal application must have
+Accessibility permission to control the focused window. The tour never closes
+or mutates the source artifact.
+The generic alias is `just system-layout-tour`; matching
+`system-layout-mlos-tour` and `system-layout-mesaos-tour` recipes are already
+reserved for the next two producer integrations.
 
 There is no setup or generated data to retain. The launcher selects the
 adjacent development MLPL binary (or the absolute `MLPL` override), evaluates
@@ -66,13 +83,9 @@ a peer device. SWTOS runtime RAM/EBR/stack data and `loads-to` relationships
 belong to the separately queued runtime-snapshot step; they are not inferred
 or fabricated from this flash artifact.
 
-The native preview currently shows overview boxes, a selected-item annotation,
-and switchable color legends. Relationship edges, labels anchored directly to
-each box, and adaptive block-level detail remain follow-up presentation work;
-the fixture already carries the relationship columns and the shared MLPL
-adapter already exposes deterministic block coordinates.
-
-The queued block-layer view will use fine cubes only for occupied allocation
-blocks (dozens for the current SWTOS artifact). Padding remains a distinct
-kind. Free regions will not be expanded into cubes; each is represented by one
-logarithmically scaled summary, keeping sparse layouts legible and bounded.
+The native preview now shows bounded block layers, a prominent selected-region
+annotation, and switchable color legends. Multiple selectable cubes share one
+region annotation through a generic presentation index; this avoids duplicating
+application strings at the native boundary. Relationship edges and labels
+anchored directly to each box remain follow-up presentation work; the fixture
+already carries the relationship columns.

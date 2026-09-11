@@ -20,6 +20,8 @@ struct Document {
     ids: Vec<u64>,
     labels: Vec<String>,
     details: Vec<String>,
+    #[serde(default)]
+    detail_index: Vec<usize>,
     mode_labels: Vec<String>,
     mode_colors: Vec<Vec<[f32; 4]>>,
     view_labels: Vec<String>,
@@ -58,10 +60,8 @@ impl BoxViewer {
         if !document.rotation_speed.is_finite() || document.rotation_speed < 0.0 {
             return Err("rotation_speed must be finite and nonnegative".into());
         }
-        if document.ids.len() != scene_ids.len()
-            || document.labels.len() != scene_ids.len()
-            || document.details.len() != scene_ids.len()
-            || document.ids.len() > MAX_ITEMS
+        let details_align = details_align(&document, scene_ids.len());
+        if document.ids.len() != scene_ids.len() || !details_align || document.ids.len() > MAX_ITEMS
         {
             return Err("presentation items must align with scene ids".into());
         }
@@ -198,6 +198,14 @@ impl BoxViewer {
         self.selected = id.filter(|candidate| self.item_by_id.contains_key(candidate));
     }
 
+    fn detail_for_item(&self, item: usize) -> usize {
+        self.document
+            .detail_index
+            .get(item)
+            .copied()
+            .unwrap_or(item)
+    }
+
     /// Applies a mode digit or rotation toggle, returning whether it was handled.
     pub fn key(&mut self, key: &str) -> bool {
         if key == "r" {
@@ -219,6 +227,14 @@ impl BoxViewer {
             self.highlight = None;
             return true;
         }
+        if matches!(key, "arrow_left" | "bracket_left") {
+            self.move_selection(-1);
+            return true;
+        }
+        if matches!(key, "arrow_right" | "bracket_right") {
+            self.move_selection(1);
+            return true;
+        }
         let Some(index) = key
             .parse::<usize>()
             .ok()
@@ -233,6 +249,24 @@ impl BoxViewer {
         } else {
             false
         }
+    }
+
+    fn move_selection(&mut self, direction: isize) {
+        let count = self.document.ids.len();
+        if count == 0 {
+            return;
+        }
+        let current = self
+            .selected
+            .and_then(|id| self.item_by_id.get(&id).copied());
+        let next = match (current, direction) {
+            (Some(0) | None, -1) => count - 1,
+            (Some(index), -1) => index - 1,
+            (Some(index), 1) => (index + 1) % count,
+            (None, 1) => 0,
+            _ => return,
+        };
+        self.selected = Some(self.document.ids[next]);
     }
 
     /// Hit-tests the visible top-row controls in physical window pixels.
@@ -301,27 +335,31 @@ impl BoxViewer {
             })
             .collect::<Vec<_>>()
             .join(" ");
-        let selection = self
-            .selected
-            .and_then(|id| self.item_by_id.get(&id))
-            .map_or_else(
-                || "SELECTED: none — click a box".to_owned(),
-                |index| {
-                    format!(
-                        "SELECTED {}: {}\n{}",
-                        self.document.ids[*index],
-                        self.document.labels[*index],
-                        self.document.details[*index]
-                    )
-                },
-            );
         let emphasis = self
             .highlight
             .map_or_else(|| "all".to_owned(), |index| self.legend()[index].0.clone());
         format!(
-            "{}\nCOLOR {} [H HIGHLIGHT: {}] [C CLEAR] [R ROTATE: {}]\nVIEW {} [V NEXT]\n{}\nDRAG ORBIT | SHIFT+DRAG PAN | WHEEL ZOOM | ESC CLOSE",
-            self.document.title, buttons, emphasis, rotation, views, selection
+            "{}\nCOLOR {} [H HIGHLIGHT: {}] [C CLEAR] [R ROTATE: {}]\nVIEW {} [V NEXT]\nLEFT/RIGHT OR [/] SELECT BLOCK | DRAG ORBIT | SHIFT+DRAG PAN | WHEEL ZOOM | ESC CLOSE",
+            self.document.title, buttons, emphasis, rotation, views
         )
+    }
+
+    #[must_use]
+    pub fn selection_overlay(&self) -> String {
+        self.selected
+            .and_then(|id| self.item_by_id.get(&id))
+            .map_or_else(
+                || ">>> SELECTED: NONE — CLICK A BLOCK <<<".to_owned(),
+                |item| {
+                    let index = self.detail_for_item(*item);
+                    format!(
+                        ">>> SELECTED {}: {} <<<\n{}",
+                        self.document.ids[*item],
+                        self.document.labels[index],
+                        self.document.details[index]
+                    )
+                },
+            )
     }
 }
 
@@ -339,11 +377,25 @@ fn item_index(ids: &[u64]) -> BTreeMap<u64, usize> {
         .collect()
 }
 
+fn details_align(document: &Document, item_count: usize) -> bool {
+    if document.detail_index.is_empty() {
+        document.labels.len() == item_count && document.details.len() == item_count
+    } else {
+        document.labels.len() == document.details.len()
+            && document.detail_index.len() == item_count
+            && document
+                .detail_index
+                .iter()
+                .all(|index| *index < document.labels.len())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::BoxViewer;
 
     const VALID: &str = r#"{"schema":"sw-ml-study.native3d.box-presentation","version":1,"title":"Layout","rotation_speed":0.25,"ids":[7,9],"labels":["Header","Image"],"details":["8 bytes","48 bytes"],"mode_labels":["Kind","Owner"],"mode_colors":[[[1,0,0,1],[0,1,0,1]],[[0,0,1,1],[0,0,1,1]]],"view_labels":["Overview","Physical"],"view_centers":[[[0,0,0],[1,0,0]],[[0,0,0],[0,1,0]]],"view_sizes":[[[1,1,1],[1,1,1]],[[1,1,1],[1,2,1]]],"legend_mode":[0,1],"legend_labels":["header","kernel"],"legend_colors":[[1,0,0,1],[0,0,1,1]]}"#;
+    const GROUPED: &str = r#"{"schema":"sw-ml-study.native3d.box-presentation","version":1,"title":"Layout","rotation_speed":0,"ids":[70,71],"labels":["Image"],"details":["40 bytes / 5 blocks"],"detail_index":[0,0],"mode_labels":["Kind"],"mode_colors":[[[1,0,0,1],[1,0,0,1]]],"view_labels":["Blocks"],"view_centers":[[[0,0,0],[1,0,0]]],"view_sizes":[[[1,1,1],[1,1,1]]],"legend_mode":[0],"legend_labels":["image"],"legend_colors":[[1,0,0,1]]}"#;
 
     #[test]
     fn defaults_static_and_exposes_selection_legend_and_modes() {
@@ -351,7 +403,11 @@ mod tests {
         assert!(viewer.rotation_speed().abs() < f32::EPSILON);
         assert_eq!(viewer.legend()[0].0, "header");
         viewer.select(Some(9));
-        assert!(viewer.overlay().contains("SELECTED 9: Image\n48 bytes"));
+        assert!(
+            viewer
+                .selection_overlay()
+                .contains("SELECTED 9: Image <<<\n48 bytes")
+        );
         assert!(viewer.key("2"));
         assert!(
             viewer.colors()[0]
@@ -374,6 +430,10 @@ mod tests {
         assert!(viewer.overlay().contains("H HIGHLIGHT: header"));
         assert!(viewer.key("c"));
         assert!((viewer.colors()[1][3] - 1.0).abs() < f32::EPSILON);
+        assert!(viewer.key("arrow_right"));
+        assert!(viewer.selection_overlay().contains("SELECTED 7"));
+        assert!(viewer.key("bracket_left"));
+        assert!(viewer.selection_overlay().contains("SELECTED 9"));
     }
 
     #[test]
@@ -386,5 +446,16 @@ mod tests {
         assert!(viewer.overlay().contains("[Physical*]"));
         assert!(BoxViewer::parse(VALID, &[7]).is_err());
         assert!(BoxViewer::parse(&VALID.replace("0.25", "-1"), &[7, 9]).is_err());
+    }
+
+    #[test]
+    fn many_selectable_boxes_can_share_one_region_detail() {
+        let mut viewer = BoxViewer::parse(GROUPED, &[70, 71]).unwrap();
+        viewer.select(Some(71));
+        assert!(
+            viewer
+                .selection_overlay()
+                .contains("SELECTED 71: Image <<<\n40 bytes / 5 blocks")
+        );
     }
 }

@@ -1,5 +1,8 @@
 use mlpl_native3d_scene::{Camera, LineScene, PointLimits, PointScene, Viewport};
-use mlpl_native3d_window::{line_vertices, point_vertices, text_vertices, text_vertices_colored};
+use mlpl_native3d_window::{
+    line_vertices, point_vertices, text_vertices, text_vertices_colored,
+    text_vertices_colored_scaled,
+};
 
 fn line_scene() -> LineScene {
     LineScene::parse(
@@ -125,6 +128,24 @@ fn colored_status_text_preserves_requested_accent() {
             .zip(color)
             .all(|(actual, expected)| (actual - expected).abs() < f32::EPSILON)
     }));
+}
+
+#[test]
+fn selected_callout_scale_increases_glyph_geometry() {
+    let viewport = Viewport::new(800, 600).unwrap();
+    let normal = text_vertices_colored("SELECTED", viewport, [18.0, 500.0], [1.0; 4]);
+    let accent = text_vertices_colored_scaled("SELECTED", viewport, [18.0, 500.0], [1.0; 4], 1.5);
+    let width = |vertices: &[mlpl_native3d_window::GpuVertex]| {
+        vertices
+            .iter()
+            .map(|vertex| vertex.position[0])
+            .fold(f32::NEG_INFINITY, f32::max)
+            - vertices
+                .iter()
+                .map(|vertex| vertex.position[0])
+                .fold(f32::INFINITY, f32::min)
+    };
+    assert!(width(&accent) > width(&normal) * 1.4);
 }
 
 #[test]

@@ -36,6 +36,37 @@ def u:overview_log_geometry(lengths) {
   {centers: u:columns3(range(n)-(n-1)/2,heights/2-2.5,zeros([n])),sizes: u:columns3(fill([n],0.72),heights,fill([n],0.72))}
 }
 
+def u:block_layer_geometry(layout,palette,region_owner_colors,block) {
+  "Expand occupied regions into bounded small cubes and summarize each free region once.";
+  kinds=record_get(layout,"region_kind")?;
+  lengths=record_get(layout,"region_length")?;
+  stable_ids=record_get(layout,"region_id")?;
+  region_colors=select_rows(palette,kinds);
+  free_mask=flatten(select_rows({header:[0],catalog:[0],image:[0],free:[1],padding:[0],text:[0],data:[0],bss:[0],state:[0],stack:[0],kernel:[0]},kinds));
+  region_count=tally(lengths);
+  block_counts=ceil(lengths/block)*(1-free_mask);
+  width=reduce(:max,block_counts);
+  region_grid=matmul(reshape(range(region_count),[region_count,1]),ones([1,width]));
+  unit_grid=matmul(ones([region_count,1]),reshape(range(width),[1,width]));
+  occupied_mask=flatten(lt(unit_grid,reshape(block_counts,[region_count,1])));
+  occupied_regions=compress(occupied_mask,flatten(region_grid));
+  occupied_units=compress(occupied_mask,flatten(unit_grid));
+  free_regions=compress(free_mask,range(region_count));
+  occupied=tally(occupied_regions);
+  free_count=tally(free_regions);
+  slot=range(occupied);
+  occupied_centers=u:columns3(mod(slot,4)-1.5,floor(slot/16)-1.5,mod(floor(slot/4),4)-1.5);
+  occupied_sizes=fill([occupied,3],0.86);
+  free_lengths=flatten(gather_rows(reshape(lengths,[region_count,1]),free_regions));
+  free_heights=0.35+log(free_lengths+1)/4;
+  free_centers=u:columns3(range(free_count)+4.5,free_heights/2-1.5,zeros([free_count]));
+  free_sizes=u:columns3(fill([free_count],0.8),free_heights,fill([free_count],3.8));
+  detail_index=concat(occupied_regions,free_regions);
+  unit_index=concat(occupied_units,zeros([free_count]));
+  region_ids=flatten(gather_rows(reshape(stable_ids,[tally(stable_ids),1]),detail_index));
+  {centers: concat(occupied_centers,free_centers,0),sizes: concat(occupied_sizes,free_sizes,0),colors: gather_rows(region_colors,detail_index),owner_colors: gather_rows(region_owner_colors,detail_index),ids: region_ids*1000000+unit_index,detail_index: detail_index,count: occupied+free_count,occupied: occupied}
+}
+
 def u:region_geometry(layout,palette,space_offset,block) {
   "Assemble generic overview boxes from a columnar system-layout record.";
   starts=record_get(layout,"region_start")?;

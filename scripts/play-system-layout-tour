@@ -1,0 +1,27 @@
+#!/bin/sh
+# Replay a deterministic macOS keyboard tour into the focused native viewer.
+set -eu
+
+case "$(uname -s)" in
+  Darwin) ;;
+  *)
+    echo "system-layout-tour currently requires macOS System Events" >&2
+    exit 1
+    ;;
+esac
+
+echo "Focus the system-layout window; tour starts in 3 seconds." >&2
+sleep 3
+osascript \
+  -e 'tell application "System Events"' \
+  -e 'keystroke "1"' -e 'delay 1' \
+  -e 'keystroke "2"' -e 'delay 1' \
+  -e 'keystroke "r"' -e 'delay 2' \
+  -e 'keystroke "h"' -e 'delay 1' \
+  -e 'keystroke "h"' -e 'delay 1' \
+  -e 'keystroke "h"' -e 'delay 1' \
+  -e 'key code 124' -e 'delay 1' \
+  -e 'key code 124' -e 'delay 1' \
+  -e 'key code 124' -e 'delay 1' \
+  -e 'keystroke "r"' \
+  -e 'end tell'

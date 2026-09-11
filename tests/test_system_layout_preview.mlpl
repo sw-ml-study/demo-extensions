@@ -34,4 +34,18 @@ def u:test_system_layout_overview_log_geometry() {
   u:assert_true(reduce(:max,heights)<=4.85,"largest region fits the overview")
 }
 
+@test {name: "system layout block layers expand only occupied blocks",tags: ["native3d","system-layout","arrays"]}
+def u:test_system_layout_block_layer_geometry() {
+  "Prove occupied blocks become cubes while a huge free region remains one bounded summary.";
+  layout=parse_json(read_text("fixtures/swtos-storage-layout-5c4a24e.json")?)?;
+  palette={header:[1,0,0,1],catalog:[0,1,0,1],image:[0,0,1,1],free:[0,0,0,0.3],padding:[0.5,0.5,0.5,1],text:[1,1,0,1],data:[0,1,1,1],bss:[1,0,1,1],state:[1,0,1,1],stack:[0,1,1,1],kernel:[1,1,1,1]};
+  owners=[[1,1,1,1],[1,1,1,1],[1,0,0,1],[1,0,0,1],[0,1,0,1],[0,1,0,1],[0,0,1,1],[0,0,0,0.3]];
+  geometry=u:block_layer_geometry(layout,palette,owners,8);
+  u:assert_eq(geometry.occupied,49,"only non-free header, catalog, images, and padding expand")?;
+  u:assert_eq(geometry.count,50,"one logarithmic free summary is added")?;
+  u:assert_eq(shape(geometry.centers),[50,3],"all small cubes and summary have centers")?;
+  u:assert_eq(shape(geometry.colors),[50,4],"all small cubes and summary retain kind colors")?;
+  u:assert_eq(take(geometry.detail_index,0,49),7,"free summary maps back to the free region details")
+}
+
 u:run_registered_tests()

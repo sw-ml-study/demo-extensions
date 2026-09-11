@@ -111,6 +111,22 @@ system-layout-preview:
 system-layout-swtos:
     ./scripts/run-system-layout-preview
 
+# Replay a one-second-per-key macOS tour into the focused system-layout viewer.
+system-layout-tour:
+    ./scripts/play-system-layout-tour
+
+# Replay the recording tour into the focused SWTOS viewer.
+system-layout-swtos-tour:
+    ./scripts/play-system-layout-tour
+
+# Replay the recording tour into the focused MLOS viewer once integration lands.
+system-layout-mlos-tour:
+    ./scripts/play-system-layout-tour
+
+# Replay the recording tour into the focused MesaOS viewer once integration lands.
+system-layout-mesaos-tour:
+    ./scripts/play-system-layout-tour
+
 # Open the deterministic MLPL-owned native point-cloud teaching app.
 point-cloud:
     ./scripts/run-point-cloud
