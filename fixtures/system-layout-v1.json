@@ -1,0 +1,25 @@
+{
+  "schema": "sw-ml-study.system-layout",
+  "version": 1,
+  "provenance": {
+    "producer": "demo-extensions synthetic fixture",
+    "producer_revision": "fixture-v1",
+    "generated_at": "2026-09-11T00:00:00Z",
+    "source_description": "Synthetic address spaces; not an SWTOS storage image"
+  },
+  "spaces": [
+    { "id": "space-main", "address_unit": "byte", "extent": 4096, "block_size": 512, "sector_size": 256 },
+    { "id": "space-memory", "address_unit": "byte", "extent": 1024 }
+  ],
+  "regions": [
+    { "id": "region-a", "space_id": "space-main", "address": 0, "extent": 512, "purpose": "header", "owner": "fixture", "location": "leading", "state": "allocated" },
+    { "id": "region-b", "space_id": "space-main", "address": 512, "extent": 1024, "purpose": "catalog", "owner": "fixture", "location": "middle", "state": "allocated" },
+    { "id": "region-c", "space_id": "space-main", "address": 1536, "extent": 2560, "purpose": "available", "owner": "none", "location": "trailing", "state": "free" },
+    { "id": "region-d", "space_id": "space-memory", "address": 64, "extent": 256, "purpose": "cache", "owner": "fixture", "location": "runtime", "state": "active" }
+  ],
+  "relationships": [
+    { "id": "relationship-a", "from_region_id": "region-a", "to_region_id": "region-b", "kind": "describes" },
+    { "id": "relationship-b", "from_region_id": "region-d", "to_region_id": "region-b", "kind": "mirrors" }
+  ],
+  "composition": { "format": "C24IMG", "image_id": "synthetic-image", "part_index": 0, "part_count": 1 }
+}

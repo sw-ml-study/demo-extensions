@@ -21,6 +21,7 @@ cargo fmt --manifest-path "$repo_root/Cargo.toml" --check \
     --package mlpl-extension-http-server \
     --package mlpl-extension-sqlite \
     --package mlpl-http-contract \
+    --package mlpl-system-layout \
     --package mlpl-native3d-scene \
     --package mlpl-native3d-window \
     --package mlpl-microscope-model \

@@ -1,0 +1,439 @@
+I want to use the 3D graphics in (
+sw-ml-study/demo-extensions ) to document the storage layout used in the recently updated TUI interactive demo (
+sw-embed/sw-tos ) similar to this demo: https://clisystems.com/tools/flashviz/ - i.e., show an interactive 3D view of stacks of memory blocks classified by location and usage/purpose.
+
+Yes. The idea fits sw-tos very well, but I would not copy FlashViz literally. I’d use the same visual metaphor—3D stacks of blocks—but make the model specific to SWTOS’s two-stage storage/runtime architecture.
+
+The key observation from the current code is that demo-extensions already has the right primitive boundary: native3d accepts bulk arrays of positions, edges, RGBA colors, thicknesses, and stable IDs, while keeping the viewer behind a native handle. That is almost exactly what you need for a block-map renderer; what is missing is mostly higher-level geometry and interaction.
+
+What I would visualize
+
+I’d make the first version show three adjacent towers/planes:
+
+      Persistent storage             Runtime RAM / EBR
+   W25Q32 / SD image                  allocations
+┌────────────────────┐          ┌────────────────────┐
+│ C24IMG embedded-ping│ ───────▶ │ ping text/data/BSS │
+├────────────────────┤          ├────────────────────┤
+│ padding/free block │          │ ping stack          │
+├────────────────────┤          ├────────────────────┤
+│ C24IMG embedded-hello│ ──────▶ │ hello text/data/BSS│
+├────────────────────┤          ├────────────────────┤
+│ catalog records    │          │ hello stack         │
+├────────────────────┤          ├────────────────────┤
+│ storage header     │          │ process state       │
+└────────────────────┘          ├────────────────────┤
+                                │ free EBR            │
+                                └────────────────────┘
+
+          Fixed/system RAM
+       ┌────────────────────┐
+       │ boot stack reserve │
+       ├────────────────────┤
+       │ proc table         │
+       ├────────────────────┤
+       │ kernel/image       │
+       └────────────────────┘
+
+That reflects the architecture much better than a single “flash utilization” tower.
+
+SWTOS's storage format is already very visualization-friendly: 8-byte blocks, an 8-byte header, fixed 24-byte catalog records, block-aligned embedded C24IMG extents, and free/padding space between extents. Runtime allocations are also structured enough to display meaningfully: child state, loaded executable image, and stack are allocated from a reclaimable EBR generation, with current usage and high-water statistics already exposed by mem.
+
+Don't make the renderer understand SWTOS
+
+I would keep this architectural boundary:
+
+sw-tos
+   │
+   │ produces
+   ▼
+storage-layout.json
+   │
+   ▼
+MLPL visualization script
+   │
+   ▼
+native3d extension
+   │
+   ▼
+3D viewer
+
+In other words:
+
+SWTOS knows storage semantics. MLPL knows visualization semantics. native3d knows graphics.
+
+That keeps demo-extensions reusable.
+
+A generated representation could look approximately like:
+
+{
+  "version": 1,
+  "spaces": [
+    {
+      "id": "flash",
+      "name": "W25Q32 storage",
+      "unit": "byte",
+      "block_size": 8,
+      "capacity": 4194304,
+      "regions": [
+        {
+          "kind": "header",
+          "name": "storage header",
+          "start": 0,
+          "length": 8
+        },
+        {
+          "kind": "catalog",
+          "name": "catalog records",
+          "start": 8,
+          "length": 120
+        },
+        {
+          "kind": "image",
+          "name": "embedded-hello",
+          "start": 128,
+          "length": 44,
+          "image": {
+            "text_words": 6,
+            "data_words": 0,
+            "bss_words": 0
+          }
+        }
+      ]
+    }
+  ]
+}
+
+The actual values should be emitted from the same build artifacts used by cor24-storage.py, not reconstructed separately. That avoids documentation drift.
+
+Why this would be substantially better than a static diagram
+
+FlashViz gives you useful interactions: drag-to-rotate, pan, zoom, address display, free-cell display, and 2D/3D switching. Those are worth borrowing.
+
+But SWTOS can add interactions that actually explain the OS:
+
+Click an embedded image → highlight its catalog record and C24IMG extent.
+Click "Load" → animate its text/data/BSS moving from flash into an EBR allocation.
+Show stack separately above or beside the loaded image.
+Run second process → show its allocation joining the same generation.
+Exit one child → allocation remains if generation is still live.
+Exit final child → animate the complete LIFO generation becoming free.
+Toggle physical, logical, or ownership coloring.
+Toggle bytes vs 24-bit words.
+Show 8-byte storage block boundaries.
+Show 512-byte SD sector boundaries when SD is selected.
+Show W25Q32 cache block / SD cache sector as an outlined active region.
+
+That turns it into an architectural teaching tool.
+
+Color should mean one thing at a time
+
+One weakness of memory-map visualizers is trying to encode too much in color.
+
+I’d provide modes:
+
+Mode	Color represents
+Purpose	header, catalog, text, data, BSS, stack, process state, free
+Owner	kernel, shell, child 1, child 2
+Location	resident RAM, EBR, flash, SD
+State	free, stored, loading, live, reclaimable, invalid
+
+Don't combine all four into one rainbow.
+
+Selection can add an outline rather than changing semantic color.
+
+The current native3d API needs only modest extension
+
+Right now it is intentionally a generic headless line renderer with set_lines() and explicit render(rotation_y).
+
+For this application I would resist adding an SWTOS-specific API such as:
+
+draw_memory_block(...)
+
+Instead add reusable primitives, perhaps:
+
+set_boxes(
+    viewer,
+    centers,       # [N,3]
+    sizes,         # [N,3]
+    colors,        # [N,4]
+    ids            # [N]
+)
+
+set_labels(
+    viewer,
+    positions,
+    strings,
+    ids
+)
+
+pick(viewer, x, y) -> id
+
+camera(...)
+
+And probably:
+
+set_visibility(ids, ...)
+set_highlight(ids, ...)
+
+set_boxes is the important one. A storage visualizer constructed entirely from line cubes will work, but filled cuboids will communicate utilization much better.
+
+The stable IDs already present in set_lines() are especially useful because they give you the natural basis for picking, selection, annotations, and cross-highlighting.
+
+Block geometry
+
+I would not map every byte to a cube.
+
+Use logical cells.
+
+For flash:
+
+1 cell = 8-byte block
+
+because 8 bytes is already the provider abstraction used by the SWTOS storage format.
+
+Arrange cells in layers:
+
+x = block % 16
+z = (block / 16) % 16
+y = block / 256
+
+So 256 blocks become one 16×16 layer.
+
+That gives:
+
+one layer = 2048 bytes
+
+For a 4 MiB W25Q32, displaying the entire physical capacity at true 8-byte resolution would produce 524,288 cells, which is unnecessary.
+
+So use adaptive levels of detail:
+
+Overview:
+    one cube = e.g. 512 B / 4 KiB
+
+Region zoom:
+    one cube = 8-byte SWTOS block
+
+Image zoom:
+    show C24IMG header + text/data/BSS composition
+
+This is where your version can improve significantly on FlashViz.
+
+I would integrate it with the TUI
+
+This is perhaps the strongest part of the idea.
+
+The existing Resources mechanism already takes coherent snapshots rather than publishing partially collected data. So eventually the visualization could consume the same logical snapshot.
+
+Conceptually:
+
+SWTOS target
+    │
+    │ resource snapshot
+    ▼
+te-rs
+    ├──────────────▶ TUI Resources pane
+    │
+    └──────────────▶ storage/memory visualizer
+
+Initially it doesn't need to be live.
+
+Phase 1 — static generated layout
+
+Generate:
+
+build/storage-layout.json
+
+from the build.
+
+Show:
+
+storage header
+catalog records
+resident descriptors
+embedded image extents
+unused space
+C24IMG structure
+
+This proves the visualization.
+
+Phase 2 — runtime snapshot
+
+Add:
+
+build/runtime-layout.json
+
+or emit equivalent data from mem -r.
+
+Show:
+
+executable boundary
+EBR start/end
+current allocation
+high-water mark
+process state
+stack allocation
+free space
+
+SWTOS already measures essentially this information.
+
+Phase 3 — TUI-linked visualization
+
+Have te-rs optionally write or stream snapshot events:
+
+storage-layout
+process-spawn
+image-load
+allocation
+process-exit
+generation-reclaim
+
+The 3D viewer can then animate them.
+
+That would make a demonstration such as:
+
+run embedded-hello
+
+visibly produce:
+
+FLASH                         EBR
+
+[embedded-hello]  ───────▶   [text]
+                              [data]
+                              [BSS]
+                              [state]
+                              [stack]
+
+Then exiting would reclaim the tower.
+
+That has considerably more educational value than a generic allocation graph.
+
+A useful 3D arrangement
+
+I would use separate physical islands, not one giant continuous stack:
+
+        W25Q32                    SD
+        FLASH                   STORAGE
+          │                        │
+          │ provider               │ provider
+          └───────────┬────────────┘
+                      ▼
+
+              CATALOG / C24IMG
+                    LOAD
+                      │
+                      ▼
+
+               COR24 RAM / EBR
+
+3D position communicates location.
+
+Vertical stacking communicates address/extent.
+
+Color communicates the currently selected semantic mode.
+
+Lines/arrows communicate relationships.
+
+That is much easier to understand than treating everything as an undifferentiated address range.
+
+One very useful special view
+
+I would add "Explain selected program".
+
+Select embedded-ping, and everything else dims:
+
+Catalog record
+      │
+      │ ordinal + offset + extent
+      ▼
+Flash extent
+      │
+      │ bounded provider reads
+      ▼
+C24IMG header
+      │
+      ├── text
+      ├── data
+      └── BSS size
+      │
+      ▼
+EBR allocation
+      ├── state
+      ├── relocated executable
+      └── stack
+
+This visually documents several architectural details that are otherwise fairly difficult to communicate from prose alone.
+
+The repo already contains exactly those relationships: the catalog describes images, provider lookup supplies the extent and read callback, C24IMG validation precedes loading, and the loaded child owns an EBR allocation until its generation is reclaimed.
+
+Where I would put it
+
+I would not put SWTOS-specific visualization code into demo-extensions.
+
+I'd structure it roughly as:
+
+demo-extensions/
+    extensions/native3d/
+        generic renderer
+
+sw-tos/
+    scripts/
+        storage-layout.py       # emits semantic layout
+    viz/
+        storage.mlpl
+        memory.mlpl
+        colors.mlpl
+        geometry.mlpl
+
+Or, if this grows beyond SWTOS:
+
+sw-ml-study/demo-system-layout/
+
+with SWTOS supplying its JSON.
+
+But I think starting inside sw-tos/viz/ is preferable. You are building SWTOS documentation, not another generic demo yet.
+
+The first concrete milestone I would build
+
+Keep it deliberately small:
+
+Extend native3d with filled boxes + picking.
+Modify cor24-storage.py or a companion script to emit storage-layout.json.
+Write viz/storage.mlpl.
+Render only:
+storage header,
+catalog records,
+embedded image extents,
+padding/free space.
+Mouse:
+rotate,
+pan,
+zoom,
+click.
+Clicking displays:
+embedded-ping
+provider: W25Q32
+offset: 0x0000D8
+stored: 45 bytes
+blocks: 6
+format: C24IMG v1
+text: 6 words
+data: 0 words
+bss: 0 words
+Add a 2D orthographic mode using the exact same semantic model.
+
+Only after that would I connect runtime EBR allocations.
+
+Why this sequence
+
+It separates three uncertainties:
+
+storage metadata correctness
+        ↓
+MLPL geometry/layout
+        ↓
+native3d interaction
+
+rather than simultaneously debugging SWTOS, MLPL, rendering, and live telemetry.
+
+I think this is a very strong use case for the native3d extension. It demonstrates something important about sw-MLPL too: MLPL is not merely drawing a canned scene; it can consume structured systems data, reshape/classify it, generate geometry, and drive a native visualization extension. And for SWTOS, the particularly compelling end state is not merely “FlashViz but in Rust”—it is a visual, animated explanation of stored image → provider → validated C24IMG → allocated process → reclaimed memory.

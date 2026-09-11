@@ -1,6 +1,6 @@
 number = 1
 slug = "interchange-contract"
-status = "pending"
+status = "in-progress"
 description = "Define and document the renderer-neutral versioned system-layout interchange ..."
 role = "production"
 context_files = []

@@ -23,6 +23,11 @@ HTTP/HTTPS client and fixed middleware-policy validation; callback-free serving,
 SQLite, an MLPL framework, and pinned model acquisition follow as explicit
 steps documented in `network-db-extensions.md`.
 
+The active `swtos-system-layout-visualization` saga begins with the versioned,
+bounded, renderer-neutral interchange in `system-layout-interchange.md`. This
+repository owns generic box graphics and validation; `sw-tos` owns authoritative
+storage semantics and generated artifacts, while `sw-mlpl` owns host contracts.
+
 The mandatory checklist in `AGENTS.md` applies to every step in every saga:
 pre-commit tests, affected documentation, `.gitignore` audit, tracked-file
 audit, named-file staging, a detailed commit, AgentRail completion metadata,
