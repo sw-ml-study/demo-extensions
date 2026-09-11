@@ -1,6 +1,6 @@
 number = 2
 slug = "generic-filled-box-scene"
-status = "pending"
+status = "in-progress"
 description = "Add renderer-neutral bulk filled-box scene support for external MLPL consumer..."
 role = "production"
 context_files = []

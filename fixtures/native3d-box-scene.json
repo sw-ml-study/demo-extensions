@@ -1,0 +1,8 @@
+{
+  "schema": "sw-ml-study.native3d.box-scene",
+  "version": 1,
+  "centers": { "shape": [2, 3], "values": [0.0, 0.0, 0.0, 2.0, 0.0, 0.0] },
+  "sizes": { "shape": [2, 3], "values": [2.0, 4.0, 6.0, 1.0, 1.0, 1.0] },
+  "colors": [[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 0.5]],
+  "ids": [17, 23]
+}

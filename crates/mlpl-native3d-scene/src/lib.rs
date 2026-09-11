@@ -2,11 +2,15 @@
 
 use serde::{Deserialize, Serialize};
 
+mod box_renderer;
+mod box_scene;
 mod interaction;
 mod point;
 mod point_renderer;
 mod renderer;
 
+pub use box_renderer::{BoxRenderPlan, PlannedScreenTriangle};
+pub use box_scene::{BoxLimits, BoxScene, BoxSceneError, BoxTriangle, BoxTrianglePlan};
 pub use interaction::{InteractionError, OrbitCamera, Ray3};
 pub use point::{PlannedPoint, PointLimits, PointScene, PointSceneError, PointUploadPlan};
 pub use point_renderer::{PlannedScreenPoint, PointRenderPlan};

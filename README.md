@@ -417,6 +417,9 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
 - [Native3D point-cloud contract](docs/native3d-point-cloud.md) — bulk point
   shapes, attributes, stable IDs, budgets, rendering, retained updates, and
   selection delivery.
+- [Native3D filled-box contract](docs/native3d-filled-boxes.md) — generic bulk
+  centers, sizes, colors, stable IDs, triangle planning, and headless depth
+  evidence for later system-layout demonstrations.
 - [Native3D point-cloud demo](docs/native3d-point-cloud-demo.md) — deterministic
   MLPL-owned arrays, controls, selection styling, and host responsibility split.
 - [Native3D point-cloud acceptance](docs/native3d-point-cloud-acceptance.md) —
