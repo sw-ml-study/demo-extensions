@@ -1,0 +1,1 @@
+Defined the v1 bounded renderer-neutral system-layout interchange with JSON Schema, synthetic fixture, immutable Rust model, deterministic ordered validation, provenance and C24IMG metadata, documentation, and full-gate coverage.
