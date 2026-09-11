@@ -31,13 +31,23 @@ materialized byte count using a conceptual vertex of `[3] f32` position,
 correctness oracle; a native backend may later use indexed or instanced draws
 without changing the scene contract.
 
-The pure camera path applies Y rotation and perspective projection, discards
+The pure camera path applies Y rotation and either perspective or orthographic
+projection, discards
 triangles crossing the near plane, removes triangles wholly outside the
 viewport, and sorts accepted triangles far-to-near by average view depth.
 Exact depth ties draw larger stable IDs first, so lower IDs are deterministically
 topmost. The CPU rasterizer uses triangle coverage and source-over alpha on the
 shared bounded RGBA surface. It is deterministic evidence, not an antialiasing
 or hardware-depth equivalence claim.
+
+The generic camera record accepts `projection:"perspective"` (the compatible
+default) or `projection:"orthographic"`. Orthographic records also carry a
+positive `vertical_span` in world units. That mode is the reusable 2D physical
+layout view: equal-sized objects remain equal-sized at different depths, while
+yaw, pitch, target, near-plane clipping, stable IDs, and box geometry remain
+unchanged. Wheel input changes `vertical_span`; pan and orbit remain available,
+and orthographic picking uses parallel rays translated across the view plane.
+No storage-region or operating-system policy is part of this camera contract.
 
 ## Native window
 

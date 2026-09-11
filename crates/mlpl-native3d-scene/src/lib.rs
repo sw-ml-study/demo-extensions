@@ -14,7 +14,7 @@ pub use box_scene::{BoxHit, BoxLimits, BoxScene, BoxSceneError, BoxTriangle, Box
 pub use interaction::{InteractionError, OrbitCamera, Ray3};
 pub use point::{PlannedPoint, PointLimits, PointScene, PointSceneError, PointUploadPlan};
 pub use point_renderer::{PlannedScreenPoint, PointRenderPlan};
-pub use renderer::{Camera, HeadlessImage, PlannedLine, RenderError, Viewport};
+pub use renderer::{Camera, HeadlessImage, PlannedLine, Projection, RenderError, Viewport};
 
 const SCHEMA: &str = "sw-ml-study.native3d.line-scene";
 const MAX_VERTICES: usize = 1_000_000;

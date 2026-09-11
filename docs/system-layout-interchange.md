@@ -1,10 +1,12 @@
 # System-layout interchange
 
 This repository consumes a bounded, renderer-neutral description of address
-spaces. It does not define SWTOS storage semantics. A producer such as
-`sw-tos` decides what its regions mean and emits those meanings as data; the
-generic Rust code validates the envelope before later MLPL code maps it to
-boxes, labels, colors, and interactions.
+spaces. It does not define operating-system storage semantics. Producers such
+as `../../sw-embed/sw-tos` and `../sw-os-ml` (MLOS) decide what their regions
+mean and emit those meanings as data; the generic Rust code validates the
+envelope before later MLPL code maps it to boxes, labels, colors, and
+interactions. Both producers target the same contract and neither receives an
+operating-system-specific Rust renderer path.
 
 ## Version 1
 
@@ -56,8 +58,8 @@ best-effort rendering.
 
 ## Cross-repository handoff
 
-`sw-tos` should publish its authoritative generated artifact and a pinned
-producer revision without copying its domain rules into this crate. Once that
-artifact is available, a later saga step will vendor or hash-pin it and prove
+Each producer should publish its authoritative generated artifact and a pinned
+producer revision without copying its domain rules into this crate. Once an
+artifact is available, a later saga step can vendor or hash-pin it and prove
 that an MLPL adapter drives the generic renderer. `sw-mlpl` changes, if needed
 for live events or extension transport, remain separately owned upstream.

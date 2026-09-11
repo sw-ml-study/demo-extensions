@@ -69,7 +69,6 @@ pub(crate) fn plan_boxes(
     let forward = normalize(sub(target, eye)).ok_or(RenderError::InvalidCamera)?;
     let right = normalize(cross(forward, [0.0, 1.0, 0.0])).ok_or(RenderError::InvalidCamera)?;
     let up = cross(right, forward);
-    let focal = height as f32 / (2.0 * (camera.vertical_fov_radians() / 2.0).tan());
     let mut triangles = Vec::new();
     for triangle in scene
         .triangle_plan()
@@ -92,8 +91,10 @@ pub(crate) fn plan_boxes(
                 break;
             }
             screen[index] = [
-                width as f32 / 2.0 + dot(relative, right) * focal / depth,
-                height as f32 / 2.0 - dot(relative, up) * focal / depth,
+                width as f32 / 2.0
+                    + dot(relative, right) * camera.projection_scale(height as f32, depth),
+                height as f32 / 2.0
+                    - dot(relative, up) * camera.projection_scale(height as f32, depth),
             ];
             depths[index] = depth;
         }

@@ -100,7 +100,6 @@ pub(crate) fn plan_points(
     let forward = normalize(sub(target, eye)).ok_or(RenderError::InvalidCamera)?;
     let right = normalize(cross(forward, [0.0, 1.0, 0.0])).ok_or(RenderError::InvalidCamera)?;
     let up = cross(right, forward);
-    let focal = height / (2.0 * (camera.vertical_fov_radians() / 2.0).tan());
     let mut points = Vec::with_capacity(upload.points().len());
     for point in upload.points() {
         let position = point.position();
@@ -119,8 +118,8 @@ pub(crate) fn plan_points(
             continue;
         }
         let center = [
-            width / 2.0 + view[0] * focal / view[2],
-            height / 2.0 - view[1] * focal / view[2],
+            width / 2.0 + view[0] * camera.projection_scale(height, view[2]),
+            height / 2.0 - view[1] * camera.projection_scale(height, view[2]),
         ];
         let radius = point.size() / 2.0;
         if center[0] + radius < 0.0

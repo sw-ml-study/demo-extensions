@@ -1,11 +1,20 @@
 //! Pure transform, projection, clipping, and deterministic CPU rasterization.
 
-use crate::{InteractionError, LineScene, OrbitCamera, Ray3};
+use crate::{InteractionError, LineScene, Ray3};
 
 const MAX_VIEWPORT_EDGE: u32 = 8_192;
 const BACKGROUND: [u8; 4] = [8, 10, 16, 255];
 
-/// Perspective camera parameters for the renderer-neutral line pipeline.
+/// Projection policy shared by every renderer-neutral scene primitive.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Projection {
+    /// Perspective projection with the camera's vertical field of view.
+    Perspective,
+    /// Orthographic projection covering `vertical_span` world units.
+    Orthographic { vertical_span: f32 },
+}
+
+/// Camera parameters for the renderer-neutral scene pipeline.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Camera {
     target: [f32; 3],
@@ -14,6 +23,7 @@ pub struct Camera {
     distance: f32,
     vertical_fov_radians: f32,
     near: f32,
+    projection: Projection,
 }
 
 impl Default for Camera {
@@ -25,6 +35,7 @@ impl Default for Camera {
             distance: 4.0,
             vertical_fov_radians: 60.0_f32.to_radians(),
             near: 0.1,
+            projection: Projection::Perspective,
         }
     }
 }
@@ -48,6 +59,7 @@ impl Camera {
             distance,
             vertical_fov_radians,
             near,
+            projection: Projection::Perspective,
         };
         validate_camera(camera)?;
         Ok(camera)
@@ -74,6 +86,33 @@ impl Camera {
             distance,
             vertical_fov_radians,
             near,
+            projection: Projection::Perspective,
+        };
+        validate_camera(camera)?;
+        Ok(camera)
+    }
+
+    /// Creates an orthographic orbit camera looking at `target`.
+    ///
+    /// # Errors
+    ///
+    /// Rejects invalid orbit values or a non-positive/non-finite vertical span.
+    pub fn orthographic(
+        target: [f32; 3],
+        yaw: f32,
+        pitch: f32,
+        distance: f32,
+        vertical_span: f32,
+        near: f32,
+    ) -> Result<Self, RenderError> {
+        let camera = Self {
+            target,
+            yaw,
+            pitch,
+            distance,
+            vertical_fov_radians: 60.0_f32.to_radians(),
+            near,
+            projection: Projection::Orthographic { vertical_span },
         };
         validate_camera(camera)?;
         Ok(camera)
@@ -96,29 +135,76 @@ impl Camera {
         self.distance
     }
 
+    #[must_use]
+    pub const fn projection(self) -> Projection {
+        self.projection
+    }
+
     /// Builds a world-space pick ray using the same orbit projection as rendering.
     ///
     /// # Errors
     ///
     /// Rejects an invalid screen point or camera basis.
+    #[allow(clippy::cast_precision_loss)] // Viewports are bounded to 8192 and exactly fit f32.
     pub fn pick_ray(self, viewport: Viewport, point: [f32; 2]) -> Result<Ray3, InteractionError> {
-        OrbitCamera::new(
-            self.target,
-            self.yaw,
-            self.pitch,
-            self.distance,
-            self.vertical_fov_radians,
-            self.near,
-        )?
-        .pick_ray(viewport, point)
-    }
-
-    pub(crate) const fn vertical_fov_radians(self) -> f32 {
-        self.vertical_fov_radians
+        validate_camera(self).map_err(|_| InteractionError::InvalidCamera)?;
+        let [viewport_width, viewport_height] = viewport.dimensions();
+        let width = viewport_width as f32;
+        let height = viewport_height as f32;
+        if !point.into_iter().all(f32::is_finite)
+            || point[0] < 0.0
+            || point[1] < 0.0
+            || point[0] > width
+            || point[1] > height
+        {
+            return Err(InteractionError::InvalidScreenPoint);
+        }
+        let CameraBasis {
+            eye,
+            forward,
+            right,
+            up,
+        } = camera_basis(self).ok_or(InteractionError::InvalidCamera)?;
+        let ndc_x = point[0].mul_add(2.0 / width, -1.0);
+        let ndc_y = 1.0 - point[1] * 2.0 / height;
+        match self.projection {
+            Projection::Perspective => {
+                let half_height = (self.vertical_fov_radians * 0.5).tan();
+                Ray3::new(
+                    eye,
+                    add(
+                        forward,
+                        add(
+                            scale(right, ndc_x * width / height * half_height),
+                            scale(up, ndc_y * half_height),
+                        ),
+                    ),
+                )
+            }
+            Projection::Orthographic { vertical_span } => Ray3::new(
+                add(
+                    eye,
+                    add(
+                        scale(right, ndc_x * vertical_span * width / height * 0.5),
+                        scale(up, ndc_y * vertical_span * 0.5),
+                    ),
+                ),
+                forward,
+            ),
+        }
     }
 
     pub(crate) const fn near(self) -> f32 {
         self.near
+    }
+
+    pub(crate) fn projection_scale(self, viewport_height: f32, depth: f32) -> f32 {
+        match self.projection {
+            Projection::Perspective => {
+                viewport_height / (2.0 * (self.vertical_fov_radians * 0.5).tan()) / depth
+            }
+            Projection::Orthographic { vertical_span } => viewport_height / vertical_span,
+        }
     }
 }
 
@@ -322,10 +408,45 @@ fn validate_camera(camera: Camera) -> Result<(), RenderError> {
         || camera.distance <= camera.near
         || camera.near <= 0.0
         || !(0.01..3.13).contains(&camera.vertical_fov_radians)
+        || matches!(camera.projection, Projection::Orthographic { vertical_span } if !vertical_span.is_finite() || vertical_span <= 0.0)
     {
         return Err(RenderError::InvalidCamera);
     }
     Ok(())
+}
+
+struct CameraBasis {
+    eye: [f32; 3],
+    forward: [f32; 3],
+    right: [f32; 3],
+    up: [f32; 3],
+}
+
+fn camera_basis(camera: Camera) -> Option<CameraBasis> {
+    let (sin_yaw, cos_yaw) = camera.yaw.sin_cos();
+    let (sin_pitch, cos_pitch) = camera.pitch.sin_cos();
+    let eye = [
+        camera.target[0] + camera.distance * cos_pitch * sin_yaw,
+        camera.target[1] + camera.distance * sin_pitch,
+        camera.target[2] + camera.distance * cos_pitch * cos_yaw,
+    ];
+    let forward = normalize(sub(camera.target, eye))?;
+    let right = normalize(cross(forward, [0.0, 1.0, 0.0]))?;
+    let up = cross(right, forward);
+    Some(CameraBasis {
+        eye,
+        forward,
+        right,
+        up,
+    })
+}
+
+fn add(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
+    [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+}
+
+fn scale(value: [f32; 3], scalar: f32) -> [f32; 3] {
+    [value[0] * scalar, value[1] * scalar, value[2] * scalar]
 }
 
 fn sub(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
@@ -372,10 +493,10 @@ fn clip_near(mut start: [f32; 3], mut end: [f32; 3], near: f32) -> Option<([f32;
 
 #[allow(clippy::cast_precision_loss)] // Viewport dimensions are bounded to 8192 and exactly fit f32.
 fn project(point: [f32; 3], camera: Camera, viewport: Viewport) -> [f32; 2] {
-    let focal = 0.5 * viewport.height as f32 / (camera.vertical_fov_radians * 0.5).tan();
+    let scale = camera.projection_scale(viewport.height as f32, point[2]);
     [
-        viewport.width as f32 * 0.5 + point[0] * focal / point[2],
-        viewport.height as f32 * 0.5 - point[1] * focal / point[2],
+        viewport.width as f32 * 0.5 + point[0] * scale,
+        viewport.height as f32 * 0.5 - point[1] * scale,
     ]
 }
 

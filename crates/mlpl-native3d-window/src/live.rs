@@ -1077,14 +1077,42 @@ fn parse_camera(fields: &BTreeMap<String, Value>) -> Result<Camera, String> {
         .into_iter()
         .map(|value| to_f32(value, "camera target"))
         .collect::<Result<Vec<_>, _>>()?;
-    Camera::orbit(
-        [target[0], target[1], target[2]],
-        to_f32(scalar_field(fields, "yaw")?, "camera yaw")?,
-        to_f32(scalar_field(fields, "pitch")?, "camera pitch")?,
-        to_f32(scalar_field(fields, "distance")?, "camera distance")?,
-        to_f32(scalar_field(fields, "fov")?, "camera fov")?,
-        to_f32(scalar_field(fields, "near")?, "camera near")?,
-    )
+    let target = [target[0], target[1], target[2]];
+    let yaw = to_f32(scalar_field(fields, "yaw")?, "camera yaw")?;
+    let pitch = to_f32(scalar_field(fields, "pitch")?, "camera pitch")?;
+    let distance = to_f32(scalar_field(fields, "distance")?, "camera distance")?;
+    let near = to_f32(scalar_field(fields, "near")?, "camera near")?;
+    match fields.get("projection") {
+        None => Camera::orbit(
+            target,
+            yaw,
+            pitch,
+            distance,
+            to_f32(scalar_field(fields, "fov")?, "camera fov")?,
+            near,
+        ),
+        Some(Value::Str(value)) if value == "perspective" => Camera::orbit(
+            target,
+            yaw,
+            pitch,
+            distance,
+            to_f32(scalar_field(fields, "fov")?, "camera fov")?,
+            near,
+        ),
+        Some(Value::Str(value)) if value == "orthographic" => Camera::orthographic(
+            target,
+            yaw,
+            pitch,
+            distance,
+            to_f32(
+                scalar_field(fields, "vertical_span")?,
+                "camera vertical_span",
+            )?,
+            near,
+        ),
+        Some(Value::Str(_)) => return Err("camera projection is unsupported".into()),
+        Some(_) => return Err("camera projection must be a string".into()),
+    }
     .map_err(|_| "camera values are outside supported bounds".into())
 }
 

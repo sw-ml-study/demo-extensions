@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use mlpl_array::{DenseArray, Shape};
 use mlpl_eval::Value;
-use mlpl_native3d_scene::Camera;
+use mlpl_native3d_scene::{Camera, Projection};
 use mlpl_native3d_window::live::parse_scene_command;
 
 fn array(shape: &[usize], values: &[f64]) -> Value {
@@ -80,5 +80,21 @@ fn rejects_malformed_mlpl_camera_and_defaults_when_absent() {
     assert_eq!(
         parse_scene_command(command(None)).unwrap().camera,
         Camera::default()
+    );
+}
+
+#[test]
+fn parses_generic_orthographic_camera_mode() {
+    let Value::Record { mut fields } = camera(&[1.0, 2.0, 3.0]) else {
+        unreachable!()
+    };
+    fields.insert("projection".into(), Value::Str("orthographic".into()));
+    fields.insert("vertical_span".into(), scalar(12.0));
+    let parsed = parse_scene_command(command(Some(Value::Record { fields }))).unwrap();
+    assert_eq!(
+        parsed.camera.projection(),
+        Projection::Orthographic {
+            vertical_span: 12.0
+        }
     );
 }

@@ -1,4 +1,4 @@
-use mlpl_native3d_scene::{BoxLimits, BoxScene, BoxSceneError, Camera, Ray3, Viewport};
+use mlpl_native3d_scene::{BoxLimits, BoxScene, BoxSceneError, Camera, Projection, Ray3, Viewport};
 
 fn scene(ids: Vec<u64>) -> BoxScene {
     BoxScene::from_parallel_arrays(
@@ -56,4 +56,24 @@ fn camera_pick_rotation_and_missing_selection_fail_cleanly() {
     );
     assert_eq!(scene.validate_selection(Some(10)), Ok(()));
     assert_eq!(scene.validate_selection(None), Ok(()));
+}
+
+#[test]
+fn orthographic_pick_rays_are_parallel_and_screen_translated() {
+    let camera = Camera::orthographic([0.0; 3], 0.0, 0.0, 5.0, 4.0, 0.1).unwrap();
+    assert_eq!(
+        camera.projection(),
+        Projection::Orthographic { vertical_span: 4.0 }
+    );
+    let viewport = Viewport::new(200, 100).unwrap();
+    let center = camera.pick_ray(viewport, [100.0, 50.0]).unwrap();
+    let right = camera.pick_ray(viewport, [150.0, 50.0]).unwrap();
+    assert!(
+        center
+            .direction()
+            .into_iter()
+            .zip(right.direction())
+            .all(|(a, b)| (a - b).abs() < f32::EPSILON)
+    );
+    assert!((right.origin()[0] - center.origin()[0] - 2.0).abs() < 0.000_01);
 }

@@ -29,6 +29,19 @@ def u:test_native3d_pick_ray_plane() {
   u:assert_eq(parallel.hit,0,"parallel ray has no hit")
 }
 
+@test {name: "native3d orthographic camera preserves physical scale", tags: ["native3d", "camera", "orthographic"]}
+def u:test_native3d_orthographic_camera() {
+  "Verify orthographic zoom and parallel screen-translated pick rays.";
+  camera=u:n3d_camera_projection(u:n3d_camera_defaults(),"orthographic",4);
+  u:assert_eq(u:n3d_camera_valid(camera),1,"orthographic camera is valid")?;
+  left=unwrap(u:n3d_pick_ray(camera,{viewport:{width:200,height:100},xy:[100,50]}));
+  right=unwrap(u:n3d_pick_ray(camera,{viewport:{width:200,height:100},xy:[150,50]}));
+  u:assert_eq(left.direction,right.direction,"orthographic rays are parallel")?;
+  u:assert_true(lt(abs(take(right.origin,0,0)-take(left.origin,0,0)-2),0.000001),"ray origin follows physical view scale")?;
+  zoomed=u:n3d_camera_reduce(camera,{kind:"wheel",dx:0,dy:100,x:0,y:0,shift:0});
+  u:assert_true(gt(zoomed.vertical_span,camera.vertical_span),"orthographic wheel changes span")
+}
+
 @test {name: "native3d generic styles lines and plane grids keep bulk shapes", tags: ["native3d", "arrays", "library"]}
 def u:test_native3d_geometry() {
   "Exercise test native3d geometry behavior in this MLPL module.";

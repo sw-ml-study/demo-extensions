@@ -53,9 +53,11 @@ transitions remain ordered. A full queue is flushed before another discrete
 event is accepted. None of these generic events has cube meaning in Rust.
 
 An optional scene-command camera record contains target `[3]`, yaw, pitch,
-distance, vertical field of view, and near plane. Missing camera state uses the
-old default, so the keyboard cube remains compatible. The MLPL camera library
-and application mouse mappings own every camera transition.
+distance, vertical field of view, near plane, and optional projection fields.
+Missing `projection` means perspective for compatibility. `projection` may be
+`"perspective"` or `"orthographic"`; orthographic mode requires a positive
+`vertical_span` in world units. The MLPL camera library and application mouse
+mappings own every camera transition, including span-based orthographic zoom.
 
 The generic live protocol also accepts `set_view` with `camera`, `revision`,
 `help`, optional `status`, and optional `rotation_y_speed`. It retains the last
