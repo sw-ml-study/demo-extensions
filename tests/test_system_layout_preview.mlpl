@@ -23,4 +23,15 @@ def u:test_system_layout_block_coordinates() {
   u:assert_eq(u:block_xyz([0,15,16,255,256]),[[0,0,0],[15,0,0],[0,0,1],[15,0,15],[0,1,0]],"16 by 16 layered block coordinates")
 }
 
+@test {name: "system layout overview makes small and large regions visible",tags: ["native3d","system-layout","arrays"]}
+def u:test_system_layout_overview_log_geometry() {
+  "Prove logarithmic overview geometry preserves alignment without empty-space domination.";
+  overview=u:overview_log_geometry([8,240,36,4,48,4,36,4193932]);
+  u:assert_eq(shape(overview.centers),[8,3],"one overview center per region")?;
+  u:assert_eq(shape(overview.sizes),[8,3],"one overview size per region")?;
+  heights=transpose(overview.sizes)[1];
+  u:assert_true(reduce(:min,heights)>=0.35,"small regions retain a visible minimum height")?;
+  u:assert_true(reduce(:max,heights)<=4.85,"largest region fits the overview")
+}
+
 u:run_registered_tests()

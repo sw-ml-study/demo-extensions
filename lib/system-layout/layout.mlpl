@@ -29,6 +29,13 @@ def u:region_ids(layout,n) {
   }
 }
 
+def u:overview_log_geometry(lengths) {
+  "Make every region visible while retaining logarithmic length comparison.";
+  n=tally(lengths);
+  heights=0.35+4.5*log(lengths+1)/reduce(:max,log(lengths+1));
+  {centers: u:columns3(range(n)-(n-1)/2,heights/2-2.5,zeros([n])),sizes: u:columns3(fill([n],0.72),heights,fill([n],0.72))}
+}
+
 def u:region_geometry(layout,palette,space_offset,block) {
   "Assemble generic overview boxes from a columnar system-layout record.";
   starts=record_get(layout,"region_start")?;

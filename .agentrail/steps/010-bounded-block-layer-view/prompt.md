@@ -1,0 +1,1 @@
+Add a generic bounded block/layer visualization for system-layout boxes inspired by voxel memory maps. Show subdivisions or representative cells without instantiating unbounded per-byte/per-block geometry; preserve stable region picking and semantic highlighting, document the approximation and controls, add headless contract tests, run just check, commit, complete, and push main.

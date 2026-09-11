@@ -579,7 +579,14 @@ impl Application {
             .as_ref()
             .map_or(command.help, BoxViewer::overlay);
         self.status = command.status;
+        self.suppress_line_scene_for_box_viewer();
         true
+    }
+
+    fn suppress_line_scene_for_box_viewer(&mut self) {
+        if self.box_viewer.is_some() {
+            self.scene = None;
+        }
     }
 
     fn set_line_scene(
@@ -709,9 +716,14 @@ impl Application {
             .box_scene
             .as_ref()
             .ok_or("box presentation has no scene")?;
+        let (centers, sizes) = viewer.geometry();
+        let centers = centers.iter().flatten().copied().collect();
+        let sizes = sizes.iter().flatten().copied().collect();
         self.box_scene = Some(
             scene
-                .recolored(viewer.colors().to_vec())
+                .relayout(centers, sizes)
+                .map_err(|error| format!("box relayout rejected: {error:?}"))?
+                .recolored(viewer.colors())
                 .map_err(|error| format!("box recolor rejected: {error:?}"))?,
         );
         self.rotation_speed = viewer.rotation_speed();
@@ -1630,6 +1642,8 @@ mod tests {
         Application, FramePass, frame_passes, load_box_scene, load_point_scene, normalize_button,
         normalize_key, normalize_wheel,
     };
+    use mlpl_native3d_scene::LineScene;
+    use mlpl_native3d_window::box_viewer::BoxViewer;
     use mlpl_native3d_window::interaction::{PointerButton, PointerButtons};
     use winit::dpi::PhysicalPosition;
     use winit::event::{MouseButton, MouseScrollDelta};
@@ -1646,6 +1660,25 @@ mod tests {
             frame_passes(false, true),
             vec![FramePass::OverlayWithoutDepth]
         );
+    }
+
+    #[test]
+    fn box_presentation_never_restores_the_stock_line_scene() {
+        let (_command_tx, command_rx) = std::sync::mpsc::channel();
+        let (event_tx, _event_rx) = std::sync::mpsc::channel();
+        let mut application = Application::new(command_rx, event_tx);
+        application.scene = LineScene::from_arrays(
+            vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+            vec![0, 1],
+            0.0,
+            [1.0; 4],
+            1.0,
+        )
+        .ok();
+        let presentation = r#"{"schema":"sw-ml-study.native3d.box-presentation","version":1,"title":"Layout","rotation_speed":0,"ids":[7],"labels":["one"],"details":["detail"],"mode_labels":["Kind"],"mode_colors":[[[1,0,0,1]]],"view_labels":["Overview"],"view_centers":[[[0,0,0]]],"view_sizes":[[[1,1,1]]],"legend_mode":[0],"legend_labels":["one"],"legend_colors":[[1,0,0,1]]}"#;
+        application.box_viewer = BoxViewer::parse(presentation, &[7]).ok();
+        application.suppress_line_scene_for_box_viewer();
+        assert!(application.scene.is_none());
     }
 
     #[test]

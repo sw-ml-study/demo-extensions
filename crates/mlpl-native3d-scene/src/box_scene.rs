@@ -198,6 +198,24 @@ impl BoxScene {
         Ok(scene)
     }
 
+    /// Replaces parallel centers and sizes while preserving colors and IDs.
+    ///
+    /// # Errors
+    ///
+    /// Rejects malformed, non-finite, nonpositive, or misaligned geometry.
+    pub fn relayout(&self, centers: Vec<f32>, sizes: Vec<f32>) -> Result<Self, BoxSceneError> {
+        Self::from_parallel_arrays(
+            centers,
+            sizes,
+            self.colors.clone(),
+            self.ids.clone(),
+            BoxLimits {
+                max_boxes: self.len().max(1),
+                max_bytes: usize::MAX,
+            },
+        )
+    }
+
     /// Validates an optional caller-owned selection against current stable IDs.
     ///
     /// # Errors

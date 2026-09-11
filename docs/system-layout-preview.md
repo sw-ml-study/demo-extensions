@@ -4,17 +4,21 @@
 the hash-pinned authoritative layout published by SWTOS. It exercises this
 repository's MLPL consumer and generic renderer against real producer data.
 
-The current SWTOS artifact contains one `flash` space. Box height represents
-byte length in eight-byte blocks; a small visual
-minimum keeps short real regions clickable without changing the validated raw
-extent arrays. Region ID 106 (`embedded-hello`) starts selected. Click any box
-to select it.
+The current SWTOS artifact contains one external W25Q32 `flash` space. Its
+4,194,304-byte capacity is storage, not the system's RAM address space. The
+default `Overview log` view uses normalized `log(byte length + 1)` bar heights
+so all eight real regions remain visible despite only 372 bytes being used.
+The `Physical` view retains proportional eight-byte-block geometry for honest
+capacity comparison. Region ID 106 (`embedded-hello`) starts selected. Click
+any box to select it.
 
 The viewer is stationary by default. Click the visible `Rotate` control or
-press `R` to toggle automatic rotation. Click the `Kind`, `Owner`, or `Space`
-controls (or press `1`, `2`, or `3`) to recolor every box. The colored legend
-at the right changes with the selected mode. Drag to orbit, Shift-drag to pan,
-use the wheel to zoom, and press Escape to close the window.
+press `R` to toggle automatic rotation. Click the `Kind` or `Owner`
+controls (or press `1` or `2`) to recolor every box. Press `H` repeatedly to
+isolate legend categories in the current mode, and `C` to restore all regions. The colored legend
+at the right changes with the selected mode. Click `Overview log` or `Physical`,
+or press `V` to cycle views. Drag to orbit, Shift-drag to pan, use the wheel to
+zoom, and press Escape to close the window.
 
 ## Run it
 
@@ -55,8 +59,20 @@ from `free`. The MLPL palette now covers the complete closed vocabulary and
 renders padding separately. MLOS and MesaOS will use the same producer-neutral
 columnar contract in later steps.
 
+This artifact is intentionally a storage-only view. External flash, system
+RAM, and EBR are distinct devices/address spaces and must render as separate
+groups when present. A process stack is a region owned within RAM or EBR, not
+a peer device. SWTOS runtime RAM/EBR/stack data and `loads-to` relationships
+belong to the separately queued runtime-snapshot step; they are not inferred
+or fabricated from this flash artifact.
+
 The native preview currently shows overview boxes, a selected-item annotation,
 and switchable color legends. Relationship edges, labels anchored directly to
 each box, and adaptive block-level detail remain follow-up presentation work;
 the fixture already carries the relationship columns and the shared MLPL
 adapter already exposes deterministic block coordinates.
+
+The queued block-layer view will use fine cubes only for occupied allocation
+blocks (dozens for the current SWTOS artifact). Padding remains a distinct
+kind. Free regions will not be expanded into cubes; each is represented by one
+logarithmically scaled summary, keeping sparse layouts legible and bounded.

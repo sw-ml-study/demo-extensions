@@ -59,6 +59,23 @@ fn recolors_boxes_without_changing_geometry_or_identity() {
 }
 
 #[test]
+fn relayouts_boxes_without_changing_color_or_identity() {
+    let scene = BoxScene::parse(FIXTURE, limits()).unwrap();
+    let relaid = scene
+        .relayout(vec![4.0, 5.0, 6.0, 7.0, 8.0, 9.0], vec![2.0; 6])
+        .unwrap();
+    assert_eq!(relaid.ids(), scene.ids());
+    assert_f32s(
+        relaid.triangle_plan().unwrap().triangles()[0].color(),
+        scene.triangle_plan().unwrap().triangles()[0].color(),
+    );
+    assert_eq!(
+        scene.relayout(vec![0.0; 3], vec![1.0; 3]),
+        Err(BoxSceneError::ParallelLength)
+    );
+}
+
+#[test]
 fn rejects_shapes_values_colors_ids_and_budgets() {
     let make = |centers, sizes, colors, ids, limits| {
         BoxScene::from_parallel_arrays(centers, sizes, colors, ids, limits)
