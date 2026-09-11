@@ -133,6 +133,7 @@ tests/test_life_model.mlpl
 tests/test_life_controls.mlpl
 tests/test_life_scene.mlpl
 tests/test_life_torus.mlpl
+tests/test_system_layout_preview.mlpl
 tests/test_model_atlas_scan.mlpl
 tests/test_model_atlas_contract.mlpl
 tests/test_model_atlas_city.mlpl

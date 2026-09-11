@@ -103,6 +103,10 @@ box-scene-smoke:
 native3d-extension-check:
     ./scripts/check-native3d-extension
 
+# Visualize the hash-pinned synthetic sw-MLPL system-layout sample.
+system-layout-preview:
+    ./scripts/run-system-layout-preview
+
 # Open the deterministic MLPL-owned native point-cloud teaching app.
 point-cloud:
     ./scripts/run-point-cloud

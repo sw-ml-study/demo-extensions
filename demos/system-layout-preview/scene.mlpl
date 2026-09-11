@@ -1,0 +1,15 @@
+# Convert the pinned sw-MLPL columnar sample into generic native3d box-scene JSON.
+include "../../lib/system-layout/layout.mlpl";
+
+layout_path=list_get(args(),0)?;
+layout=parse_json(read_text(layout_path)?)?;
+palette={header:[0.95,0.7,0.2,1],catalog:[0.3,0.65,1,1],image:[0.3,0.85,0.45,1],free:[0.18,0.2,0.25,0.35],text:[0.7,0.45,1,1],state:[1,0.4,0.4,1],stack:[0.2,0.85,0.9,1],kernel:[0.95,0.3,0.65,1]};
+space_offset={flash:[-3,0,0],ebr:[0,0,0],sysram:[3,0,0]};
+geometry=u:region_geometry(layout,palette,space_offset,8);
+centers=geometry.centers*[1,0.003,1]+[0,-3.072,0];
+sizes=geometry.sizes*[1,0.003,1];
+center_shape=shape(centers);
+size_shape=shape(sizes);
+scene={schema: "sw-ml-study.native3d.box-scene",version: 1,centers: {shape: center_shape,values: reshape(centers,[reduce(:mul,center_shape)])},sizes: {shape: size_shape,values: reshape(sizes,[reduce(:mul,size_shape)])},colors: geometry.colors,ids: geometry.ids};
+print(to_json(scene)?);
+0

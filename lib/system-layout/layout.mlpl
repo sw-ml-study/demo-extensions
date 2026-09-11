@@ -1,0 +1,46 @@
+# Pinned generic columnar system-layout to box-geometry adapter from sw-MLPL baf015ff.
+def u:columns3(a,b,c) {
+  "Stack three length-M vectors as columns of an [M,3] matrix.";
+  m=tally(a);
+  transpose(reshape(concat(concat(a,b,0),c,0),[3,m]))
+}
+
+def u:block_xyz(b) {
+  "Lay block indices out in 16x16 layers as an [M,3] matrix.";
+  u:columns3(mod(b,16),floor(b/256),mod(floor(b/16),16))
+}
+
+def u:first_blocks(starts,block) {
+  "Return each region start as a block index.";
+  floor(starts/block)
+}
+
+def u:block_counts(lengths,block) {
+  "Return the whole-block count occupied by each region.";
+  ceil(lengths/block)
+}
+
+def u:region_ids(layout,n) {
+  "Return producer stable region IDs, with a positional compatibility fallback.";
+  if has_field(layout,"region_id") {
+    record_get(layout,"region_id")?
+  } else {
+    range(n)
+  }
+}
+
+def u:region_geometry(layout,palette,space_offset,block) {
+  "Assemble generic overview boxes from a columnar system-layout record.";
+  starts=record_get(layout,"region_start")?;
+  lengths=record_get(layout,"region_length")?;
+  spaces=record_get(layout,"region_space")?;
+  kinds=record_get(layout,"region_kind")?;
+  fb=u:first_blocks(starts,block);
+  bc=u:block_counts(lengths,block);
+  n=tally(starts);
+  base=select_rows(space_offset,spaces);
+  centers=base+u:columns3(zeros([n]),fb+(bc/2),zeros([n]));
+  sizes=u:columns3(ones([n]),bc,ones([n]));
+  colors=select_rows(palette,kinds);
+  {centers: centers,sizes: sizes,colors: colors,ids: u:region_ids(layout,n)}
+}
