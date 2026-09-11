@@ -1,0 +1,8 @@
+number = 11
+slug = "fix-swtos-tour-framing"
+status = "in-progress"
+description = "Fix the SWTOS recording tour and initial framing from live user feedback. Mak..."
+role = "production"
+context_files = []
+created_at = "2026-09-11T14:06:21"
+commits = []

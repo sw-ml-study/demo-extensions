@@ -37,12 +37,12 @@ For a repeatable recording, leave the viewer running and use a second terminal:
 just system-layout-swtos-tour
 ```
 
-Focus the viewer during the three-second countdown. On macOS, the tour sends
-`1`, `2`, then `R` to rotate while it cycles `H`, `H`, `H`, Right, Right,
-Right. A final `R` stops rotation on a stable frame. Steps are one second apart,
-with two seconds after rotation starts. The terminal application must have
-Accessibility permission to control the focused window. The tour never closes
-or mutates the source artifact.
+Focus the viewer during the one-second countdown. On macOS, the first key is
+`R`, so rotation is visible throughout `1`, `2`, `H`, `H`, `H`, Right, Right,
+Right. A final `R` stops rotation on a stable frame. The complete countdown and
+tour take about eight seconds, fitting inside a ten-second recording. The
+terminal application must have Accessibility permission to control the focused
+window. The tour never closes or mutates the source artifact.
 The generic alias is `just system-layout-tour`; matching
 `system-layout-mlos-tour` and `system-layout-mesaos-tour` recipes are already
 reserved for the next two producer integrations.
