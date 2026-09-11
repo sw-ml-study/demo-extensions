@@ -1,8 +1,0 @@
-number = 14
-slug = "mesaos-fixture-integration"
-status = "pending"
-description = "After the ../../softwarewrighter/MesaOS agent publishes an authoritative Mesa..."
-role = "production"
-context_files = []
-created_at = "2026-09-11T10:53:34"
-commits = []
