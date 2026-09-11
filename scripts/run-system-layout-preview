@@ -15,7 +15,9 @@ preview_dir=$(mktemp -d "${TMPDIR:-/tmp}/mlpl-layout-preview.XXXXXX")
 trap 'rm -rf "$preview_dir"' EXIT HUP INT TERM
 raw=$preview_dir/output.txt
 scene=$preview_dir/box-scene.json
+presentation=$preview_dir/box-presentation.json
 "$mlpl" --source-dir "$repo_root" -f "$repo_root/demos/system-layout-preview/scene.mlpl" -- "$layout" >"$raw"
 sed -n '1p' "$raw" >"$scene"
+sed -n '2p' "$raw" >"$presentation"
 cargo run --release --manifest-path "$repo_root/Cargo.toml" -p mlpl-native3d-window -- \
-  --box-scene "$scene" --selected-box 8
+  --box-scene "$scene" --box-presentation "$presentation" --selected-box 8

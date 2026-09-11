@@ -1,4 +1,4 @@
-number = 10
+number = 11
 slug = "mesaos-fixture-integration"
 status = "pending"
 description = "After the ../../softwarewrighter/MesaOS agent publishes an authoritative Mesa..."

@@ -1,0 +1,9 @@
+number = 8
+slug = "box-viewer-controls"
+status = "in-progress"
+description = "Make the generic native box-scene viewer usable before authoritative OS fixtu..."
+role = "production"
+context_files = []
+created_at = "2026-09-11T11:44:59"
+task_type = "native3d-box-usability"
+commits = []

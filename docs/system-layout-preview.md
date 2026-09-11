@@ -6,9 +6,15 @@ and renderer evolve while the authoritative SWTOS, MLOS, and MesaOS producer
 artifacts are still pending.
 
 The three vertical groups are the fixture's `flash`, `ebr`, and `sysram`
-spaces. Color identifies `region_kind`; box height represents byte length in
-eight-byte blocks. Region ID 8 starts selected. Drag to orbit, use the wheel
-to zoom, and press Escape to close the window.
+spaces. Box height represents byte length in eight-byte blocks. Region ID 8
+starts selected, and its name and owner appear in the annotation. Click any
+box to select it.
+
+The viewer is stationary by default. Click the visible `Rotate` control or
+press `R` to toggle automatic rotation. Click the `Kind`, `Owner`, or `Space`
+controls (or press `1`, `2`, or `3`) to recolor every box. The colored legend
+at the right changes with the selected mode. Drag to orbit, Shift-drag to pan,
+use the wheel to zoom, and press Escape to close the window.
 
 ## Run it
 
@@ -23,9 +29,11 @@ adjacent development MLPL binary (or the absolute `MLPL` override), evaluates
 [`scene.mlpl`](../demos/system-layout-preview/scene.mlpl), writes its generic
 box-scene JSON to a temporary directory, and launches the native3d window.
 
-MLPL owns JSON parsing, kind-to-color classification, space placement,
-block geometry, stable IDs, and scene construction. Rust owns only generic
-bulk box validation, rendering, camera input, and selection highlighting.
+MLPL owns JSON parsing, kind/owner/space palettes, legend content, region
+annotations, space placement, block geometry, stable IDs, and scene
+construction. Rust owns bounded presentation validation, generic text/control
+rendering and hit testing, bulk box rendering, camera input, and selection
+highlighting. The native code has no knowledge of OS region kinds or owners.
 
 ## Provenance and limits
 
@@ -43,7 +51,8 @@ an emitted OS artifact. The active AgentRail step remains open until a
 committed producer artifact is available. MLOS and MesaOS will use the same
 producer-neutral columnar contract in later steps.
 
-The native preview currently shows overview boxes. Relationship edges,
-labels, and adaptive block-level detail remain follow-up presentation work;
+The native preview currently shows overview boxes, a selected-item annotation,
+and switchable color legends. Relationship edges, labels anchored directly to
+each box, and adaptive block-level detail remain follow-up presentation work;
 the fixture already carries the relationship columns and the shared MLPL
 adapter already exposes deterministic block coordinates.

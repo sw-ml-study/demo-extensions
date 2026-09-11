@@ -42,6 +42,23 @@ fn plans_owned_parallel_boxes_as_twelve_triangles_each() {
 }
 
 #[test]
+fn recolors_boxes_without_changing_geometry_or_identity() {
+    let scene = BoxScene::parse(FIXTURE, limits()).unwrap();
+    let recolored = scene
+        .recolored(vec![[0.1, 0.2, 0.3, 1.0], [0.8, 0.7, 0.6, 1.0]])
+        .unwrap();
+    assert_eq!(recolored.ids(), scene.ids());
+    assert_f32s(
+        recolored.triangle_plan().unwrap().triangles()[0].color(),
+        [0.1, 0.2, 0.3, 1.0],
+    );
+    assert_eq!(
+        scene.recolored(vec![[1.0; 4]]),
+        Err(BoxSceneError::ParallelLength)
+    );
+}
+
+#[test]
 fn rejects_shapes_values_colors_ids_and_budgets() {
     let make = |centers, sizes, colors, ids, limits| {
         BoxScene::from_parallel_arrays(centers, sizes, colors, ids, limits)

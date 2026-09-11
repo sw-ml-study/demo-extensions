@@ -183,6 +183,21 @@ impl BoxScene {
         &self.ids
     }
 
+    /// Replaces only the parallel colors while preserving validated geometry and IDs.
+    ///
+    /// # Errors
+    ///
+    /// Rejects a length mismatch or any non-finite/out-of-range RGBA component.
+    pub fn recolored(&self, colors: Vec<[f32; 4]>) -> Result<Self, BoxSceneError> {
+        let mut scene = self.clone();
+        scene.colors = colors;
+        scene.validate(BoxLimits {
+            max_boxes: self.len().max(1),
+            max_bytes: usize::MAX,
+        })?;
+        Ok(scene)
+    }
+
     /// Validates an optional caller-owned selection against current stable IDs.
     ///
     /// # Errors

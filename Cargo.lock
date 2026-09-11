@@ -2327,6 +2327,8 @@ dependencies = [
  "mlpl-eval",
  "mlpl-native3d-scene",
  "pollster",
+ "serde",
+ "serde_json",
  "symphonia",
  "wgpu",
  "winit",

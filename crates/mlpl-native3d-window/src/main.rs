@@ -10,6 +10,7 @@ use mlpl_eval::{Value, run_applet_with_host};
 use mlpl_native3d_scene::{
     BoxLimits, BoxScene, Camera, LineScene, PointLimits, PointScene, Viewport,
 };
+use mlpl_native3d_window::box_viewer::BoxViewer;
 use mlpl_native3d_window::interaction::{
     BoundedInput, FrameGate, InputError, InputEvent, Modifiers, PointerButton, PointerButtons,
 };
@@ -154,7 +155,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .and_then(|index| arguments.get(index + 1))
         .map(|path| load_point_scene(std::path::Path::new(path)))
         .transpose()?;
-    let (box_scene, selected_box_id) = load_box_options(&arguments)?;
+    let (box_scene, selected_box_id, box_viewer) = load_box_options(&arguments)?;
     let source = if point_cloud {
         point_cloud_applet_source()
     } else if tic_tac_toe {
@@ -185,7 +186,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     } else {
         applet_source()
     };
-    println!("MLPL Native 3D — application behavior is evaluated by MLPL");
     let mut host_error = None;
     let rooted = disk_usage
         .or(model_atlas_file)
@@ -196,6 +196,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         application.point_scene = point_scene;
         application.box_scene = box_scene;
         application.selected_box_id = selected_box_id;
+        application.box_viewer = box_viewer;
+        application.refresh_box_presentation()?;
         event_loop.run_app(&mut application)?;
         return Ok(());
     }
@@ -205,6 +207,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             application.point_scene = point_scene;
             application.box_scene = box_scene;
             application.selected_box_id = selected_box_id;
+            application.box_viewer = box_viewer;
+            if let Err(error) = application.refresh_box_presentation() {
+                host_error = Some(error);
+                return;
+            }
             if let Err(error) = event_loop.run_app(&mut application) {
                 host_error = Some(error.to_string());
             }
@@ -247,9 +254,9 @@ fn load_box_scene(path: &std::path::Path) -> Result<BoxScene, Box<dyn Error>> {
         .map_err(|error| format!("box scene rejected: {error:?}").into())
 }
 
-fn load_box_options(
-    arguments: &[String],
-) -> Result<(Option<BoxScene>, Option<u64>), Box<dyn Error>> {
+type BoxOptions = (Option<BoxScene>, Option<u64>, Option<BoxViewer>);
+
+fn load_box_options(arguments: &[String]) -> Result<BoxOptions, Box<dyn Error>> {
     let scene = arguments
         .iter()
         .position(|argument| argument == "--box-scene")
@@ -262,6 +269,10 @@ fn load_box_options(
         .and_then(|index| arguments.get(index + 1))
         .map(|value| value.parse::<u64>())
         .transpose()?;
+    let presentation_path = arguments
+        .iter()
+        .position(|argument| argument == "--box-presentation")
+        .and_then(|index| arguments.get(index + 1));
     match (&scene, selected) {
         (Some(scene), selected) => scene
             .validate_selection(selected)
@@ -269,7 +280,21 @@ fn load_box_options(
         (None, Some(_)) => return Err("--selected-box requires --box-scene".into()),
         (None, None) => {}
     }
-    Ok((scene, selected))
+    let mut presentation = match (&scene, presentation_path) {
+        (Some(scene), Some(path)) => {
+            let source = std::fs::read_to_string(path)?;
+            Some(
+                BoxViewer::parse(&source, scene.ids())
+                    .map_err(|error| format!("box presentation rejected: {error}"))?,
+            )
+        }
+        (None, Some(_)) => return Err("--box-presentation requires --box-scene".into()),
+        (_, None) => None,
+    };
+    if let Some(viewer) = presentation.as_mut() {
+        viewer.select(selected);
+    }
+    Ok((scene, selected, presentation))
 }
 
 struct Application {
@@ -277,6 +302,8 @@ struct Application {
     point_scene: Option<PointScene>,
     box_scene: Option<BoxScene>,
     selected_box_id: Option<u64>,
+    box_viewer: Option<BoxViewer>,
+    box_legend: Vec<(String, [f32; 4])>,
     retained_scene: Option<mlpl_native3d_window::live::RetainedScene>,
     retained_point_scene: Option<mlpl_native3d_window::live::RetainedPointScene>,
     graphics: Option<Graphics>,
@@ -324,6 +351,8 @@ impl Application {
             point_scene: None,
             box_scene: None,
             selected_box_id: None,
+            box_viewer: None,
+            box_legend: Vec::new(),
             retained_scene: None,
             retained_point_scene: None,
             graphics: None,
@@ -446,6 +475,9 @@ impl Application {
                     }
                 }
                 Ok(mlpl_native3d_window::live::LiveCommand::Patch(command)) => {
+                    if self.box_viewer.is_some() {
+                        continue;
+                    }
                     let Some(retained) = self.retained_scene.as_mut() else {
                         eprintln!("MLPL scene patch arrived before a complete scene");
                         event_loop.exit();
@@ -467,29 +499,9 @@ impl Application {
                     self.patch_point_scene(&command, event_loop);
                 }
                 Ok(mlpl_native3d_window::live::LiveCommand::View(command)) => {
-                    if let Some(retained) = self.retained_scene.as_mut() {
-                        if let Err(error) =
-                            retained.apply_view(command.revision, command.rotation_speed)
-                        {
-                            eprintln!("MLPL retained view rejected: {error}");
-                            event_loop.exit();
-                            return;
-                        }
-                        self.scene = Some(retained.scene().clone());
-                    }
-                    if let Some(retained) = self.retained_point_scene.as_mut()
-                        && let Err(error) = retained.apply_view(command.revision)
-                    {
-                        eprintln!("MLPL retained point view rejected: {error}");
-                        event_loop.exit();
+                    if !self.apply_view_command(command, event_loop) {
                         return;
                     }
-                    if let Some(rotation_speed) = command.rotation_speed {
-                        self.rotation_speed = rotation_speed;
-                    }
-                    self.camera = command.camera;
-                    self.help = command.help;
-                    self.status = command.status;
                 }
                 Ok(mlpl_native3d_window::live::LiveCommand::FrameAck(_revision)) => {
                     self.frame_gate.acknowledge();
@@ -536,6 +548,40 @@ impl Application {
         }
     }
 
+    fn apply_view_command(
+        &mut self,
+        command: mlpl_native3d_window::live::ViewCommand,
+        event_loop: &ActiveEventLoop,
+    ) -> bool {
+        if let Some(retained) = self.retained_scene.as_mut() {
+            if let Err(error) = retained.apply_view(command.revision, command.rotation_speed) {
+                eprintln!("MLPL retained view rejected: {error}");
+                event_loop.exit();
+                return false;
+            }
+            self.scene = Some(retained.scene().clone());
+        }
+        if let Some(retained) = self.retained_point_scene.as_mut()
+            && let Err(error) = retained.apply_view(command.revision)
+        {
+            eprintln!("MLPL retained point view rejected: {error}");
+            event_loop.exit();
+            return false;
+        }
+        if self.box_viewer.is_none()
+            && let Some(rotation_speed) = command.rotation_speed
+        {
+            self.rotation_speed = rotation_speed;
+        }
+        self.camera = command.camera;
+        self.help = self
+            .box_viewer
+            .as_ref()
+            .map_or(command.help, BoxViewer::overlay);
+        self.status = command.status;
+        true
+    }
+
     fn set_line_scene(
         &mut self,
         command: mlpl_native3d_window::live::SceneCommand,
@@ -557,6 +603,13 @@ impl Application {
         self.rotation_speed = command.rotation_speed;
         self.help = command.help;
         self.status = command.status;
+        if self.box_viewer.is_some() {
+            self.scene = None;
+            if let Err(error) = self.refresh_box_presentation() {
+                self.status = error;
+                return false;
+            }
+        }
         true
     }
 
@@ -641,7 +694,53 @@ impl Application {
             return;
         };
         self.selected_box_id = selected_box_id(&event);
+        if let Some(viewer) = self.box_viewer.as_mut() {
+            viewer.select(self.selected_box_id);
+            self.help = viewer.overlay();
+        }
         self.send(event, event_loop);
+    }
+
+    fn refresh_box_presentation(&mut self) -> Result<(), String> {
+        let Some(viewer) = self.box_viewer.as_ref() else {
+            return Ok(());
+        };
+        let scene = self
+            .box_scene
+            .as_ref()
+            .ok_or("box presentation has no scene")?;
+        self.box_scene = Some(
+            scene
+                .recolored(viewer.colors().to_vec())
+                .map_err(|error| format!("box recolor rejected: {error:?}"))?,
+        );
+        self.rotation_speed = viewer.rotation_speed();
+        self.help = viewer.overlay();
+        self.box_legend = viewer.legend();
+        self.scene = None;
+        Ok(())
+    }
+
+    fn box_viewer_key(&mut self, key: &str) -> bool {
+        let handled = self
+            .box_viewer
+            .as_mut()
+            .is_some_and(|viewer| viewer.key(key));
+        if handled && let Err(error) = self.refresh_box_presentation() {
+            self.status = error;
+        }
+        handled
+    }
+
+    fn box_viewer_click(&mut self) -> bool {
+        let handled = self
+            .box_viewer
+            .as_mut()
+            .is_some_and(|viewer| viewer.click(self.pointer_position));
+        if handled && let Err(error) = self.refresh_box_presentation() {
+            self.status = error;
+        }
+        handled
     }
 
     fn note_point_motion(&mut self) {
@@ -824,6 +923,7 @@ impl Application {
             angle: self.angle,
             help: &self.help,
             status: &self.status,
+            legend: &self.box_legend,
         }) {
             match error {
                 wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated => graphics.reconfigure(),
@@ -898,7 +998,9 @@ impl ApplicationHandler for Application {
                         }
                         return;
                     }
-                    self.send(key_event(key), event_loop);
+                    if !self.box_viewer_key(key) {
+                        self.send(key_event(key), event_loop);
+                    }
                     if key == "escape" {
                         self.send(close_event(), event_loop);
                         event_loop.exit();
@@ -938,7 +1040,9 @@ impl ApplicationHandler for Application {
                         event_loop,
                     );
                     if point_activation {
-                        if self.box_scene.is_some() {
+                        if self.box_viewer_click() {
+                            // The visible presentation control consumed this click.
+                        } else if self.box_scene.is_some() {
                             self.send_box_selection(event_loop);
                         } else {
                             self.send_point_selection(event_loop);
@@ -1072,6 +1176,7 @@ struct RenderContent<'a> {
     angle: f32,
     help: &'a str,
     status: &'a str,
+    legend: &'a [(String, [f32; 4])],
 }
 
 struct FrameVertices {
@@ -1132,6 +1237,23 @@ fn frame_vertices(content: &RenderContent<'_>, viewport: Viewport) -> FrameVerti
         [14.0, 14.0 + help_line_count * 18.0],
         [1.0, 0.9, 0.15, 1.0],
     ));
+    let legend_x =
+        f32::from(u16::try_from(viewport.dimensions()[0].saturating_sub(190)).unwrap_or(u16::MAX));
+    lines.extend(text_vertices_colored(
+        "LEGEND",
+        viewport,
+        [legend_x, 14.0],
+        [0.9, 0.9, 0.9, 1.0],
+    ));
+    for (index, (label, color)) in content.legend.iter().enumerate() {
+        let row = f32::from(u16::try_from(index).unwrap_or(u16::MAX));
+        lines.extend(text_vertices_colored(
+            label,
+            viewport,
+            [legend_x, 34.0 + row * 18.0],
+            *color,
+        ));
+    }
     FrameVertices {
         lines,
         points,

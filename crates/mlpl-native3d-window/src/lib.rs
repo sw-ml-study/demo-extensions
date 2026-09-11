@@ -4,6 +4,7 @@ use bytemuck::{Pod, Zeroable};
 use mlpl_native3d_scene::{PlannedLine, PlannedScreenPoint, PlannedScreenTriangle, Viewport};
 
 pub mod audio;
+pub mod box_viewer;
 pub mod disk_usage;
 pub mod interaction;
 pub mod live;
