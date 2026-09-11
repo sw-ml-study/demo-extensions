@@ -7,7 +7,9 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::time::Instant;
 
 use mlpl_eval::{Value, run_applet_with_host};
-use mlpl_native3d_scene::{Camera, LineScene, PointLimits, PointScene, Viewport};
+use mlpl_native3d_scene::{
+    BoxLimits, BoxScene, Camera, LineScene, PointLimits, PointScene, Viewport,
+};
 use mlpl_native3d_window::interaction::{
     BoundedInput, FrameGate, InputError, InputEvent, Modifiers, PointerButton, PointerButtons,
 };
@@ -16,7 +18,8 @@ use mlpl_native3d_window::live::{
     model_atlas_applet_source, point_cloud_applet_source, resize_event, tic_tac_toe_applet_source,
 };
 use mlpl_native3d_window::{
-    GpuPointVertex, GpuVertex, line_vertices, point_vertices, text_vertices, text_vertices_colored,
+    GpuBoxVertex, GpuPointVertex, GpuVertex, box_vertices, line_vertices, point_vertices,
+    text_vertices, text_vertices_colored,
 };
 use wgpu::util::DeviceExt;
 use winit::{
@@ -85,6 +88,38 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 ";
 
+const BOX_SHADER: &str = r"
+struct VertexInput {
+    @location(0) position: vec3<f32>,
+    @location(1) color: vec4<f32>,
+    @location(2) barycentric: vec3<f32>,
+    @location(3) stable_id: vec2<u32>,
+    @location(4) selected: u32,
+};
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) color: vec4<f32>,
+    @location(1) barycentric: vec3<f32>,
+    @location(2) @interpolate(flat) selected: u32,
+};
+@vertex
+fn vs_main(input: VertexInput) -> VertexOutput {
+    var output: VertexOutput;
+    output.position = vec4<f32>(input.position, 1.0);
+    output.color = input.color;
+    output.barycentric = input.barycentric;
+    output.selected = input.selected;
+    return output;
+}
+@fragment
+fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
+    if input.selected == 1u && min(input.barycentric.x, min(input.barycentric.y, input.barycentric.z)) < 0.035 {
+        return vec4<f32>(1.0, 0.9, 0.15, 1.0);
+    }
+    return input.color;
+}
+";
+
 fn main() -> Result<(), Box<dyn Error>> {
     let event_loop = EventLoop::new()?;
     let arguments: Vec<_> = std::env::args().collect();
@@ -119,6 +154,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .and_then(|index| arguments.get(index + 1))
         .map(|path| load_point_scene(std::path::Path::new(path)))
         .transpose()?;
+    let (box_scene, selected_box_id) = load_box_options(&arguments)?;
     let source = if point_cloud {
         point_cloud_applet_source()
     } else if tic_tac_toe {
@@ -158,6 +194,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     if let Some(root) = rooted {
         let mut application = Application::new_supervised(source, root)?;
         application.point_scene = point_scene;
+        application.box_scene = box_scene;
+        application.selected_box_id = selected_box_id;
         event_loop.run_app(&mut application)?;
         return Ok(());
     }
@@ -165,6 +203,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         run_applet_with_host(&source, |commands, events| {
             let mut application = Application::new(commands, events);
             application.point_scene = point_scene;
+            application.box_scene = box_scene;
+            application.selected_box_id = selected_box_id;
             if let Err(error) = event_loop.run_app(&mut application) {
                 host_error = Some(error.to_string());
             }
@@ -192,9 +232,44 @@ fn load_point_scene(path: &std::path::Path) -> Result<PointScene, Box<dyn Error>
         .map_err(|error| format!("point scene rejected: {error:?}").into())
 }
 
+fn load_box_scene(path: &std::path::Path) -> Result<BoxScene, Box<dyn Error>> {
+    const MAX_FILE_BYTES: u64 = 8 * 1024 * 1024;
+    let mut source = String::new();
+    std::fs::File::open(path)?
+        .take(MAX_FILE_BYTES + 1)
+        .read_to_string(&mut source)?;
+    if u64::try_from(source.len()).unwrap_or(u64::MAX) > MAX_FILE_BYTES {
+        return Err("box scene file exceeds 8 MiB".into());
+    }
+    let limits = BoxLimits::new(100_000, 4_800_000)
+        .map_err(|error| format!("box limits rejected: {error:?}"))?;
+    BoxScene::parse(&source, limits)
+        .map_err(|error| format!("box scene rejected: {error:?}").into())
+}
+
+fn load_box_options(
+    arguments: &[String],
+) -> Result<(Option<BoxScene>, Option<u64>), Box<dyn Error>> {
+    let scene = arguments
+        .iter()
+        .position(|argument| argument == "--box-scene")
+        .and_then(|index| arguments.get(index + 1))
+        .map(|path| load_box_scene(std::path::Path::new(path)))
+        .transpose()?;
+    let selected = arguments
+        .iter()
+        .position(|argument| argument == "--selected-box")
+        .and_then(|index| arguments.get(index + 1))
+        .map(|value| value.parse::<u64>())
+        .transpose()?;
+    Ok((scene, selected))
+}
+
 struct Application {
     scene: Option<LineScene>,
     point_scene: Option<PointScene>,
+    box_scene: Option<BoxScene>,
+    selected_box_id: Option<u64>,
     retained_scene: Option<mlpl_native3d_window::live::RetainedScene>,
     retained_point_scene: Option<mlpl_native3d_window::live::RetainedPointScene>,
     graphics: Option<Graphics>,
@@ -240,6 +315,8 @@ impl Application {
         Self {
             scene: None,
             point_scene: None,
+            box_scene: None,
+            selected_box_id: None,
             retained_scene: None,
             retained_point_scene: None,
             graphics: None,
@@ -290,6 +367,7 @@ impl Application {
         self.rotation_speed = 0.0;
         self.retained_scene = None;
         self.retained_point_scene = None;
+        self.box_scene = None;
         self.scene = LineScene::from_arrays(
             vec![
                 -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, -2.0, 2.0, 0.0, 2.0, -2.0, 0.0,
@@ -705,18 +783,20 @@ impl Application {
         let Some(graphics) = self.graphics.as_mut() else {
             return;
         };
-        if self.scene.is_none() && self.point_scene.is_none() {
+        if self.scene.is_none() && self.point_scene.is_none() && self.box_scene.is_none() {
             graphics.window.request_redraw();
             return;
         }
-        if let Err(error) = graphics.render(
-            self.scene.as_ref(),
-            self.point_scene.as_ref(),
-            self.camera,
-            self.angle,
-            &self.help,
-            &self.status,
-        ) {
+        if let Err(error) = graphics.render(&RenderContent {
+            lines: self.scene.as_ref(),
+            points: self.point_scene.as_ref(),
+            boxes: self.box_scene.as_ref(),
+            selected_box_id: self.selected_box_id,
+            camera: self.camera,
+            angle: self.angle,
+            help: &self.help,
+            status: &self.status,
+        }) {
             match error {
                 wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated => graphics.reconfigure(),
                 wgpu::SurfaceError::OutOfMemory => event_loop.exit(),
@@ -937,6 +1017,67 @@ struct Graphics {
     configuration: wgpu::SurfaceConfiguration,
     pipeline: wgpu::RenderPipeline,
     point_pipeline: wgpu::RenderPipeline,
+    box_pipeline: wgpu::RenderPipeline,
+    depth_view: wgpu::TextureView,
+}
+
+struct RenderContent<'a> {
+    lines: Option<&'a LineScene>,
+    points: Option<&'a PointScene>,
+    boxes: Option<&'a BoxScene>,
+    selected_box_id: Option<u64>,
+    camera: Camera,
+    angle: f32,
+    help: &'a str,
+    status: &'a str,
+}
+
+struct FrameVertices {
+    lines: Vec<GpuVertex>,
+    points: Vec<GpuPointVertex>,
+    boxes: Vec<GpuBoxVertex>,
+}
+
+fn frame_vertices(content: &RenderContent<'_>, viewport: Viewport) -> FrameVertices {
+    let mut lines = content
+        .lines
+        .and_then(|scene| {
+            scene
+                .plan_lines(content.camera, viewport, content.angle)
+                .ok()
+        })
+        .map_or_else(Vec::new, |plan| line_vertices(&plan, viewport));
+    let points = content
+        .points
+        .and_then(|scene| {
+            scene
+                .plan_points(content.camera, viewport, content.angle)
+                .ok()
+        })
+        .map_or_else(Vec::new, |plan| point_vertices(plan.points(), viewport));
+    let boxes = content
+        .boxes
+        .and_then(|scene| {
+            scene
+                .plan_box_triangles(content.camera, viewport, content.angle)
+                .ok()
+        })
+        .map_or_else(Vec::new, |plan| {
+            box_vertices(plan.triangles(), viewport, content.selected_box_id)
+        });
+    lines.extend(text_vertices(content.help, viewport));
+    let help_line_count = content.help.lines().fold(0.0_f32, |count, _| count + 1.0);
+    lines.extend(text_vertices_colored(
+        content.status,
+        viewport,
+        [14.0, 14.0 + help_line_count * 18.0],
+        [1.0, 0.9, 0.15, 1.0],
+    ));
+    FrameVertices {
+        lines,
+        points,
+        boxes,
+    }
 }
 
 impl Graphics {
@@ -1001,6 +1142,8 @@ impl Graphics {
             cache: None,
         });
         let point_pipeline = create_point_pipeline(&device, configuration.format);
+        let box_pipeline = create_box_pipeline(&device, configuration.format);
+        let depth_view = create_depth_view(&device, &configuration);
         Ok(Self {
             window,
             surface,
@@ -1009,6 +1152,8 @@ impl Graphics {
             configuration,
             pipeline,
             point_pipeline,
+            box_pipeline,
+            depth_view,
         })
     }
 
@@ -1021,42 +1166,25 @@ impl Graphics {
         self.reconfigure();
     }
 
-    fn reconfigure(&self) {
+    fn reconfigure(&mut self) {
         self.surface.configure(&self.device, &self.configuration);
+        self.depth_view = create_depth_view(&self.device, &self.configuration);
     }
 
     fn viewport(&self) -> Option<Viewport> {
         Viewport::new(self.configuration.width, self.configuration.height).ok()
     }
 
-    fn render(
-        &mut self,
-        scene: Option<&LineScene>,
-        point_scene: Option<&PointScene>,
-        camera: Camera,
-        angle: f32,
-        help: &str,
-        status: &str,
-    ) -> Result<(), wgpu::SurfaceError> {
+    fn render(&mut self, content: &RenderContent<'_>) -> Result<(), wgpu::SurfaceError> {
         let Ok(viewport) = Viewport::new(self.configuration.width, self.configuration.height)
         else {
             return Ok(());
         };
-        let mut vertices = scene
-            .and_then(|scene| scene.plan_lines(camera, viewport, angle).ok())
-            .map_or_else(Vec::new, |lines| line_vertices(&lines, viewport));
-        let point_vertices = point_scene
-            .and_then(|scene| scene.plan_points(camera, viewport, angle).ok())
-            .map_or_else(Vec::new, |plan| point_vertices(plan.points(), viewport));
-        vertices.extend(text_vertices(help, viewport));
-        let help_line_count = help.lines().fold(0.0_f32, |count, _| count + 1.0);
-        let status_y = 14.0 + help_line_count * 18.0;
-        vertices.extend(text_vertices_colored(
-            status,
-            viewport,
-            [14.0, status_y],
-            [1.0, 0.9, 0.15, 1.0],
-        ));
+        let FrameVertices {
+            lines: vertices,
+            points: point_vertices,
+            boxes: box_vertices,
+        } = frame_vertices(content, viewport);
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -1069,6 +1197,14 @@ impl Graphics {
                 .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                     label: Some("mlpl native3d point vertices"),
                     contents: bytemuck::cast_slice(&point_vertices),
+                    usage: wgpu::BufferUsages::VERTEX,
+                })
+        });
+        let box_buffer = (!box_vertices.is_empty()).then(|| {
+            self.device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("mlpl native3d box vertices"),
+                    contents: bytemuck::cast_slice(&box_vertices),
                     usage: wgpu::BufferUsages::VERTEX,
                 })
         });
@@ -1097,10 +1233,25 @@ impl Graphics {
                         store: wgpu::StoreOp::Store,
                     },
                 })],
-                depth_stencil_attachment: None,
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: wgpu::StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }),
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
+            if let Some(box_buffer) = box_buffer.as_ref() {
+                pass.set_pipeline(&self.box_pipeline);
+                pass.set_vertex_buffer(0, box_buffer.slice(..));
+                pass.draw(
+                    0..u32::try_from(box_vertices.len()).unwrap_or(u32::MAX),
+                    0..1,
+                );
+            }
             if let Some(point_buffer) = point_buffer.as_ref() {
                 pass.set_pipeline(&self.point_pipeline);
                 pass.set_vertex_buffer(0, point_buffer.slice(..));
@@ -1117,6 +1268,79 @@ impl Graphics {
         frame.present();
         Ok(())
     }
+}
+
+fn create_depth_view(
+    device: &wgpu::Device,
+    configuration: &wgpu::SurfaceConfiguration,
+) -> wgpu::TextureView {
+    device
+        .create_texture(&wgpu::TextureDescriptor {
+            label: Some("mlpl native3d box depth"),
+            size: wgpu::Extent3d {
+                width: configuration.width,
+                height: configuration.height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Depth32Float,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[],
+        })
+        .create_view(&wgpu::TextureViewDescriptor::default())
+}
+
+fn create_box_pipeline(device: &wgpu::Device, format: wgpu::TextureFormat) -> wgpu::RenderPipeline {
+    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: Some("mlpl native3d box shader"),
+        source: wgpu::ShaderSource::Wgsl(BOX_SHADER.into()),
+    });
+    device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        label: Some("mlpl native3d box pipeline"),
+        layout: None,
+        vertex: wgpu::VertexState {
+            module: &shader,
+            entry_point: Some("vs_main"),
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
+            buffers: &[wgpu::VertexBufferLayout {
+                array_stride: std::mem::size_of::<GpuBoxVertex>() as wgpu::BufferAddress,
+                step_mode: wgpu::VertexStepMode::Vertex,
+                attributes: &wgpu::vertex_attr_array![
+                    0 => Float32x3,
+                    1 => Float32x4,
+                    2 => Float32x3,
+                    3 => Uint32x2,
+                    4 => Uint32
+                ],
+            }],
+        },
+        primitive: wgpu::PrimitiveState {
+            cull_mode: Some(wgpu::Face::Back),
+            ..wgpu::PrimitiveState::default()
+        },
+        depth_stencil: Some(wgpu::DepthStencilState {
+            format: wgpu::TextureFormat::Depth32Float,
+            depth_write_enabled: true,
+            depth_compare: wgpu::CompareFunction::Less,
+            stencil: wgpu::StencilState::default(),
+            bias: wgpu::DepthBiasState::default(),
+        }),
+        multisample: wgpu::MultisampleState::default(),
+        fragment: Some(wgpu::FragmentState {
+            module: &shader,
+            entry_point: Some("fs_main"),
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
+            targets: &[Some(wgpu::ColorTargetState {
+                format,
+                blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
+        }),
+        multiview: None,
+        cache: None,
+    })
 }
 
 fn create_point_pipeline(
@@ -1165,7 +1389,10 @@ fn create_point_pipeline(
 
 #[cfg(test)]
 mod tests {
-    use super::{Application, load_point_scene, normalize_button, normalize_key, normalize_wheel};
+    use super::{
+        Application, load_box_scene, load_point_scene, normalize_button, normalize_key,
+        normalize_wheel,
+    };
     use mlpl_native3d_window::interaction::{PointerButton, PointerButtons};
     use winit::dpi::PhysicalPosition;
     use winit::event::{MouseButton, MouseScrollDelta};
@@ -1178,6 +1405,14 @@ mod tests {
         let scene = load_point_scene(&path).unwrap();
         assert_eq!(scene.len(), 7);
         assert_eq!(scene.ids(), [101, 102, 103, 104, 105, 106, 107]);
+    }
+
+    #[test]
+    fn bundled_box_scene_loads_through_the_bounded_smoke_path() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/native3d-box-scene.json");
+        let scene = load_box_scene(&path).unwrap();
+        assert_eq!(scene.ids(), &[17, 23]);
     }
 
     #[test]

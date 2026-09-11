@@ -119,6 +119,7 @@ The graphics commands all build and run the release binary
 | `just audio-spectrum` | `--audio-spectrum ROOT` | `demos/audio-spectrum/*` | confined audio discovery/decode/output |
 | `just weight-distribution` | `--weight-distribution ROOT` | `demos/weight-distribution/*` plus bounded format modules | confined model root |
 | `just point-cloud-smoke` | `--point-scene FILE` | default cube applet plus a JSON point fixture | explicit bounded fixture read |
+| `just box-scene-smoke` | `--box-scene FILE --selected-box ID` | default cube applet plus a JSON box fixture | bounded fixture read/GPU depth |
 
 The corresponding `scripts/run-*` file changes to the repository root and
 runs `cargo run --release -p mlpl-native3d-window` with the selector above.

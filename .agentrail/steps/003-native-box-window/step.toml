@@ -1,6 +1,6 @@
 number = 3
 slug = "native-box-window"
-status = "pending"
+status = "in-progress"
 description = "Integrate generic filled boxes into the native winit/wgpu window path with re..."
 role = "production"
 context_files = []

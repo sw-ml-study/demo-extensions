@@ -1,7 +1,7 @@
 //! Native-window rendering primitives over renderer-neutral planned lines.
 
 use bytemuck::{Pod, Zeroable};
-use mlpl_native3d_scene::{PlannedLine, PlannedScreenPoint, Viewport};
+use mlpl_native3d_scene::{PlannedLine, PlannedScreenPoint, PlannedScreenTriangle, Viewport};
 
 pub mod audio;
 pub mod disk_usage;
@@ -31,6 +31,61 @@ pub struct GpuPointVertex {
     pub local: [f32; 2],
     /// Low/high halves of the stable point ID retained for later picking.
     pub stable_id: [u32; 2],
+}
+
+/// One depth-tested filled-triangle vertex with retained generic identity.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub struct GpuBoxVertex {
+    /// XYZ position in normalized device coordinates; Z uses wgpu's `0..1` range.
+    pub position: [f32; 3],
+    /// Linear RGBA box color, optionally accented for generic selection.
+    pub color: [f32; 4],
+    /// Per-triangle edge coordinates used for a generic selection outline.
+    pub barycentric: [f32; 3],
+    /// Low/high halves of the stable box ID.
+    pub stable_id: [u32; 2],
+    /// One when the caller selected this stable ID, otherwise zero.
+    pub selected: u32,
+}
+
+/// Copies projected filled triangles into a GPU-ready depth-tested vertex stream.
+#[must_use]
+#[allow(clippy::cast_precision_loss)] // Viewports are bounded to exactly representable edges.
+pub fn box_vertices(
+    triangles: &[PlannedScreenTriangle],
+    viewport: Viewport,
+    selected_id: Option<u64>,
+) -> Vec<GpuBoxVertex> {
+    let [width, height] = viewport.dimensions();
+    let (width, height) = (width as f32, height as f32);
+    let mut output = Vec::with_capacity(triangles.len() * 3);
+    for triangle in triangles {
+        let id = triangle.id();
+        let stable_id = [
+            u32::try_from(id & u64::from(u32::MAX)).unwrap_or(u32::MAX),
+            u32::try_from(id >> 32).unwrap_or(u32::MAX),
+        ];
+        let depth = triangle.depth() / (triangle.depth() + 1.0);
+        output.extend(
+            triangle
+                .vertices()
+                .into_iter()
+                .zip([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+                .map(|(point, barycentric)| GpuBoxVertex {
+                    position: [
+                        point[0] / width * 2.0 - 1.0,
+                        1.0 - point[1] / height * 2.0,
+                        depth,
+                    ],
+                    color: triangle.color(),
+                    barycentric,
+                    stable_id,
+                    selected: u32::from(selected_id == Some(id)),
+                }),
+        );
+    }
+    output
 }
 
 /// Expands generic thick lines into two GPU triangles per line.
