@@ -1080,6 +1080,23 @@ struct FrameVertices {
     boxes: Vec<GpuBoxVertex>,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum FramePass {
+    BoxesWithDepth,
+    OverlayWithoutDepth,
+}
+
+fn frame_passes(has_boxes: bool, has_overlay: bool) -> Vec<FramePass> {
+    let mut passes = Vec::with_capacity(2);
+    if has_boxes {
+        passes.push(FramePass::BoxesWithDepth);
+    }
+    if has_overlay {
+        passes.push(FramePass::OverlayWithoutDepth);
+    }
+    passes
+}
+
 fn frame_vertices(content: &RenderContent<'_>, viewport: Viewport) -> FrameVertices {
     let mut lines = content
         .lines
@@ -1259,56 +1276,112 @@ impl Graphics {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("mlpl native3d frame encoder"),
             });
-        {
-            let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("mlpl native3d frame"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 8.0 / 255.0,
-                            g: 10.0 / 255.0,
-                            b: 16.0 / 255.0,
-                            a: 1.0,
-                        }),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &self.depth_view,
-                    depth_ops: Some(wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(1.0),
-                        store: wgpu::StoreOp::Store,
+        for frame_pass in frame_passes(box_buffer.is_some(), true) {
+            match frame_pass {
+                FramePass::BoxesWithDepth => self.render_boxes(
+                    &mut encoder,
+                    &view,
+                    box_buffer.as_ref().expect("planned box pass has vertices"),
+                    box_vertices.len(),
+                ),
+                FramePass::OverlayWithoutDepth => self.render_overlay(
+                    &mut encoder,
+                    &view,
+                    box_buffer.is_some(),
+                    point_buffer.as_ref().map(|buffer| {
+                        (
+                            buffer,
+                            u32::try_from(point_vertices.len()).unwrap_or(u32::MAX),
+                        )
                     }),
-                    stencil_ops: None,
-                }),
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
-            if let Some(box_buffer) = box_buffer.as_ref() {
-                pass.set_pipeline(&self.box_pipeline);
-                pass.set_vertex_buffer(0, box_buffer.slice(..));
-                pass.draw(
-                    0..u32::try_from(box_vertices.len()).unwrap_or(u32::MAX),
-                    0..1,
-                );
+                    (
+                        &vertex_buffer,
+                        u32::try_from(vertices.len()).unwrap_or(u32::MAX),
+                    ),
+                ),
             }
-            if let Some(point_buffer) = point_buffer.as_ref() {
-                pass.set_pipeline(&self.point_pipeline);
-                pass.set_vertex_buffer(0, point_buffer.slice(..));
-                pass.draw(
-                    0..u32::try_from(point_vertices.len()).unwrap_or(u32::MAX),
-                    0..1,
-                );
-            }
-            pass.set_pipeline(&self.pipeline);
-            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            pass.draw(0..u32::try_from(vertices.len()).unwrap_or(u32::MAX), 0..1);
         }
         self.queue.submit(Some(encoder.finish()));
         frame.present();
         Ok(())
+    }
+
+    fn render_boxes(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        view: &wgpu::TextureView,
+        box_buffer: &wgpu::Buffer,
+        vertex_count: usize,
+    ) {
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("mlpl native3d box pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(frame_background()),
+                    store: wgpu::StoreOp::Store,
+                },
+            })],
+            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                view: &self.depth_view,
+                depth_ops: Some(wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(1.0),
+                    store: wgpu::StoreOp::Store,
+                }),
+                stencil_ops: None,
+            }),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        pass.set_pipeline(&self.box_pipeline);
+        pass.set_vertex_buffer(0, box_buffer.slice(..));
+        pass.draw(0..u32::try_from(vertex_count).unwrap_or(u32::MAX), 0..1);
+    }
+
+    fn render_overlay(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        view: &wgpu::TextureView,
+        load_existing_color: bool,
+        points: Option<(&wgpu::Buffer, u32)>,
+        lines: (&wgpu::Buffer, u32),
+    ) {
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("mlpl native3d overlay pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: if load_existing_color {
+                        wgpu::LoadOp::Load
+                    } else {
+                        wgpu::LoadOp::Clear(frame_background())
+                    },
+                    store: wgpu::StoreOp::Store,
+                },
+            })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        if let Some((point_buffer, point_count)) = points {
+            pass.set_pipeline(&self.point_pipeline);
+            pass.set_vertex_buffer(0, point_buffer.slice(..));
+            pass.draw(0..point_count, 0..1);
+        }
+        pass.set_pipeline(&self.pipeline);
+        pass.set_vertex_buffer(0, lines.0.slice(..));
+        pass.draw(0..lines.1, 0..1);
+    }
+}
+
+fn frame_background() -> wgpu::Color {
+    wgpu::Color {
+        r: 8.0 / 255.0,
+        g: 10.0 / 255.0,
+        b: 16.0 / 255.0,
+        a: 1.0,
     }
 }
 
@@ -1432,13 +1505,26 @@ fn create_point_pipeline(
 #[cfg(test)]
 mod tests {
     use super::{
-        Application, load_box_scene, load_point_scene, normalize_button, normalize_key,
-        normalize_wheel,
+        Application, FramePass, frame_passes, load_box_scene, load_point_scene, normalize_button,
+        normalize_key, normalize_wheel,
     };
     use mlpl_native3d_window::interaction::{PointerButton, PointerButtons};
     use winit::dpi::PhysicalPosition;
     use winit::event::{MouseButton, MouseScrollDelta};
     use winit::keyboard::{Key, NamedKey};
+
+    #[test]
+    fn box_depth_and_depthless_overlays_use_separate_render_passes() {
+        assert_eq!(
+            frame_passes(true, true),
+            vec![FramePass::BoxesWithDepth, FramePass::OverlayWithoutDepth]
+        );
+        assert_eq!(frame_passes(true, false), vec![FramePass::BoxesWithDepth]);
+        assert_eq!(
+            frame_passes(false, true),
+            vec![FramePass::OverlayWithoutDepth]
+        );
+    }
 
     #[test]
     fn bundled_point_scene_loads_through_the_bounded_smoke_path() {
