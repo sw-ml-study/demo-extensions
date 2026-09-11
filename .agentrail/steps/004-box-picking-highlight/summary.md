@@ -1,0 +1,1 @@
+Added deterministic nearest-hit filled-box picking with inverse scene rotation, stable-ID tie behavior, exact box-selection events, click/drag arbitration, miss-to-clear outlines, and fail-closed initial highlight validation.

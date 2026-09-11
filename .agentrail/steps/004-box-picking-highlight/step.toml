@@ -1,9 +1,10 @@
 number = 4
 slug = "box-picking-highlight"
-status = "in-progress"
+status = "completed"
 description = "Add generic stable-ID ray picking and selection highlighting for filled boxes..."
 role = "production"
 context_files = []
 created_at = "2026-09-11T09:08:44"
+completed_at = "2026-09-11T09:55:55"
 task_type = "native3d-box-interaction"
-commits = []
+commits = ["40ba45373528b270034faf8b28c5eb9764d8864b"]
