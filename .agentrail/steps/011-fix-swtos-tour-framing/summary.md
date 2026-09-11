@@ -1,0 +1,1 @@
+Fixed the SWTOS recording tour so R starts rotation before all other actions, its one-second countdown and shortened delays finish the interaction sequence in about eight seconds, and the initial MLPL scene is scaled to 58% so the occupied blocks and logarithmic free-space summary fit comfortably in frame. Verified the live macOS tour and full just check.
