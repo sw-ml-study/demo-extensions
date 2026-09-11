@@ -111,6 +111,10 @@ system-layout-preview:
 system-layout-swtos:
     ./scripts/run-system-layout-preview
 
+# Visualize the hash-pinned authoritative MLOS disk, DRAM, and sysram layout.
+system-layout-mlos:
+    ./scripts/run-system-layout-mlos
+
 # Replay a one-second-per-key macOS tour into the focused system-layout viewer.
 system-layout-tour:
     ./scripts/play-system-layout-tour
@@ -119,7 +123,7 @@ system-layout-tour:
 system-layout-swtos-tour:
     ./scripts/play-system-layout-tour
 
-# Replay the recording tour into the focused MLOS viewer once integration lands.
+# Replay the recording tour into the focused MLOS viewer.
 system-layout-mlos-tour:
     ./scripts/play-system-layout-tour
 

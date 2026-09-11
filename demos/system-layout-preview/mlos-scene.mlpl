@@ -1,0 +1,21 @@
+# Convert the pinned MLOS columnar layout into a generic native3d box presentation.
+include "../../lib/system-layout/layout.mlpl";
+
+layout_path=list_get(args(),0)?;
+layout=parse_json(read_text(layout_path)?)?;
+kind_colors=parse_json("{\"header\":[0.55,0.55,0.6,1],\"catalog\":[0.2,0.6,1,1],\"image\":[1,0.45,0.2,1],\"free\":[0.12,0.12,0.14,0.3],\"padding\":[0.22,0.2,0.16,0.55],\"text\":[0.3,0.85,0.4,1],\"rodata\":[0.85,0.7,0.25,1],\"data\":[0.3,0.7,0.85,1],\"bss\":[0.55,0.45,0.85,1],\"state\":[0.9,0.85,0.25,1],\"stack\":[0.9,0.25,0.25,1],\"kernel\":[0.6,0.6,0.65,1],\"reserved\":[0.45,0.45,0.5,1],\"weight-tile\":[0.25,0.65,1,1],\"scale\":[0.8,0.5,1,1],\"expert\":[0.4,0.9,0.5,1],\"kv-block\":[1,0.6,0.3,1],\"activation\":[1,0.35,0.5,1],\"embed-block\":[0.5,0.8,0.8,1],\"rag-block\":[0.7,0.6,0.3,1],\"adapter\":[0.9,0.8,0.4,1]}")?;
+blocks=flatten(select_rows({disk:[512],dram:[16],sysram:[4096]},layout.region_space));
+space_palette={disk: [0.25,0.65,1,1],dram: [0.75,0.45,1,1],sysram: [0.35,0.85,0.45,1]};
+space_colors=select_rows(space_palette,layout.region_space);
+geometry=u:block_layer_geometry_grid(layout,kind_colors,space_colors,blocks,16);
+centers=geometry.centers*0.22;
+sizes=geometry.sizes*0.22;
+center_shape=shape(centers);
+size_shape=shape(sizes);
+scene={schema: "sw-ml-study.native3d.box-scene",version: 1,centers: {shape: center_shape,values: reshape(centers,[reduce(:mul,center_shape)])},sizes: {shape: size_shape,values: reshape(sizes,[reduce(:mul,size_shape)])},colors: geometry.colors,ids: geometry.ids};
+print(to_json(scene)?);
+mode_colors=reshape(concat(geometry.colors,geometry.owner_colors,0),[2,geometry.count,4]);
+legend_colors=[[0.25,0.65,1,1],[0.12,0.12,0.14,0.3],[0.45,0.45,0.5,1],[0.3,0.85,0.4,1],[0.22,0.2,0.16,0.55],[0.85,0.7,0.25,1],[0.3,0.7,0.85,1],[0.55,0.45,0.85,1],[0.9,0.25,0.25,1],[0.25,0.65,1,1],[0.75,0.45,1,1],[0.35,0.85,0.45,1]];
+presentation={schema: "sw-ml-study.native3d.box-presentation",version: 1,title: "MLOS storage and memory — native units; free is log summary",rotation_speed: 0.35,ids: geometry.ids,labels: layout.region_name,details: layout.region_kind,detail_index: geometry.detail_index,mode_labels: ["Kind","Space"],mode_colors: mode_colors,view_labels: ["Block layers"],view_centers: reshape(centers,[1,geometry.count,3]),view_sizes: reshape(sizes,[1,geometry.count,3]),legend_mode: [0,0,0,0,0,0,0,0,0,1,1,1],legend_labels: ["weight-tile","free","reserved","text","padding","rodata","data","bss","stack","disk","dram","sysram"],legend_colors: legend_colors};
+print(to_json(presentation)?);
+0

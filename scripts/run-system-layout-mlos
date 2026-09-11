@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+layout=$repo_root/fixtures/mlos-storage-layout-807adb2.json
+expected=cdb0cfc1fd7c9c919444712027c483fcfe9cf275881bf1a0ebba2042e1bc4b2d
+actual=$(shasum -a 256 "$layout" | awk '{print $1}')
+if [ "$actual" != "$expected" ]; then
+  echo "MLOS layout checksum mismatch: expected $expected, got $actual" >&2
+  exit 1
+fi
+
+mlpl=$($repo_root/scripts/select-mlpl)
+preview_dir=$(mktemp -d "${TMPDIR:-/tmp}/mlpl-layout-mlos.XXXXXX")
+trap 'rm -rf "$preview_dir"' EXIT HUP INT TERM
+raw=$preview_dir/output.txt
+scene=$preview_dir/box-scene.json
+presentation=$preview_dir/box-presentation.json
+"$mlpl" --source-dir "$repo_root" -f "$repo_root/demos/system-layout-preview/mlos-scene.mlpl" -- "$layout" >"$raw"
+sed -n '1p' "$raw" >"$scene"
+sed -n '2p' "$raw" >"$presentation"
+cargo run --release --manifest-path "$repo_root/Cargo.toml" -p mlpl-native3d-window -- \
+  --box-scene "$scene" --box-presentation "$presentation" --selected-box 285212672000000 \
+  --initial-yaw -0.70 --initial-pitch 0.42

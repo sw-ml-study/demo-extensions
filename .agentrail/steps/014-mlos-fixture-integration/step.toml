@@ -1,6 +1,6 @@
 number = 14
 slug = "mlos-fixture-integration"
-status = "pending"
+status = "in-progress"
 description = "After the ../../sw-ml-study/sw-os-ml agent publishes an authoritative MLOS sy..."
 role = "production"
 context_files = []

@@ -48,14 +48,33 @@ and `C`. A final `R` stops rotation on a stable frame. The complete countdown
 and tour take about twelve seconds. The
 terminal application must have Accessibility permission to control the focused
 window. The tour never closes or mutates the source artifact.
-The generic alias is `just system-layout-tour`; matching
-`system-layout-mlos-tour` and `system-layout-mesaos-tour` recipes are already
-reserved for the next two producer integrations.
+The generic alias is `just system-layout-tour`. The
+`system-layout-mlos-tour` recipe drives the integrated MLOS view;
+`system-layout-mesaos-tour` remains reserved for that producer integration.
+
+## MLOS
+
+`just system-layout-mlos` uses the same MLPL adapter and generic Rust renderer
+for MLOS disk, DRAM, and system RAM. Disk cells are real 512-byte sectors,
+DRAM cells are 16-byte arena units, and sysram cells are 4096-byte pages. The
+16-by-16 layer view expands 850 occupied cells; the two free regions remain
+single logarithmic summaries, so the roughly 509 MiB sysram tail cannot hide
+the kernel sections. `just system-layout-mlos-tour` runs the same documented
+keyboard tour after the viewer is open.
+
+The vendored artifact is
+[`fixtures/mlos-storage-layout-807adb2.json`](../fixtures/mlos-storage-layout-807adb2.json),
+SHA-256 `cdb0cfc1fd7c9c919444712027c483fcfe9cf275881bf1a0ebba2042e1bc4b2d`.
+It was published by `sw-ml-study/sw-os-ml` at `5b3f777830b4`; its embedded
+clean producer revision is `807adb290086`. Static relationships are correctly
+empty because the snapshot claims no resident objects.
 
 There is no setup or generated data to retain. The launcher selects the
 adjacent development MLPL binary (or the absolute `MLPL` override), evaluates
-[`scene.mlpl`](../demos/system-layout-preview/scene.mlpl), writes its generic
-box-scene JSON to a temporary directory, and launches the native3d window.
+the corresponding [`scene.mlpl`](../demos/system-layout-preview/scene.mlpl) or
+[`mlos-scene.mlpl`](../demos/system-layout-preview/mlos-scene.mlpl), writes its
+generic box-scene JSON to a temporary directory, and launches the native3d
+window.
 
 MLPL owns JSON parsing, kind/owner/space palettes, legend content, region
 annotations, space placement, block geometry, stable IDs, and scene
