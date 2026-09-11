@@ -1,9 +1,10 @@
 number = 6
 slug = "physical-orthographic-views"
-status = "in-progress"
+status = "completed"
 description = "Add reusable perspective/orthographic camera modes and a 2D physical-layout v..."
 role = "production"
 context_files = []
 created_at = "2026-09-11T09:08:44"
+completed_at = "2026-09-11T10:21:22"
 task_type = "native3d-view-modes"
-commits = []
+commits = ["d9e0452b1d589850ba2ca9f9ff5b3b3a3e5088ef"]
