@@ -140,7 +140,12 @@ parameter. The evaluator rejects that parameter kind before the function body.
 This does not block TodoMVC: `server.mlpl` keeps listener/connection operations
 in its top-level application loop while all routes, state, SQL plans, and HTML
 remain in MLPL functions. General handle-accepting library helpers require the
-separately authorized upstream follow-up recorded in AgentRail step 012.
+separately authorized upstream follow-up recorded in AgentRail step 012. The
+stock-CLI dynamic native3d acceptance reproduces the same limitation: loading
+and direct `_native3d:*` box/view/pick/selection calls pass, while a facade
+wrapper cannot bind its viewer argument. The package therefore keeps
+handle-taking calls at the registered namespace until that upstream contract
+lands.
 
 The same checkout's freshly rebuilt executables report older commit IDs from
 `mlpl-repl --version` (`01fd675a` debug, `2b11c6b9` release) rather than

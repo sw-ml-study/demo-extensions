@@ -1,6 +1,6 @@
 number = 7
 slug = "dynamic-box-extension-api"
-status = "pending"
+status = "in-progress"
 description = "Expose the proven box, picking/highlight, and view-mode capabilities through ..."
 role = "production"
 context_files = []

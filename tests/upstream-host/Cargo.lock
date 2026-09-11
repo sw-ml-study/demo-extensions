@@ -625,6 +625,7 @@ name = "mlpl-extension-native3d"
 version = "0.0.0"
 dependencies = [
  "mlpl-extension-sdk",
+ "mlpl-native3d-scene",
 ]
 
 [[package]]
@@ -794,6 +795,14 @@ dependencies = [
  "mlpl-models-mutate",
  "mlpl-parser",
  "mlpl-runtime",
+]
+
+[[package]]
+name = "mlpl-native3d-scene"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -1,0 +1,13 @@
+# Headless stock-CLI acceptance for the dynamically loaded native3d package.
+include "../../extensions/native3d/module.mlpl";
+
+library=list_get(args(),0)?;
+load_extension(library);
+viewer=u:native3d_create(640,480);
+_native3d:set_boxes(viewer,[[-1,0,0],[1,0,-2]],[[1,1,1],[1,1,1]],[[0.2,0.4,0.6,1],[0.6,0.4,0.2,1]],[10,20]);
+_native3d:set_view(viewer,"orthographic",[0,0,0],0,0,6,4,0.1);
+hit=_native3d:pick_box(viewer,230,240,0);
+_native3d:set_selection(viewer,hit.id);
+frame=_native3d:render(viewer,0);
+_native3d:close(viewer);
+{hit: hit.hit,id: hit.id,frame: frame.frame}

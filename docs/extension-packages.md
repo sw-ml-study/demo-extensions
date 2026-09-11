@@ -47,3 +47,23 @@ Until sw-MLPL gains the host import hook recorded in `upstream-contract.md`,
 the facade accepts a typed native value explicitly in its test. This proves
 ordinary MLPL composition and namespace discipline without misrepresenting a
 downstream harness as language integration.
+
+## Native3d package
+
+`extensions/native3d/extension.toml` and `module.mlpl` apply the same package
+layout to the renderer-neutral `_native3d` provider. Its V1 C descriptor exposes
+bulk line and filled-box replacement, perspective/orthographic camera state,
+stable-ID box picking and selection, deterministic headless frame state, and
+typed viewer teardown. Both SWTOS and MLOS may call this same API after their
+MLPL adapters map producer data to generic arrays.
+
+Until sw-MLPL accepts native handles as user-function parameters, handle-taking
+calls use `_native3d:*` directly after loading. The helper module can wrap
+creation and pure projection-name validation, but does not pretend it can wrap
+the remaining handle calls. This limitation is tracked in
+[`upstream-contract.md`](upstream-contract.md#extension-handles-through-user-functions).
+
+The packaged cdylib does not open a window. A stock CLI can load and exercise
+its headless state API, but winit requires a main-thread event loop and ongoing
+host event delivery that the callback-free V1 extension contract does not yet
+provide. The custom native3d host remains the honest interactive window path.

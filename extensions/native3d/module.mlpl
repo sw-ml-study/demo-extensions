@@ -1,0 +1,10 @@
+# Public MLPL facade for generic bulk native3d scene resources.
+def u:native3d_create(width,height) {
+  "Create a bounded generic native3d viewer handle.";
+  _native3d:create_viewer(width,height)
+}
+
+def u:native3d_projection_valid(projection) {
+  "Return one when a projection name is supported by the native provider.";
+  str_eq(projection,"perspective")+str_eq(projection,"orthographic")
+}

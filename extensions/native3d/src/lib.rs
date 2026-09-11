@@ -4,12 +4,14 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use mlpl_extension_sdk::{DenseArray, HandleRegistry, NativeHandle, OwnedError, Value};
+use mlpl_native3d_scene::{BoxLimits, BoxScene, Camera, Projection, Viewport};
 
 const EXTENSION_ID: u64 = 0x4E_33_44_01;
 const VIEWER_TYPE: u64 = 1;
 const MAX_VIEWERS: usize = 64;
 const MAX_VERTICES: usize = 1_000_000;
 const MAX_LINES: usize = 2_000_000;
+const MAX_BOXES: usize = 100_000;
 
 thread_local! {
     static VIEWERS: RefCell<HandleRegistry> = const {
@@ -22,6 +24,9 @@ struct Viewer {
     width: u32,
     height: u32,
     scene: Option<LineScene>,
+    boxes: Option<BoxScene>,
+    camera: Camera,
+    selected_id: Option<u64>,
     frame: u64,
     rotation_y: f64,
 }
@@ -79,6 +84,83 @@ name = "viewer"
 type = "native<Viewer>"
 
 [[functions]]
+name = "set_boxes"
+documentation = "Replace a viewer's generic filled-box scene using parallel bulk arrays."
+returns = "record"
+[[functions.arguments]]
+name = "viewer"
+type = "native<Viewer>"
+[[functions.arguments]]
+name = "centers"
+type = "array<f64>[N,3]"
+[[functions.arguments]]
+name = "sizes"
+type = "array<f64>[N,3]"
+[[functions.arguments]]
+name = "colors"
+type = "array<f64>[N,4]"
+[[functions.arguments]]
+name = "ids"
+type = "array<f64>[N]"
+
+[[functions]]
+name = "set_view"
+documentation = "Set a generic perspective or orthographic camera. Scale means fov radians or vertical world span."
+returns = "record"
+[[functions.arguments]]
+name = "viewer"
+type = "native<Viewer>"
+[[functions.arguments]]
+name = "projection"
+type = "string"
+[[functions.arguments]]
+name = "target"
+type = "array<f64>[3]"
+[[functions.arguments]]
+name = "yaw"
+type = "f64"
+[[functions.arguments]]
+name = "pitch"
+type = "f64"
+[[functions.arguments]]
+name = "distance"
+type = "f64"
+[[functions.arguments]]
+name = "scale"
+type = "f64"
+[[functions.arguments]]
+name = "near"
+type = "f64"
+
+[[functions]]
+name = "pick_box"
+documentation = "Pick the nearest stable box ID at a physical-pixel coordinate."
+returns = "record"
+[[functions.arguments]]
+name = "viewer"
+type = "native<Viewer>"
+[[functions.arguments]]
+name = "x"
+type = "f64"
+[[functions.arguments]]
+name = "y"
+type = "f64"
+[[functions.arguments]]
+name = "rotation_y"
+type = "f64"
+
+[[functions]]
+name = "set_selection"
+documentation = "Set or clear the generic highlighted stable box ID."
+returns = "record"
+[[functions.arguments]]
+name = "viewer"
+type = "native<Viewer>"
+[[functions.arguments]]
+name = "id"
+type = "f64|nil"
+
+[[functions]]
 name = "viewer_size"
 documentation = "Return the logical drawable width and height."
 returns = "record"
@@ -121,6 +203,9 @@ fn create_viewer(arguments: &[Value]) -> Result<Value, OwnedError> {
                     width,
                     height,
                     scene: None,
+                    boxes: None,
+                    camera: Camera::default(),
+                    selected_id: None,
                     frame: 0,
                     rotation_y: 0.0,
                 },
@@ -144,6 +229,140 @@ fn set_lines(arguments: &[Value]) -> Result<Value, OwnedError> {
     })
 }
 
+fn set_boxes(arguments: &[Value]) -> Result<Value, OwnedError> {
+    let handle = handle_argument(arguments)?;
+    let centers = array_argument(arguments, 1, "centers")?;
+    let sizes = array_argument(arguments, 2, "sizes")?;
+    let colors = array_argument(arguments, 3, "colors")?;
+    let ids = array_argument(arguments, 4, "ids")?;
+    let count = matrix(centers, 3, MAX_BOXES, "centers")?;
+    matrix_exact(sizes, count, 3, "sizes")?;
+    matrix_exact(colors, count, 4, "colors")?;
+    vector_exact(ids, count, "ids")?;
+    let centers = f32_values(centers, "centers")?;
+    let sizes = f32_values(sizes, "sizes")?;
+    let colors = f32_values(colors, "colors")?
+        .chunks_exact(4)
+        .map(|rgba| [rgba[0], rgba[1], rgba[2], rgba[3]])
+        .collect();
+    let ids = ids
+        .view()
+        .as_f64()
+        .map_err(array_error)?
+        .iter()
+        .map(|value| exact_id(*value, "ids"))
+        .collect::<Result<Vec<_>, _>>()?;
+    let limits = BoxLimits::new(MAX_BOXES, MAX_BOXES * 48)
+        .map_err(|error| OwnedError::extension(format!("invalid box limits: {error:?}")))?;
+    let scene = BoxScene::from_parallel_arrays(centers, sizes, colors, ids, limits)
+        .map_err(|error| OwnedError::invalid_argument(format!("invalid box scene: {error:?}")))?;
+    VIEWERS.with_borrow_mut(|viewers| {
+        let viewer = viewers
+            .get_mut::<Viewer>(handle, VIEWER_TYPE)
+            .map_err(handle_error)?;
+        viewer.boxes = Some(scene);
+        viewer.selected_id = None;
+        Ok(record([("boxes", number(&count))]))
+    })
+}
+
+fn set_view(arguments: &[Value]) -> Result<Value, OwnedError> {
+    let handle = handle_argument(arguments)?;
+    let Value::String(projection) = argument(arguments, 1, "projection")? else {
+        return Err(OwnedError::invalid_argument("projection must be a string"));
+    };
+    let target = array_argument(arguments, 2, "target")?;
+    vector_exact(target, 3, "target")?;
+    let target = f32_values(target, "target")?;
+    let target = [target[0], target[1], target[2]];
+    let yaw = finite_f32(argument(arguments, 3, "yaw")?, "yaw")?;
+    let pitch = finite_f32(argument(arguments, 4, "pitch")?, "pitch")?;
+    let distance = finite_f32(argument(arguments, 5, "distance")?, "distance")?;
+    let scale = finite_f32(argument(arguments, 6, "scale")?, "scale")?;
+    let near = finite_f32(argument(arguments, 7, "near")?, "near")?;
+    let camera = match projection.as_str() {
+        "perspective" => Camera::orbit(target, yaw, pitch, distance, scale, near),
+        "orthographic" => Camera::orthographic(target, yaw, pitch, distance, scale, near),
+        _ => return Err(OwnedError::invalid_argument("unsupported projection")),
+    }
+    .map_err(|error| OwnedError::invalid_argument(format!("invalid camera: {error:?}")))?;
+    VIEWERS.with_borrow_mut(|viewers| {
+        viewers
+            .get_mut::<Viewer>(handle, VIEWER_TYPE)
+            .map_err(handle_error)?
+            .camera = camera;
+        Ok(record([
+            ("projection", Value::String(projection.clone())),
+            ("scale", Value::F64(f64::from(scale))),
+        ]))
+    })
+}
+
+fn pick_box(arguments: &[Value]) -> Result<Value, OwnedError> {
+    let handle = handle_argument(arguments)?;
+    let x = finite_f32(argument(arguments, 1, "x")?, "x")?;
+    let y = finite_f32(argument(arguments, 2, "y")?, "y")?;
+    let rotation = finite_f32(argument(arguments, 3, "rotation_y")?, "rotation_y")?;
+    VIEWERS.with_borrow(|viewers| {
+        let viewer = viewers
+            .get::<Viewer>(handle, VIEWER_TYPE)
+            .map_err(handle_error)?;
+        let scene = viewer
+            .boxes
+            .as_ref()
+            .ok_or_else(|| OwnedError::invalid_argument("viewer requires set_boxes before pick"))?;
+        let viewport = Viewport::new(viewer.width, viewer.height)
+            .map_err(|error| OwnedError::extension(format!("invalid viewport: {error:?}")))?;
+        let ray = viewer
+            .camera
+            .pick_ray(viewport, [x, y])
+            .map_err(|error| OwnedError::invalid_argument(format!("invalid pick: {error:?}")))?;
+        let hit = scene
+            .pick(ray, rotation)
+            .map_err(|error| OwnedError::invalid_argument(format!("invalid pick: {error:?}")))?;
+        Ok(hit.map_or_else(
+            || {
+                record([
+                    ("hit", Value::Bool(false)),
+                    ("id", Value::Nil),
+                    ("distance", Value::Nil),
+                ])
+            },
+            |hit| {
+                record([
+                    ("hit", Value::Bool(true)),
+                    ("id", number(&hit.id())),
+                    ("distance", Value::F64(f64::from(hit.distance()))),
+                ])
+            },
+        ))
+    })
+}
+
+fn set_selection(arguments: &[Value]) -> Result<Value, OwnedError> {
+    let handle = handle_argument(arguments)?;
+    let selected_id = match argument(arguments, 1, "id")? {
+        Value::Nil => None,
+        value => Some(exact_id(finite_number(value, "id")?, "id")?),
+    };
+    VIEWERS.with_borrow_mut(|viewers| {
+        let viewer = viewers
+            .get_mut::<Viewer>(handle, VIEWER_TYPE)
+            .map_err(handle_error)?;
+        let scene = viewer.boxes.as_ref().ok_or_else(|| {
+            OwnedError::invalid_argument("viewer requires set_boxes before selection")
+        })?;
+        scene.validate_selection(selected_id).map_err(|error| {
+            OwnedError::invalid_argument(format!("invalid selection: {error:?}"))
+        })?;
+        viewer.selected_id = selected_id;
+        Ok(record([(
+            "selected_id",
+            selected_id.map_or(Value::Nil, |id| number(&id)),
+        )]))
+    })
+}
+
 fn viewer_state(arguments: &[Value]) -> Result<Value, OwnedError> {
     let handle = handle_argument(arguments)?;
     VIEWERS.with_borrow(|viewers| {
@@ -154,12 +373,25 @@ fn viewer_state(arguments: &[Value]) -> Result<Value, OwnedError> {
             .scene
             .as_ref()
             .map_or((0, 0), |scene| (scene.vertices(), scene.lines()));
+        let projection = match viewer.camera.projection() {
+            Projection::Perspective => "perspective",
+            Projection::Orthographic { .. } => "orthographic",
+        };
         Ok(record([
             ("vertices", number(&vertices)),
             ("lines", number(&lines)),
             ("frame", number(&viewer.frame)),
             ("rotation_y", Value::F64(viewer.rotation_y)),
             ("configured", Value::Bool(viewer.scene.is_some())),
+            (
+                "boxes",
+                number(&viewer.boxes.as_ref().map_or(0, BoxScene::len)),
+            ),
+            ("projection", Value::String(projection.into())),
+            (
+                "selected_id",
+                viewer.selected_id.map_or(Value::Nil, |id| number(&id)),
+            ),
         ]))
     })
 }
@@ -184,9 +416,9 @@ fn render(arguments: &[Value]) -> Result<Value, OwnedError> {
         let viewer = viewers
             .get_mut::<Viewer>(handle, VIEWER_TYPE)
             .map_err(handle_error)?;
-        if viewer.scene.is_none() {
+        if viewer.scene.is_none() && viewer.boxes.is_none() {
             return Err(OwnedError::invalid_argument(
-                "viewer requires set_lines before render",
+                "viewer requires set_lines or set_boxes before render",
             ));
         }
         viewer.frame = viewer
@@ -426,6 +658,44 @@ fn finite_number(value: &Value, name: &str) -> Result<f64, OwnedError> {
     }
 }
 
+fn finite_f32(value: &Value, name: &str) -> Result<f32, OwnedError> {
+    let value = finite_number(value, name)?;
+    if value < f64::from(f32::MIN) || value > f64::from(f32::MAX) {
+        return Err(OwnedError::invalid_argument(format!(
+            "{name} is outside f32 range"
+        )));
+    }
+    value
+        .to_string()
+        .parse::<f32>()
+        .map_err(|_| OwnedError::invalid_argument(format!("{name} is outside f32 range")))
+}
+
+fn f32_values(array: &DenseArray, name: &str) -> Result<Vec<f32>, OwnedError> {
+    array
+        .view()
+        .as_f64()
+        .map_err(array_error)?
+        .iter()
+        .map(|value| finite_f32(&Value::F64(*value), name))
+        .collect()
+}
+
+fn exact_id(value: f64, name: &str) -> Result<u64, OwnedError> {
+    const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
+    if value.is_finite() && (0.0..=MAX_SAFE_INTEGER).contains(&value) && value.fract() == 0.0 {
+        value.to_string().parse::<u64>().map_err(|_| {
+            OwnedError::invalid_argument(format!(
+                "{name} must contain exact nonnegative integer IDs"
+            ))
+        })
+    } else {
+        Err(OwnedError::invalid_argument(format!(
+            "{name} must contain exact nonnegative integer IDs"
+        )))
+    }
+}
+
 fn dimension(value: &Value, name: &str) -> Result<u32, OwnedError> {
     let number = finite_number(value, name)?;
     if number.fract() == 0.0 && (1.0..=16384.0).contains(&number) {
@@ -480,11 +750,15 @@ mlpl_extension_sdk::export_extension! {
     module: generated_export,
     entry: sw_mlpl_extension_v1,
     name: "_native3d",
-    version: "0.1.0",
+    version: "0.2.0",
     metadata: crate::METADATA,
     functions: [
         (create_viewer_trampoline, "create_viewer", 2, crate::create_viewer),
         (set_lines_trampoline, "set_lines", 6, crate::set_lines),
+        (set_boxes_trampoline, "set_boxes", 5, crate::set_boxes),
+        (set_view_trampoline, "set_view", 8, crate::set_view),
+        (pick_box_trampoline, "pick_box", 4, crate::pick_box),
+        (set_selection_trampoline, "set_selection", 2, crate::set_selection),
         (viewer_state_trampoline, "viewer_state", 1, crate::viewer_state),
         (viewer_size_trampoline, "viewer_size", 1, crate::viewer_size),
         (render_trampoline, "render", 2, crate::render),

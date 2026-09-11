@@ -10,6 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 mlpl-extension-sdk = { path = "../../crates/mlpl-extension-sdk" }
+mlpl-native3d-scene = { path = "../../crates/mlpl-native3d-scene" }
 
 [dev-dependencies]
 mlpl-extension-loader = { path = "../../crates/mlpl-extension-loader" }

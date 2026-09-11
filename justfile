@@ -99,6 +99,10 @@ point-cloud-smoke:
 box-scene-smoke:
     ./scripts/run-box-scene-smoke
 
+# Check stock-CLI dynamic loading of the generic headless native3d package.
+native3d-extension-check:
+    ./scripts/check-native3d-extension
+
 # Open the deterministic MLPL-owned native point-cloud teaching app.
 point-cloud:
     ./scripts/run-point-cloud

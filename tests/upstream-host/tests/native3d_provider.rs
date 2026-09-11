@@ -65,3 +65,18 @@ fn malformed_arrays_closed_and_stale_viewers_fail_cleanly() {
     .abs()
         < f64::EPSILON);
 }
+
+#[test]
+fn bulk_boxes_and_orthographic_view_dispatch_through_interpreter() {
+    let mut environment = environment();
+    let source = r#"
+viewer = _native3d:create_viewer(640,480)
+boxes = _native3d:set_boxes(viewer,[[-1,0,0],[1,0,-2]],[[1,1,1],[1,1,1]],[[0.2,0.4,0.6,1],[0.6,0.4,0.2,1]],[10,20])
+view = _native3d:set_view(viewer,"orthographic",[0,0,0],0,0,6,4,0.1)
+pick = _native3d:pick_box(viewer,230,240,0)
+selection = _native3d:set_selection(viewer,pick.id)
+state = _native3d:viewer_state(viewer)
+boxes.boxes + pick.hit + selection.selected_id + state.boxes
+"#;
+    assert!((scalar(&mut environment, source) - 15.0).abs() < f64::EPSILON);
+}

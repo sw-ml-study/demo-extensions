@@ -136,10 +136,26 @@ normalizes input and sends records back for MLPL handlers registered with
 `on(port, ...)`. The host—not an MLPL-loaded library—owns winit/wgpu and the
 main-thread event loop.
 
-Consequently, these interactive commands do **not** consult
+The generic `_native3d` cdylib now has a normal package manifest and a small
+public MLPL helper module under `extensions/native3d/`. A stock `mlpl-repl` can load its
+platform library with `load_extension` (or resolve it through
+`MLPL_EXTENSION_PATH`) and call the bulk headless resource API: `set_lines`,
+`set_boxes`, `set_view`, `pick_box`, `set_selection`, `render`, and `close`.
+Static and actual dynamically loaded provider tests execute the same versioned
+C descriptor and validation. Calls taking a viewer currently use the registered
+`_native3d:*` names directly because sw-MLPL cannot yet bind a native handle to
+a user-function parameter. Arrays are copied into provider-owned storage for
+the viewer lifetime; handles are typed and generational, and stale handles are
+rejected.
+
+This API deliberately does not claim that stock `mlpl-repl` can open and drive
+the winit/wgpu window. Window creation and event delivery have main-thread and
+event-loop constraints, and the V1 callback-free ABI has no host Port injection
+contract for them. Consequently, these interactive commands do **not** consult
 `MLPL_EXTENSION_PATH`, do not execute `load_extension`, and do not use the
 separately built `libmlpl_extension_native3d.*`. That cdylib proves the public
-ABI's generic scene/handle provider in headless tests, but the shipped windowed
+ABI's generic scene/handle provider, including boxes, orthographic views,
+picking, and selection state, but the shipped windowed
 applications require the custom host until the stock CLI can configure a UI
 main loop and inject a Port. Running a `live-applet.mlpl` directly with plain
 `mlpl-repl` fails because `port` has not been registered/injected (and a stock
