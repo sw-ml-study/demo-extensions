@@ -3,21 +3,20 @@ include "../../lib/system-layout/layout.mlpl";
 
 layout_path=list_get(args(),0)?;
 layout=parse_json(read_text(layout_path)?)?;
-kind_colors={header:[0.95,0.7,0.2,1],catalog:[0.3,0.65,1,1],image:[0.3,0.85,0.45,1],free:[0.18,0.2,0.25,0.35],text:[0.7,0.45,1,1],state:[1,0.4,0.4,1],stack:[0.2,0.85,0.9,1],kernel:[0.95,0.3,0.65,1]};
-owner_palette={kernel:[0.95,0.45,0.2,1],hello:[0.25,0.7,1,1]};
+kind_colors={header:[0.55,0.55,0.6,1],catalog:[0.2,0.6,1,1],image:[1,0.45,0.2,1],free:[0.12,0.12,0.14,0.35],padding:[0.22,0.2,0.16,0.55],text:[0.3,0.85,0.4,1],data:[0.3,0.7,0.85,1],bss:[0.55,0.45,0.85,1],state:[0.9,0.85,0.25,1],stack:[0.9,0.25,0.25,1],kernel:[0.6,0.6,0.65,1]};
 space_palette={flash:[0.95,0.7,0.2,1],ebr:[0.3,0.85,0.55,1],sysram:[0.4,0.55,1,1]};
 space_offset={flash:[-3,0,0],ebr:[0,0,0],sysram:[3,0,0]};
 geometry=u:region_geometry(layout,kind_colors,space_offset,8);
-centers=geometry.centers*[1,0.003,1]+[0,-3.072,0];
-sizes=geometry.sizes*[1,0.003,1];
+centers=geometry.centers*[1,0.00001144,1]+[0,-3,0];
+sizes=geometry.sizes*[1,0.00001144,1]+[0,0.06,0];
 center_shape=shape(centers);
 size_shape=shape(sizes);
 scene={schema: "sw-ml-study.native3d.box-scene",version: 1,centers: {shape: center_shape,values: reshape(centers,[reduce(:mul,center_shape)])},sizes: {shape: size_shape,values: reshape(sizes,[reduce(:mul,size_shape)])},colors: geometry.colors,ids: geometry.ids};
 print(to_json(scene)?);
-owner_colors=select_rows(owner_palette,layout.region_owner);
+owner_colors=[[0.65,0.65,0.7,1],[0.65,0.65,0.7,1],[0.25,0.75,1,1],[0.3,0.8,0.45,1],[0.3,0.8,0.45,1],[0.95,0.55,0.2,1],[0.95,0.55,0.2,1],[0.15,0.15,0.17,0.3]];
 space_colors=select_rows(space_palette,layout.region_space);
 mode_colors=reshape(concat(concat(geometry.colors,owner_colors,0),space_colors,0),[3,8,4]);
-legend_colors=concat(concat([kind_colors.header,kind_colors.catalog,kind_colors.image,kind_colors.free,kind_colors.text,kind_colors.state,kind_colors.stack,kind_colors.kernel],[owner_palette.kernel,owner_palette.hello],0),[space_palette.flash,space_palette.ebr,space_palette.sysram],0);
-presentation={schema: "sw-ml-study.native3d.box-presentation",version: 1,title: "sw-MLPL system-layout preview",rotation_speed: 0.35,ids: geometry.ids,labels: layout.region_name,details: layout.region_owner,mode_labels: ["Kind","Owner","Space"],mode_colors: mode_colors,legend_mode: [0,0,0,0,0,0,0,0,1,1,2,2,2],legend_labels: ["header","catalog","image","free","text","state","stack","kernel","kernel","hello","flash","ebr","sysram"],legend_colors: legend_colors};
+legend_colors=concat(concat([kind_colors.header,kind_colors.catalog,kind_colors.image,kind_colors.free,kind_colors.padding,kind_colors.text,kind_colors.data,kind_colors.bss,kind_colors.state,kind_colors.stack,kind_colors.kernel],[[0.65,0.65,0.7,1],[0.25,0.75,1,1],[0.3,0.8,0.45,1],[0.95,0.55,0.2,1],[0.15,0.15,0.17,0.3]],0),[space_palette.flash],0);
+presentation={schema: "sw-ml-study.native3d.box-presentation",version: 1,title: "SWTOS storage layout",rotation_speed: 0.35,ids: geometry.ids,labels: layout.region_name,details: layout.region_kind,mode_labels: ["Kind","Owner","Space"],mode_colors: mode_colors,legend_mode: [0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,2],legend_labels: ["header","catalog","image","free","padding","text","data","bss","state","stack","kernel","kernel","embedded-hello","embedded-ping","cpu-hog","unowned","flash"],legend_colors: legend_colors};
 print(to_json(presentation)?);
 0

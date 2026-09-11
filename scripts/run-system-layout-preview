@@ -2,11 +2,11 @@
 set -eu
 
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-layout=$repo_root/fixtures/sw-mlpl-storage-layout-baf015ff.json
-expected=be71a69ec5e4e77a41e0c3d45a1bbf08dc288a2161ca10e5970d227dcdf4e87f
+layout=$repo_root/fixtures/swtos-storage-layout-5c4a24e.json
+expected=58d29496c75efaa95567d0208ead48dc4c83797c86f2a6952dfc78d1ce748a84
 actual=$(shasum -a 256 "$layout" | awk '{print $1}')
 if [ "$actual" != "$expected" ]; then
-  echo "sw-MLPL sample checksum mismatch: expected $expected, got $actual" >&2
+  echo "SWTOS layout checksum mismatch: expected $expected, got $actual" >&2
   exit 1
 fi
 
@@ -20,4 +20,4 @@ presentation=$preview_dir/box-presentation.json
 sed -n '1p' "$raw" >"$scene"
 sed -n '2p' "$raw" >"$presentation"
 cargo run --release --manifest-path "$repo_root/Cargo.toml" -p mlpl-native3d-window -- \
-  --box-scene "$scene" --box-presentation "$presentation" --selected-box 8
+  --box-scene "$scene" --box-presentation "$presentation" --selected-box 106

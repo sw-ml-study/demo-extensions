@@ -4,15 +4,17 @@ include "lib/system-layout/layout.mlpl";
 @test {name: "system layout geometry preserves column alignment",tags: ["native3d","system-layout","arrays"]}
 def u:test_system_layout_geometry() {
   "Prove the generic adapter produces aligned bulk arrays and stable IDs.";
-  layout=parse_json(read_text("fixtures/sw-mlpl-storage-layout-baf015ff.json")?)?;
-  palette={header:[1,0,0,1],catalog:[0,1,0,1],image:[0,0,1,1],free:[0,0,0,1],text:[1,1,0,1],state:[1,0,1,1],stack:[0,1,1,1],kernel:[1,1,1,1]};
+  layout=parse_json(read_text("fixtures/swtos-storage-layout-5c4a24e.json")?)?;
+  palette={header:[1,0,0,1],catalog:[0,1,0,1],image:[0,0,1,1],free:[0,0,0,1],padding:[0.5,0.5,0.5,1],text:[1,1,0,1],data:[0,1,1,1],bss:[1,0,1,1],state:[1,0,1,1],stack:[0,1,1,1],kernel:[1,1,1,1]};
   offsets={flash:[-3,0,0],ebr:[0,0,0],sysram:[3,0,0]};
   geometry=u:region_geometry(layout,palette,offsets,8);
   u:assert_eq(shape(geometry.centers),[8,3],"one center per region")?;
   u:assert_eq(shape(geometry.sizes),[8,3],"one size per region")?;
   u:assert_eq(shape(geometry.colors),[8,4],"one RGBA color per region")?;
-  u:assert_eq(geometry.ids,[1,2,3,4,5,6,7,8],"producer IDs remain stable")?;
-  u:assert_eq(geometry.sizes,[[1,1,1],[1,15,1],[1,6,1],[1,5,1],[1,6,1],[1,8,1],[1,128,1],[1,2048,1]],"byte lengths use the declared eight-byte block")
+  u:assert_eq(geometry.ids,[1,2,106,207,107,208,108,3],"producer IDs remain stable")?;
+  u:assert_eq(geometry.sizes,[[1,1,1],[1,30,1],[1,5,1],[1,1,1],[1,6,1],[1,1,1],[1,5,1],[1,524242,1]],"real header, catalog, image, padding, and free extents use eight-byte blocks")?;
+  u:assert_eq(layout.rel_kind,["describes","describes","describes"],"catalog relationships survive transport")?;
+  u:assert_eq(layout.rel_to,[106,107,108],"relationships target stable image IDs")
 }
 
 @test {name: "system layout block coordinates form deterministic layers",tags: ["native3d","system-layout","arrays"]}

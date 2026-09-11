@@ -103,8 +103,12 @@ box-scene-smoke:
 native3d-extension-check:
     ./scripts/check-native3d-extension
 
-# Visualize the hash-pinned synthetic sw-MLPL system-layout sample.
+# Compatibility name for the SWTOS system-layout viewer.
 system-layout-preview:
+    ./scripts/run-system-layout-preview
+
+# Visualize the hash-pinned authoritative SWTOS storage layout.
+system-layout-swtos:
     ./scripts/run-system-layout-preview
 
 # Open the deterministic MLPL-owned native point-cloud teaching app.

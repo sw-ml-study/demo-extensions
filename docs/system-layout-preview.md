@@ -1,14 +1,14 @@
-# Synthetic system-layout preview
+# SWTOS system-layout preview
 
-`just system-layout-preview` opens a native `wgpu`/`winit` window containing
-the hash-pinned synthetic layout published by sw-MLPL. It lets the consumer
-and renderer evolve while the authoritative SWTOS, MLOS, and MesaOS producer
-artifacts are still pending.
+`just system-layout-swtos` opens a native `wgpu`/`winit` window containing
+the hash-pinned authoritative layout published by SWTOS. It exercises this
+repository's MLPL consumer and generic renderer against real producer data.
 
-The three vertical groups are the fixture's `flash`, `ebr`, and `sysram`
-spaces. Box height represents byte length in eight-byte blocks. Region ID 8
-starts selected, and its name and owner appear in the annotation. Click any
-box to select it.
+The current SWTOS artifact contains one `flash` space. Box height represents
+byte length in eight-byte blocks; a small visual
+minimum keeps short real regions clickable without changing the validated raw
+extent arrays. Region ID 106 (`embedded-hello`) starts selected. Click any box
+to select it.
 
 The viewer is stationary by default. Click the visible `Rotate` control or
 press `R` to toggle automatic rotation. Click the `Kind`, `Owner`, or `Space`
@@ -21,8 +21,10 @@ use the wheel to zoom, and press Escape to close the window.
 From this repository:
 
 ```sh
-just system-layout-preview
+just system-layout-swtos
 ```
+
+The older `just system-layout-preview` name remains as a compatibility alias.
 
 There is no setup or generated data to retain. The launcher selects the
 adjacent development MLPL binary (or the absolute `MLPL` override), evaluates
@@ -37,19 +39,21 @@ highlighting. The native code has no knowledge of OS region kinds or owners.
 
 ## Provenance and limits
 
-The source is sw-MLPL revision `baf015ff`, file
-`examples/viz/storage-layout.json`, whose published SHA-256 is
-`b5a328a623fd7b8378bf47b7014318525334495a9911354539a007f0fbfa657b`.
-The repository keeps a whitespace-normalized vendored copy at
-[`fixtures/sw-mlpl-storage-layout-baf015ff.json`](../fixtures/sw-mlpl-storage-layout-baf015ff.json),
-SHA-256 `be71a69ec5e4e77a41e0c3d45a1bbf08dc288a2161ca10e5970d227dcdf4e87f`.
-The launcher refuses to run if that copy changes unnoticed.
+SWTOS emitter and validator revision `5c4a24e` produced the clean-tree artifact
+published at SWTOS revision `a08d886`. This repository vendors that file
+byte-for-byte as
+[`fixtures/swtos-storage-layout-5c4a24e.json`](../fixtures/swtos-storage-layout-5c4a24e.json),
+SHA-256 `58d29496c75efaa95567d0208ead48dc4c83797c86f2a6952dfc78d1ce748a84`.
+The launcher refuses to run if it changes unnoticed. Producer evidence reports
+8 regions, 3 `describes` edges, 10 programs, and 372 of 4,194,304 flash bytes
+used; the downstream tests independently pin the region extents, IDs, and
+relationship targets.
 
-This fixture is development evidence, not SWTOS acceptance evidence. Its
-provenance intentionally says it is a sample, and it must not be reported as
-an emitted OS artifact. The active AgentRail step remains open until a
-committed producer artifact is available. MLOS and MesaOS will use the same
-producer-neutral columnar contract in later steps.
+Real producer acceptance exposed a palette gap that the earlier synthetic
+fixture did not: SWTOS preserves two alignment regions as `padding`, distinct
+from `free`. The MLPL palette now covers the complete closed vocabulary and
+renders padding separately. MLOS and MesaOS will use the same producer-neutral
+columnar contract in later steps.
 
 The native preview currently shows overview boxes, a selected-item annotation,
 and switchable color legends. Relationship edges, labels anchored directly to
