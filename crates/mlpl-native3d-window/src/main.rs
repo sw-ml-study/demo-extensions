@@ -155,7 +155,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         .and_then(|index| arguments.get(index + 1))
         .map(|path| load_point_scene(std::path::Path::new(path)))
         .transpose()?;
-    let (box_scene, selected_box_id, box_viewer) = load_box_options(&arguments)?;
+    let initial_camera = initial_camera(&arguments)?;
+    let box_options = load_box_options(&arguments)?;
     let source = if point_cloud {
         point_cloud_applet_source()
     } else if tic_tac_toe {
@@ -193,10 +194,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .or(weight_distribution);
     if let Some(root) = rooted {
         let mut application = Application::new_supervised(source, root)?;
-        application.point_scene = point_scene;
-        application.box_scene = box_scene;
-        application.selected_box_id = selected_box_id;
-        application.box_viewer = box_viewer;
+        application.configure_static_scenes(point_scene, box_options, initial_camera);
         application.refresh_box_presentation()?;
         event_loop.run_app(&mut application)?;
         return Ok(());
@@ -204,10 +202,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let result = {
         run_applet_with_host(&source, |commands, events| {
             let mut application = Application::new(commands, events);
-            application.point_scene = point_scene;
-            application.box_scene = box_scene;
-            application.selected_box_id = selected_box_id;
-            application.box_viewer = box_viewer;
+            application.configure_static_scenes(point_scene, box_options, initial_camera);
             if let Err(error) = application.refresh_box_presentation() {
                 host_error = Some(error);
                 return;
@@ -255,6 +250,36 @@ fn load_box_scene(path: &std::path::Path) -> Result<BoxScene, Box<dyn Error>> {
 }
 
 type BoxOptions = (Option<BoxScene>, Option<u64>, Option<BoxViewer>);
+
+fn initial_camera(arguments: &[String]) -> Result<Option<Camera>, Box<dyn Error>> {
+    fn value(arguments: &[String], flag: &str) -> Result<Option<f32>, String> {
+        let Some(index) = arguments.iter().position(|argument| argument == flag) else {
+            return Ok(None);
+        };
+        let raw = arguments
+            .get(index + 1)
+            .ok_or_else(|| format!("{flag} requires a numeric value"))?;
+        raw.parse::<f32>()
+            .map(Some)
+            .map_err(|_| format!("{flag} requires a numeric value"))
+    }
+
+    let yaw = value(arguments, "--initial-yaw")?;
+    let pitch = value(arguments, "--initial-pitch")?;
+    if yaw.is_none() && pitch.is_none() {
+        return Ok(None);
+    }
+    Camera::orbit(
+        [0.0; 3],
+        yaw.unwrap_or(0.0),
+        pitch.unwrap_or(0.0),
+        4.0,
+        60.0_f32.to_radians(),
+        0.1,
+    )
+    .map(Some)
+    .map_err(|_| "initial camera values are outside supported bounds".into())
+}
 
 fn load_box_options(arguments: &[String]) -> Result<BoxOptions, Box<dyn Error>> {
     let scene = arguments
@@ -312,6 +337,7 @@ struct Application {
     angle: f32,
     rotation_speed: f32,
     camera: Camera,
+    initial_camera_override: Option<Camera>,
     help: String,
     status: String,
     pointer_position: [f64; 2],
@@ -336,6 +362,19 @@ struct Application {
 }
 
 impl Application {
+    fn configure_static_scenes(
+        &mut self,
+        point_scene: Option<PointScene>,
+        (box_scene, selected_box_id, box_viewer): BoxOptions,
+        initial_camera: Option<Camera>,
+    ) {
+        self.point_scene = point_scene;
+        self.box_scene = box_scene;
+        self.selected_box_id = selected_box_id;
+        self.box_viewer = box_viewer;
+        self.initial_camera_override = initial_camera;
+    }
+
     fn new(commands: Receiver<Value>, events: Sender<Value>) -> Self {
         Self::new_rooted(commands, events, None)
     }
@@ -361,6 +400,7 @@ impl Application {
             angle: 0.0,
             rotation_speed: 0.0,
             camera: Camera::default(),
+            initial_camera_override: None,
             help: String::new(),
             status: String::new(),
             pointer_position: [0.0; 2],
@@ -573,7 +613,10 @@ impl Application {
         {
             self.rotation_speed = rotation_speed;
         }
-        self.camera = command.camera;
+        self.camera = self
+            .initial_camera_override
+            .take()
+            .unwrap_or(command.camera);
         self.help = self
             .box_viewer
             .as_ref()
@@ -609,7 +652,10 @@ impl Application {
             }
         }
         self.scene = Some(command.scene);
-        self.camera = command.camera;
+        self.camera = self
+            .initial_camera_override
+            .take()
+            .unwrap_or(command.camera);
         self.rotation_speed = command.rotation_speed;
         self.help = command.help;
         self.status = command.status;
@@ -1656,8 +1702,8 @@ fn create_point_pipeline(
 #[cfg(test)]
 mod tests {
     use super::{
-        Application, FramePass, frame_passes, load_box_scene, load_point_scene, normalize_button,
-        normalize_key, normalize_wheel,
+        Application, FramePass, frame_passes, initial_camera, load_box_scene, load_point_scene,
+        normalize_button, normalize_key, normalize_wheel,
     };
     use mlpl_native3d_scene::LineScene;
     use mlpl_native3d_window::box_viewer::BoxViewer;
@@ -1665,6 +1711,21 @@ mod tests {
     use winit::dpi::PhysicalPosition;
     use winit::event::{MouseButton, MouseScrollDelta};
     use winit::keyboard::{Key, NamedKey};
+
+    #[test]
+    fn initial_camera_accepts_a_demo_selected_oblique_elevation() {
+        let arguments = vec![
+            "viewer".to_owned(),
+            "--initial-yaw".to_owned(),
+            "-0.70".to_owned(),
+            "--initial-pitch".to_owned(),
+            "0.42".to_owned(),
+        ];
+        let camera = initial_camera(&arguments).unwrap().unwrap();
+        assert!((camera.yaw() + 0.70).abs() < f32::EPSILON);
+        assert!((camera.pitch() - 0.42).abs() < f32::EPSILON);
+        assert!((camera.distance() - 4.0).abs() < f32::EPSILON);
+    }
 
     #[test]
     fn box_depth_and_depthless_overlays_use_separate_render_passes() {

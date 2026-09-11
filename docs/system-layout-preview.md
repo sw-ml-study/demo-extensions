@@ -10,6 +10,8 @@ viewer expands the 49 occupied or padding eight-byte blocks into small cubes
 arranged in 4-by-4 layers. It does not generate 524,242 empty cubes: the free
 region is one separate logarithmically sized summary. An `embedded-hello`
 block starts selected. Click any cube or the free summary to select its region.
+The initial camera looks down from a left-shoulder three-quarter view so the
+depth and layer structure are visible immediately; it remains fully orbitable.
 
 The viewer is stationary by default. Click the visible `Rotate` control or
 press `R` to toggle automatic rotation. Click the `Kind` or `Owner`

@@ -1,0 +1,8 @@
+number = 12
+slug = "fix-initial-oblique-camera"
+status = "in-progress"
+description = "Correct the system-layout viewer initial camera from a square-on view to a th..."
+role = "production"
+context_files = []
+created_at = "2026-09-11T14:16:45"
+commits = []

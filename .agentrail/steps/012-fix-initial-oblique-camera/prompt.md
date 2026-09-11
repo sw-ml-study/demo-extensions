@@ -1,0 +1,1 @@
+Correct the system-layout viewer initial camera from a square-on view to a three-quarter view with slight elevation. Preserve the existing user zoom/framing feedback, add focused regression coverage for the initial camera configuration, update affected documentation, verify interactively and with the mandatory full gate, commit, complete, and push main.
