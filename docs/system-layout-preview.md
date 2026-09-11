@@ -20,7 +20,9 @@ isolate legend categories in the current mode, and `C` to restore all regions.
 The colored legend at the right changes with the selected mode. The top overlay
 documents every shortcut. Selection details appear separately in a 1.5-times
 scale amber callout at bottom-left. Use Left/Right arrows or `[`/`]` to walk
-through visible blocks with wraparound. Drag to orbit, Shift-drag to pan, use
+through visible blocks with wraparound; `<`/`>` are aliases. The selected
+cube's yellow outline follows the text. Use `W`/`S` to raise/lower the orbit
+and `A`/`D` to orbit left/right. Drag to orbit, Shift-drag to pan, use
 the wheel to zoom, and press Escape to close the window.
 
 ## Run it
@@ -39,10 +41,11 @@ For a repeatable recording, leave the viewer running and use a second terminal:
 just system-layout-swtos-tour
 ```
 
-Focus the viewer during the one-second countdown. On macOS, the first key is
-`R`, so rotation is visible throughout `1`, `2`, `H`, `H`, `H`, Right, Right,
-Right. A final `R` stops rotation on a stable frame. The complete countdown and
-tour take about eight seconds, fitting inside a ten-second recording. The
+The script finds and focuses the newest system-layout viewer and raises its
+window. Its strict opening sequence is `W W W A A A R H`, followed by 18 `]`
+next-block selections. Only then does it demonstrate `1`, `2`, another `H`,
+and `C`. A final `R` stops rotation on a stable frame. The complete countdown
+and tour take about twelve seconds. The
 terminal application must have Accessibility permission to control the focused
 window. The tour never closes or mutates the source artifact.
 The generic alias is `just system-layout-tour`; matching

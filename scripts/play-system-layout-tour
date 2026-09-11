@@ -10,18 +10,37 @@ case "$(uname -s)" in
     ;;
 esac
 
-echo "Focus the system-layout window; tour starts in 1 second." >&2
+viewer_pid=$(pgrep -n -f 'target/release/mlpl-native3d-window.*--box-presentation') || {
+  echo "no running system-layout viewer found" >&2
+  exit 1
+}
+case "$viewer_pid" in
+  *[!0-9]*) echo "invalid viewer process id" >&2; exit 1 ;;
+esac
+osascript \
+  -e 'tell application "System Events"' \
+  -e "set viewer_process to first process whose unix id is $viewer_pid" \
+  -e 'set frontmost of viewer_process to true' \
+  -e 'perform action "AXRaise" of window 1 of viewer_process' \
+  -e 'end tell'
+echo "Focused viewer $viewer_pid; tour starts in 1 second." >&2
 sleep 1
 osascript \
   -e 'tell application "System Events"' \
-  -e 'keystroke "r"' -e 'delay 1.2' \
-  -e 'keystroke "1"' -e 'delay 0.7' \
-  -e 'keystroke "2"' -e 'delay 0.7' \
-  -e 'keystroke "h"' -e 'delay 0.7' \
-  -e 'keystroke "h"' -e 'delay 0.7' \
-  -e 'keystroke "h"' -e 'delay 0.7' \
-  -e 'key code 124' -e 'delay 0.7' \
-  -e 'key code 124' -e 'delay 0.7' \
-  -e 'key code 124' -e 'delay 0.7' \
-  -e 'keystroke "r"' \
+  -e 'keystroke "w"' -e 'delay 0.35' \
+  -e 'keystroke "w"' -e 'delay 0.35' \
+  -e 'keystroke "w"' -e 'delay 0.35' \
+  -e 'keystroke "a"' -e 'delay 0.35' \
+  -e 'keystroke "a"' -e 'delay 0.35' \
+  -e 'keystroke "a"' -e 'delay 0.35' \
+  -e 'keystroke "r"' -e 'delay 0.7' \
+  -e 'keystroke "h"' -e 'delay 0.55' \
+  -e 'repeat 18 times' \
+  -e 'keystroke "]"' -e 'delay 0.4' \
+  -e 'end repeat' \
+  -e 'keystroke "1"' -e 'delay 0.45' \
+  -e 'keystroke "2"' -e 'delay 0.45' \
+  -e 'keystroke "h"' -e 'delay 0.45' \
+  -e 'keystroke "c"' -e 'delay 0.45' \
+  -e 'keystroke "r"' -e 'delay 0.45' \
   -e 'end tell'

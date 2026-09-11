@@ -198,6 +198,11 @@ impl BoxViewer {
         self.selected = id.filter(|candidate| self.item_by_id.contains_key(candidate));
     }
 
+    #[must_use]
+    pub const fn selected_id(&self) -> Option<u64> {
+        self.selected
+    }
+
     fn detail_for_item(&self, item: usize) -> usize {
         self.document
             .detail_index
@@ -339,7 +344,7 @@ impl BoxViewer {
             .highlight
             .map_or_else(|| "all".to_owned(), |index| self.legend()[index].0.clone());
         format!(
-            "{}\nCOLOR {} [H HIGHLIGHT: {}] [C CLEAR] [R ROTATE: {}]\nVIEW {} [V NEXT]\nLEFT/RIGHT OR [/] SELECT BLOCK | DRAG ORBIT | SHIFT+DRAG PAN | WHEEL ZOOM | ESC CLOSE",
+            "{}\nCOLOR {} [H HIGHLIGHT: {}] [C CLEAR] [R ROTATE: {}]\nVIEW {} [V NEXT]\nWASD ORBIT | LEFT/RIGHT OR [/] OR </> SELECT BLOCK | SHIFT+DRAG PAN | WHEEL ZOOM | ESC CLOSE",
             self.document.title, buttons, emphasis, rotation, views
         )
     }
@@ -431,6 +436,7 @@ mod tests {
         assert!(viewer.key("c"));
         assert!((viewer.colors()[1][3] - 1.0).abs() < f32::EPSILON);
         assert!(viewer.key("arrow_right"));
+        assert_eq!(viewer.selected_id(), Some(7));
         assert!(viewer.selection_overlay().contains("SELECTED 7"));
         assert!(viewer.key("bracket_left"));
         assert!(viewer.selection_overlay().contains("SELECTED 9"));

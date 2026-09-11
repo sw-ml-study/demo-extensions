@@ -777,6 +777,7 @@ impl Application {
                 .map_err(|error| format!("box recolor rejected: {error:?}"))?,
         );
         self.rotation_speed = viewer.rotation_speed();
+        self.selected_box_id = viewer.selected_id();
         self.help = viewer.overlay();
         self.status = viewer.selection_overlay();
         self.box_legend = viewer.legend();
@@ -793,6 +794,25 @@ impl Application {
             self.status = error;
         }
         handled
+    }
+
+    fn box_camera_key(&mut self, key: &str) -> bool {
+        if self.box_viewer.is_none() {
+            return false;
+        }
+        let (yaw_delta, pitch_delta) = match key {
+            "a" => (-0.06, 0.0),
+            "d" => (0.06, 0.0),
+            "w" => (0.0, 0.06),
+            "s" => (0.0, -0.06),
+            _ => return false,
+        };
+        let yaw = self.camera.yaw() + yaw_delta;
+        let pitch = (self.camera.pitch() + pitch_delta).clamp(-1.45, 1.45);
+        if let Ok(camera) = self.camera.with_orbit_angles(yaw, pitch) {
+            self.camera = camera;
+        }
+        true
     }
 
     fn box_viewer_click(&mut self) -> bool {
@@ -1061,7 +1081,7 @@ impl ApplicationHandler for Application {
                         }
                         return;
                     }
-                    if !self.box_viewer_key(key) {
+                    if !self.box_viewer_key(key) && !self.box_camera_key(key) {
                         self.send(key_event(key), event_loop);
                     }
                     if key == "escape" {
@@ -1200,8 +1220,8 @@ fn normalize_key(key: &Key) -> Option<&'static str> {
             "o" => Some("o"),
             "1" => Some("1"),
             "2" => Some("2"),
-            "[" | "{" => Some("bracket_left"),
-            "]" | "}" => Some("bracket_right"),
+            "[" | "{" | "<" | "," => Some("bracket_left"),
+            "]" | "}" | ">" | "." => Some("bracket_right"),
             _ => None,
         },
         _ => None,
@@ -1760,6 +1780,50 @@ mod tests {
     }
 
     #[test]
+    fn box_keyboard_moves_gpu_selection_and_orbits_camera() {
+        let (_command_tx, command_rx) = std::sync::mpsc::channel();
+        let (event_tx, _event_rx) = std::sync::mpsc::channel();
+        let mut application = Application::new(command_rx, event_tx);
+        let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/native3d-box-scene.json");
+        let scene = load_box_scene(&fixture).unwrap();
+        let presentation = r#"{"schema":"sw-ml-study.native3d.box-presentation","version":1,"title":"Layout","rotation_speed":0,"ids":[17,23],"labels":["one","two"],"details":["first","second"],"mode_labels":["Kind"],"mode_colors":[[[1,0,0,1],[0,1,0,1]]],"view_labels":["Overview"],"view_centers":[[[0,0,0],[1,0,0]]],"view_sizes":[[[1,1,1],[1,1,1]]],"legend_mode":[0],"legend_labels":["one"],"legend_colors":[[1,0,0,1]]}"#;
+        application.box_scene = Some(scene);
+        application.box_viewer = BoxViewer::parse(presentation, &[17, 23]).ok();
+        application.box_viewer.as_mut().unwrap().select(Some(17));
+        assert!(application.box_viewer_key("bracket_right"));
+        assert_eq!(application.selected_box_id, Some(23));
+        assert!(application.box_camera_key("a"));
+        assert!(application.camera.yaw() < 0.0);
+        assert!(application.box_camera_key("w"));
+        assert!(application.camera.pitch() > 0.0);
+    }
+
+    #[test]
+    fn system_layout_tour_pins_camera_rotation_then_block_walk() {
+        let tour = include_str!("../../../scripts/play-system-layout-tour");
+        let prefix = [
+            "keystroke \"w\"",
+            "keystroke \"w\"",
+            "keystroke \"w\"",
+            "keystroke \"a\"",
+            "keystroke \"a\"",
+            "keystroke \"a\"",
+            "keystroke \"r\"",
+            "keystroke \"h\"",
+            "repeat 18 times",
+            "keystroke \"]\"",
+            "end repeat",
+            "keystroke \"1\"",
+        ];
+        let mut remainder = tour;
+        for command in prefix {
+            let position = remainder.find(command).unwrap();
+            remainder = &remainder[position + command.len()..];
+        }
+    }
+
+    #[test]
     fn bundled_point_scene_loads_through_the_bounded_smoke_path() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/native3d-point-scene.json");
@@ -1836,8 +1900,16 @@ mod tests {
             normalize_key(&Key::Named(NamedKey::ArrowRight)),
             Some("arrow_right")
         );
+        assert_eq!(
+            normalize_key(&Key::Character("<".into())),
+            Some("bracket_left")
+        );
+        assert_eq!(
+            normalize_key(&Key::Character(">".into())),
+            Some("bracket_right")
+        );
         for key in [
-            "a", "b", "g", "h", "i", "j", "k", "l", "n", "p", "s", "t", "u",
+            "a", "b", "d", "g", "h", "i", "j", "k", "l", "n", "p", "s", "t", "u", "w",
         ] {
             assert_eq!(normalize_key(&Key::Character(key.into())), Some(key));
         }

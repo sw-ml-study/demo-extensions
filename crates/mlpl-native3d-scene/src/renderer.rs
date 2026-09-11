@@ -41,6 +41,17 @@ impl Default for Camera {
 }
 
 impl Camera {
+    /// Returns this camera with new orbit angles and otherwise identical optics.
+    ///
+    /// # Errors
+    ///
+    /// Rejects non-finite yaw or pitch and pitch outside the supported range.
+    pub fn with_orbit_angles(self, yaw: f32, pitch: f32) -> Result<Self, RenderError> {
+        let camera = Self { yaw, pitch, ..self };
+        validate_camera(camera)?;
+        Ok(camera)
+    }
+
     /// Creates a perspective camera looking toward the origin along its depth axis.
     ///
     /// # Errors

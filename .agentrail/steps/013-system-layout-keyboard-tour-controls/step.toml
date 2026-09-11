@@ -1,6 +1,6 @@
 number = 13
 slug = "system-layout-keyboard-tour-controls"
-status = "pending"
+status = "in-progress"
 description = "Add documented generic keyboard controls for deterministic system-layout came..."
 role = "production"
 context_files = []
