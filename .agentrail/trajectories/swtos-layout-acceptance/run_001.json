@@ -1,0 +1,11 @@
+{
+  "task_type": "swtos-layout-acceptance",
+  "state": {
+    "number": 9,
+    "step": "swtos-fixture-integration"
+  },
+  "action": "Used producer-pinned fixture and MLPL geometry; added focused mlplunit and Rust contract/regression tests; exercised the live native window; ran just check; committed as 7eec997.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-11T13:12:23"
+}

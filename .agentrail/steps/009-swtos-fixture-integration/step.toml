@@ -1,9 +1,10 @@
 number = 9
 slug = "swtos-fixture-integration"
-status = "in-progress"
+status = "completed"
 description = "After the sw-tos agent publishes an authoritative generated storage-layout ar..."
 role = "production"
 context_files = []
 created_at = "2026-09-11T09:08:44"
+completed_at = "2026-09-11T13:12:23"
 task_type = "swtos-layout-acceptance"
-commits = []
+commits = ["7eec9974c48f01429bc465d50f37d8c51eb21fa4"]
