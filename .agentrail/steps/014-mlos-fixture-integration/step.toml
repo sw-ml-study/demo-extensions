@@ -1,8 +1,9 @@
 number = 14
 slug = "mlos-fixture-integration"
-status = "in-progress"
+status = "completed"
 description = "After the ../../sw-ml-study/sw-os-ml agent publishes an authoritative MLOS sy..."
 role = "production"
 context_files = []
 created_at = "2026-09-11T10:15:29"
-commits = []
+completed_at = "2026-09-11T16:06:34"
+commits = ["5d572d6a8fc33fccb213e9b6b25368e851a8d99f"]

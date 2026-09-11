@@ -1,0 +1,1 @@
+Integrated authoritative MLOS system-layout artifact end-to-end: added MLOS scene MLPL adapter on generic primitives, verified canonical per-space block geometry, checksum-gated launch script, and updated docs/README/tests for non-interactive and guided-tour workflows.
