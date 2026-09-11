@@ -1,6 +1,6 @@
 number = 8
 slug = "swtos-fixture-integration"
-status = "pending"
+status = "in-progress"
 description = "After the sw-tos agent publishes an authoritative generated storage-layout ar..."
 role = "production"
 context_files = []
