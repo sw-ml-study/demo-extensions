@@ -1,0 +1,1 @@
+Fixed the native3d box-scene wgpu validation panic by separating Depth32Float box rendering from depthless point/line overlays. Added pass-order regression coverage; scoped tests and clippy pass; full just check passes; real release box-scene smoke launched twice and remained alive without validation errors before intentional Ctrl-C termination.

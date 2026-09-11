@@ -1,8 +1,9 @@
 number = 5
 slug = "fix-box-depth-pass"
-status = "in-progress"
+status = "completed"
 description = "Reproduce and fix the native3d box-scene wgpu validation panic caused by mixi..."
 role = "production"
 context_files = []
 created_at = "2026-09-11T09:58:31"
-commits = []
+completed_at = "2026-09-11T10:06:24"
+commits = ["85cb1da77365cf522d63ebdca0e9bece3fef1f92"]
