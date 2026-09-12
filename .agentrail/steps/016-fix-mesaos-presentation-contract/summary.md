@@ -1,0 +1,1 @@
+Fixed the MesaOS presentation rejection by aligning all 22 legend_mode, legend_labels, and legend_colors entries. Added launcher-side jq validation with a precise mismatch diagnostic. Focused MLPL tests, style checks, and just check pass.
