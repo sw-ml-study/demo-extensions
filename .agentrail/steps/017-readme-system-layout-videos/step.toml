@@ -1,9 +1,10 @@
 number = 17
 slug = "readme-system-layout-videos"
-status = "in-progress"
+status = "completed"
 description = "Add inline linked README video thumbnails for the latest SWTOS, MesaOS fork, ..."
 role = "production"
 context_files = []
 created_at = "2026-09-11T18:33:43"
+completed_at = "2026-09-11T18:41:41"
 task_type = "system-layout-events"
-commits = []
+commits = ["d7b690e7fccdde3f81fead75ea92349872695de3"]

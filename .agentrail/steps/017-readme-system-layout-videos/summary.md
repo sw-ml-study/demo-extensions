@@ -1,0 +1,1 @@
+Added linked YouTube thumbnail videos for SWTOS, MesaOS fork, and MLOS system-layout visualizations. Condensed the README status/build narrative and directed detailed contracts, controls, and limitations to docs/. The full just check gate passes.
