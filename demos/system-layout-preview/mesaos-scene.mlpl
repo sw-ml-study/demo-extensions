@@ -1,0 +1,76 @@
+# Convert the MesaOS layout artifact into a generic native3d box-scene.
+include "../../lib/system-layout/layout.mlpl";
+
+layout_path=list_get(args(),0)?;
+layout=parse_json(read_text(layout_path)?)?;
+
+kind_colors={
+  blob:[0.95,0.90,0.80,1],
+  bss:[0.20,0.20,0.90,1],
+  catalog:[0.30,0.40,0.80,1],
+  code:[0.80,0.30,0.20,1],
+  data:[0.20,0.80,0.30,1],
+  file:[0.60,0.30,0.95,1],
+  free:[0.12,0.12,0.14,0.30],
+  got:[0.90,0.70,0.10,1],
+  header:[0.70,0.70,0.70,1],
+  heap:[0.60,0.50,0.90,1],
+  image:[1,0.45,0.20,1],
+  limine_requests:[0.20,0.60,0.50,1],
+  limine_requests_end:[0.40,0.40,0.60,1],
+  limine_requests_start:[0.40,0.20,0.60,1],
+  mmap:[0.10,0.70,0.70,1],
+  module:[1,0.80,0.20,1],
+  padding:[0.22,0.20,0.16,0.55],
+  rodata:[0.85,0.70,0.25,1],
+  stack:[0.90,0.25,0.25,1],
+  text:[0.30,0.85,0.40,1],
+  unattributed:[0.95,0.95,0.95,0.15]
+};
+
+block_sizes=flatten(
+  select_rows(
+    parse_json("{\"kernel\":[524288],\"kernel-modules\":[524288],\"initrd\":[524288],\"user:head.elf\":[524288],\"user:xclock.elf\":[524288]}")?,
+    layout.region_space
+  )
+);
+space_colors=select_rows(
+  parse_json("{\"kernel\":[0.95,0.90,0.80,1],\"kernel-modules\":[0.55,0.55,0.60,1],\"initrd\":[0.60,0.45,0.30,0.95],\"user:head.elf\":[0.80,0.45,0.85,1],\"user:xclock.elf\":[0.35,0.75,0.65,1]}")?,
+  layout.region_space
+);
+geometry=u:block_layer_geometry_grid(layout,kind_colors,space_colors,block_sizes,16);
+centers=geometry.centers*0.18;
+sizes=geometry.sizes*0.18;
+
+center_shape=shape(centers);
+size_shape=shape(sizes);
+scene={schema: "sw-ml-study.native3d.box-scene",version: 1,centers: {shape: center_shape,values: reshape(centers,[reduce(:mul,center_shape)])},sizes: {shape: size_shape,values: reshape(sizes,[reduce(:mul,size_shape)])},colors: geometry.colors,ids: geometry.ids};
+print(to_json(scene)?);
+mode_colors=reshape(concat(geometry.colors,geometry.owner_colors,0),[2,geometry.count,4]);
+legend_colors=[
+  [0.22,0.20,0.16,1],
+  [0.95,0.95,0.95,0.15],
+  [0.20,0.20,0.90,1],
+  [0.30,0.40,0.80,1],
+  [0.80,0.30,0.20,1],
+  [0.20,0.80,0.30,1],
+  [0.60,0.30,0.95,1],
+  [1,0.45,0.20,1],
+  [0.90,0.25,0.25,1],
+  [0.20,0.60,0.50,1],
+  [0.40,0.40,0.60,1],
+  [0.40,0.20,0.60,1],
+  [0.10,0.70,0.70,1],
+  [1,0.80,0.20,1],
+  [0.70,0.70,0.70,1],
+  [0.60,0.50,0.90,1],
+  [0.85,0.70,0.25,1],
+  [0.90,0.70,0.10,1],
+  [0.40,0.40,0.45,1],
+  [0.22,0.20,0.16,1],
+  [0.30,0.85,0.40,1],
+  [0.55,0.55,0.60,1]
+];
+presentation={schema: "sw-ml-study.native3d.box-presentation",version: 1,title: "MesaOS memory layout — sparse 512 KiB blobs + log summaries",rotation_speed: 0.35,ids: geometry.ids,labels: layout.region_name,details: layout.region_kind,detail_index: geometry.detail_index,mode_labels: ["Kind", "Space (mapped as kind accent)"],mode_colors: mode_colors,view_labels: ["Sparse block blobs"],view_centers: reshape(centers,[1,geometry.count,3]),view_sizes: reshape(sizes,[1,geometry.count,3]),legend_mode: fill([21],1),legend_labels: ["padding","unattributed","bss","catalog","code","data","file","image","stack","limine_requests","limine_requests_end","limine_requests_start","mmap","module","header","heap","got","rodata","blob","free","text","kernel"],legend_colors: legend_colors};
+print(to_json(presentation)?);
+0

@@ -115,6 +115,10 @@ system-layout-swtos:
 system-layout-mlos:
     ./scripts/run-system-layout-mlos
 
+# Visualize the pinned MesaOS memory layout artifact.
+system-layout-mesaos:
+    ./scripts/run-system-layout-mesaos
+
 # Replay a one-second-per-key macOS tour into the focused system-layout viewer.
 system-layout-tour:
     ./scripts/play-system-layout-tour
@@ -127,7 +131,7 @@ system-layout-swtos-tour:
 system-layout-mlos-tour:
     ./scripts/play-system-layout-tour
 
-# Replay the recording tour into the focused MesaOS viewer once integration lands.
+# Replay the recording tour into the focused MesaOS viewer.
 system-layout-mesaos-tour:
     ./scripts/play-system-layout-tour
 

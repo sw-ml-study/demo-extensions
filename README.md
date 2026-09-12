@@ -421,8 +421,8 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
   centers, sizes, colors, stable IDs, triangle planning, and headless depth
   evidence for later system-layout demonstrations.
 - [System-layout previews](docs/system-layout-preview.md) — runnable MLPL-owned
-  visualizations of hash-pinned SWTOS and MLOS artifacts through the same
-  generic renderer, with selection details and switchable color modes.
+  visualizations of hash-pinned SWTOS, MLOS, and MesaOS artifacts through the
+  same generic renderer, with selection details and switchable color modes.
 - [Native3D point-cloud demo](docs/native3d-point-cloud-demo.md) — deterministic
   MLPL-owned arrays, controls, selection styling, and host responsibility split.
 - [Native3D point-cloud acceptance](docs/native3d-point-cloud-acceptance.md) —

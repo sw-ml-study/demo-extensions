@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+layout=${1:-$repo_root/fixtures/mesaos-storage-layout-35da57bc6.json}
+expected=${MESAOS_LAYOUT_SHA256:-cea1a005a3bcbb6a1b81dd03aba240ec2b3b0954573ee0c1eec1ab17b9387f74}
+actual=$(shasum -a 256 "$layout" | awk '{print $1}')
+if [ "$actual" != "$expected" ]; then
+  echo "MesaOS layout checksum mismatch: expected $expected, got $actual" >&2
+  if [ -n "${MESAOS_LAYOUT_SHA256-}" ]; then
+    exit 1
+  fi
+  echo "No explicit MESAOS_LAYOUT_SHA256 was provided, so the checksum can be updated intentionally." >&2
+fi
+
+mlpl=$($repo_root/scripts/select-mlpl)
+preview_dir=$(mktemp -d "${TMPDIR:-/tmp}/mlpl-layout-mesaos.XXXXXX")
+trap 'rm -rf "$preview_dir"' EXIT HUP INT TERM
+raw=$preview_dir/output.txt
+scene=$preview_dir/box-scene.json
+presentation=$preview_dir/box-presentation.json
+"$mlpl" --source-dir "$repo_root" -f "$repo_root/demos/system-layout-preview/mesaos-scene.mlpl" -- "$layout" >"$raw"
+sed -n '1p' "$raw" >"$scene"
+sed -n '2p' "$raw" >"$presentation"
+cargo run --release --manifest-path "$repo_root/Cargo.toml" -p mlpl-native3d-window -- \
+  --box-scene "$scene" --box-presentation "$presentation" --selected-box 1001000000 \
+  --initial-yaw -0.70 --initial-pitch 0.42

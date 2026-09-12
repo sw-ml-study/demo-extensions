@@ -1,6 +1,6 @@
 number = 15
 slug = "mesaos-fixture-integration"
-status = "pending"
+status = "in-progress"
 description = "After the ../../softwarewrighter/MesaOS agent publishes an authoritative Mesa..."
 role = "production"
 context_files = []

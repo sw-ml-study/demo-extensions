@@ -40,33 +40,89 @@ def u:block_layer_geometry_grid(layout,palette,region_owner_colors,block,side) {
   "Expand occupied regions into bounded cubes on configurable square layers and summarize free regions.";
   kinds=record_get(layout,"region_kind")?;
   lengths=record_get(layout,"region_length")?;
-  stable_ids=record_get(layout,"region_id")?;
-  region_colors=select_rows(palette,kinds);
-  occupancy=parse_json("{\"header\":[0],\"catalog\":[0],\"image\":[0],\"free\":[1],\"padding\":[0],\"text\":[0],\"rodata\":[0],\"data\":[0],\"bss\":[0],\"state\":[0],\"stack\":[0],\"kernel\":[0],\"reserved\":[0],\"weight-tile\":[0],\"scale\":[0],\"expert\":[0],\"kv-block\":[0],\"activation\":[0],\"embed-block\":[0],\"rag-block\":[0],\"adapter\":[0]}")?;
-  free_mask=flatten(select_rows(occupancy,kinds));
   region_count=tally(lengths);
+  region_ids=u:region_ids(layout,region_count);
+  region_colors=select_rows(palette,kinds);
+  occupancy=parse_json("{\"header\":[0],\"catalog\":[0],\"image\":[0],\"free\":[1],\"padding\":[0],\"text\":[0],\"rodata\":[0],\"data\":[0],\"bss\":[0],\"state\":[0],\"stack\":[0],\"kernel\":[0],\"reserved\":[0],\"weight-tile\":[0],\"scale\":[0],\"expert\":[0],\"kv-block\":[0],\"activation\":[0],\"embed-block\":[0],\"rag-block\":[0],\"adapter\":[0],\"blob\":[0],\"code\":[0],\"file\":[0],\"got\":[0],\"heap\":[0],\"limine_requests\":[0],\"limine_requests_end\":[0],\"limine_requests_start\":[0],\"mmap\":[0],\"module\":[0],\"unattributed\":[0]}")?;
+  free_mask=flatten(select_rows(occupancy,kinds));
   block_counts=ceil(lengths/block)*(1-free_mask);
-  width=reduce(:max,block_counts);
+  byte_mode=eq(block,1);
+  compact_threshold = if eq(reduce(:max,byte_mode),0) {
+    2048
+  } else {
+    128
+  };
+  collapsed_mask = (1-free_mask)* (byte_mode + ((1-byte_mode)*(block_counts>compact_threshold)));
+  compact_mask = (1-free_mask)*(1-collapsed_mask);
+  compact_counts=block_counts*compact_mask;
+  max_width=reduce(:max,compact_counts);
+  width=if eq(max_width,0) {
+    1
+  } else {
+    max_width
+  };
   region_grid=matmul(reshape(range(region_count),[region_count,1]),ones([1,width]));
   unit_grid=matmul(ones([region_count,1]),reshape(range(width),[1,width]));
-  occupied_mask=flatten(lt(unit_grid,reshape(block_counts,[region_count,1])));
+  occupied_mask=flatten(lt(unit_grid,reshape(compact_counts,[region_count,1])));
   occupied_regions=compress(occupied_mask,flatten(region_grid));
   occupied_units=compress(occupied_mask,flatten(unit_grid));
   free_regions=compress(free_mask,range(region_count));
-  occupied=tally(occupied_regions);
+  collapsed_regions=compress(collapsed_mask,range(region_count));
+  collapsed_count=tally(collapsed_regions);
+  collapsed_lengths=if eq(collapsed_count,0) {
+    0
+  } else {
+    flatten(gather_rows(reshape(lengths,[region_count,1]),collapsed_regions))
+  };
+  collapsed_den=if eq(collapsed_count,0) {
+    1
+  } else {
+    reduce(:max,log(collapsed_lengths+1))
+  };
+  collapsed_heights=if eq(collapsed_count,0) {
+    0
+  } else {
+    0.35+4.5*log(collapsed_lengths+1)/collapsed_den
+  };
+  collapsed_centers=if eq(collapsed_count,0) {
+    reshape(zeros([0]),[0,3])
+  } else {u:columns3(range(collapsed_count)+side/2+2.5,collapsed_heights/2-1.5,zeros([collapsed_count]))};
+  collapsed_sizes=if eq(collapsed_count,0) {
+    reshape(zeros([0]),[0,3])
+  } else {u:columns3(fill([collapsed_count],0.8),collapsed_heights,fill([collapsed_count],3.8))};
   free_count=tally(free_regions);
-  slot=range(occupied);
+  occupied_count=reduce(:add,compact_counts);
+  expanded_count=tally(occupied_regions);
+  slot=range(occupied_count);
   layer_size=side*side;
   occupied_centers=u:columns3(mod(slot,side)-(side-1)/2,floor(slot/layer_size)-1.5,mod(floor(slot/side),side)-(side-1)/2);
-  occupied_sizes=fill([occupied,3],0.86);
+  occupied_sizes=fill([expanded_count,3],0.86);
   free_lengths=flatten(gather_rows(reshape(lengths,[region_count,1]),free_regions));
   free_heights=0.35+log(free_lengths+1)/4;
   free_centers=u:columns3(range(free_count)+side/2+2.5,free_heights/2-1.5,zeros([free_count]));
   free_sizes=u:columns3(fill([free_count],0.8),free_heights,fill([free_count],3.8));
-  detail_index=concat(occupied_regions,free_regions);
-  unit_index=concat(occupied_units,zeros([free_count]));
-  region_ids=flatten(gather_rows(reshape(stable_ids,[tally(stable_ids),1]),detail_index));
-  {centers: concat(occupied_centers,free_centers,0),sizes: concat(occupied_sizes,free_sizes,0),colors: gather_rows(region_colors,detail_index),owner_colors: gather_rows(region_owner_colors,detail_index),ids: region_ids*1000000+unit_index,detail_index: detail_index,count: occupied+free_count,occupied: occupied}
+  centers=if eq(collapsed_count,0) {
+    concat(occupied_centers,free_centers,0)
+  } else {
+    concat(occupied_centers,concat(collapsed_centers,free_centers,0),0)
+  };
+  sizes=if eq(collapsed_count,0) {
+    concat(occupied_sizes,free_sizes,0)
+  } else {
+    concat(occupied_sizes,concat(collapsed_sizes,free_sizes,0),0)
+  };
+  detail_index=if eq(collapsed_count,0) {
+    concat(occupied_regions,free_regions,0)
+  } else {
+    concat(occupied_regions,concat(collapsed_regions,free_regions,0),0)
+  };
+  unit_index=if eq(collapsed_count,0) {
+    concat(occupied_units,zeros([free_count]),0)
+  } else {
+    concat(occupied_units,concat(zeros([collapsed_count]),zeros([free_count]),0),0)
+  };
+  region_ids=flatten(gather_rows(reshape(region_ids,[region_count,1]),detail_index));
+  {centers: centers,sizes: sizes,colors: gather_rows(region_colors,detail_index),owner_colors: gather_rows(region_owner_colors,detail_index),ids: region_ids*1000000+unit_index,detail_index: detail_index,count: tally(detail_index),occupied: occupied_count}
 }
 
 def u:block_layer_geometry(layout,palette,region_owner_colors,block) {

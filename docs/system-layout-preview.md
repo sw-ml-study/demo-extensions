@@ -49,8 +49,8 @@ and tour take about twelve seconds. The
 terminal application must have Accessibility permission to control the focused
 window. The tour never closes or mutates the source artifact.
 The generic alias is `just system-layout-tour`. The
-`system-layout-mlos-tour` recipe drives the integrated MLOS view;
-`system-layout-mesaos-tour` remains reserved for that producer integration.
+`system-layout-mlos-tour` recipe drives the integrated MLOS view and
+`system-layout-mesaos-tour` drives the MesaOS view.
 
 ## MLOS
 
@@ -68,6 +68,27 @@ SHA-256 `cdb0cfc1fd7c9c919444712027c483fcfe9cf275881bf1a0ebba2042e1bc4b2d`.
 It was published by `sw-ml-study/sw-os-ml` at `5b3f777830b4`; its embedded
 clean producer revision is `807adb290086`. Static relationships are correctly
 empty because the snapshot claims no resident objects.
+
+## MesaOS
+
+`just system-layout-mesaos` opens a native3d viewer for the pinned MesaOS
+artifact using the same reusable MLPL adapter and renderer as SWTOS/MLOS.
+
+`just system-layout-mesaos-tour` runs the same deterministic keyboard walkthrough
+after launch.
+
+The MesaOS producer maps five spaces (`kernel`, `kernel-modules`, `initrd`,
+`user:head.elf`, `user:xclock.elf`) and 804 regions. The producer retains its
+native byte/4 KiB units; the viewer deliberately aggregates all five spaces into
+512 KiB visual cells so the scene is sparse and readable rather than thousands of
+tiny cubes. Occupied cells use opaque colors and remain selectable. Free and
+sparse regions use logarithmic summaries so one huge empty segment cannot drown
+out kernel sections.
+
+The vendored artifact is
+[`fixtures/mesaos-storage-layout-35da57bc6.json`](../fixtures/mesaos-storage-layout-35da57bc6.json),
+SHA-256 `cea1a005a3bcbb6a1b81dd03aba240ec2b3b0954573ee0c1eec1ab17b9387f74`.
+Producer provenance is `MesaOS` at revision `35da57bc6`.
 
 There is no setup or generated data to retain. The launcher selects the
 adjacent development MLPL binary (or the absolute `MLPL` override), evaluates

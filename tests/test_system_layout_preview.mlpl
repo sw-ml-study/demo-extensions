@@ -63,4 +63,24 @@ def u:test_mlos_multi_space_block_geometry() {
   u:assert_eq(shape(geometry.colors),[852,4],"all MLOS kinds have palette rows")
 }
 
+@test {name: "MesaOS uses mixed units and log-scale free summaries",tags: ["native3d","system-layout","mesaos"]}
+def u:test_mesaos_multi_space_block_geometry() {
+  "Prove MesaOS block-unit conversion and summary geometry are bounded and parsed.";
+  layout=parse_json(read_text("fixtures/mesaos-storage-layout-35da57bc6.json")?)?;
+  blocks=flatten(
+    select_rows(
+      parse_json("{\"kernel\":[524288],\"kernel-modules\":[524288],\"initrd\":[524288],\"user:head.elf\":[524288],\"user:xclock.elf\":[524288]}")?,
+      layout.region_space
+    )
+  );
+  kind_colors={blob:[0.95,0.90,0.80,1],bss:[0.20,0.20,0.90,1],catalog:[0.30,0.40,0.80,1],code:[0.80,0.30,0.20,1],data:[0.20,0.80,0.30,1],file:[0.60,0.30,0.95,1],free:[0.12,0.12,0.14,0.30],got:[0.90,0.70,0.10,1],header:[0.70,0.70,0.70,1],heap:[0.60,0.50,0.90,1],image:[1,0.45,0.20,1],limine_requests:[0.20,0.60,0.50,1],limine_requests_end:[0.40,0.40,0.60,1],limine_requests_start:[0.40,0.20,0.60,1],mmap:[0.10,0.70,0.70,1],module:[1,0.80,0.20,1],padding:[0.22,0.20,0.16,0.55],rodata:[0.85,0.70,0.25,1],stack:[0.90,0.25,0.25,1],text:[0.30,0.85,0.40,1],unattributed:[0.95,0.95,0.95,0.15]};
+  space_colors=select_rows(parse_json("{\"kernel\":[1,0.90,0.80,1],\"kernel-modules\":[0.55,0.55,0.60,1],\"initrd\":[0.60,0.45,0.30,0.95],\"user:head.elf\":[0.80,0.45,0.85,1],\"user:xclock.elf\":[0.35,0.75,0.65,1]}")?,layout.region_space);
+  geometry=u:block_layer_geometry_grid(layout,kind_colors,space_colors,blocks,16);
+  u:assert_true(str_eq(layout.provenance.revision,"35da57bc6"),"MesaOS producer revision is pinned")?;
+  u:assert_eq(tally(layout.rel_from),35,"MesaOS relationship metadata parses")?;
+  u:assert_true(geometry.count >= geometry.occupied, "all free regions are bounded summaries")?;
+  u:assert_true(geometry.count < 2000, "MesaOS visual aggregation stays bounded")?;
+  u:assert_eq(tally(geometry.ids),geometry.count,"ids match visible geometry")
+}
+
 u:run_registered_tests()
