@@ -303,53 +303,12 @@ cargo test -p mlpl-extension-loader --test manifest_resolution
 
 ## Current status
 
-The delivered repository proves:
-
-- fixed-layout ABI V1 values, errors, descriptors, and version negotiation;
-- bounded fail-closed metadata validation and host-owned metadata copies;
-- independent shared-library loading with library lifetime retention;
-- namespaced typed success, extension failure, and contained-panic calls;
-- deactivation that rejects later calls;
-- deterministic manifests, exact target selection, canonical path confinement,
-  stable diagnostics, and duplicate/mismatch rejection;
-- typed function/default/return and native-type metadata with deterministic
-  validation and stable help rendering;
-- bounded dense numeric arrays with validated dtype, rank, shape, byte strides,
-  alignment, storage length, and one-call `[N,3]` acceptance;
-- extension-scoped, type-tagged generational handles with stale/cross-extension
-  rejection and deterministic resource finalization;
-- macro-generated ABI descriptors/trampolines around safe Rust handlers, with
-  hello containing no handwritten unsafe code;
-- a public MLPL facade kept separate from private native functions.
-- a deterministic MLPL wireframe-cube scene with independently adjustable
-  dimensions, rotation speed, RGBA line color, and thickness;
-- a renderer-neutral Rust line-scene contract that validates bulk `[N,3]`
-  positions and `[M,2]` edges before later GPU work.
-- a bounded renderer-neutral point-scene contract for `[N,3]` positions and
-  parallel size/color/opacity/stable-ID arrays, with deterministic upload
-  planning and explicit owned-byte accounting;
-- deterministic headless point projection, viewport/near-plane culling,
-  far-to-near alpha ordering, stable-ID picking ties, and raster evidence;
-- a native wgpu/winit circular point-sprite pipeline with full stable IDs and an
-  opt-in `just point-cloud-smoke` fixture on graphical macOS/Linux sessions;
-- atomic retained point replacements/patches and precision-safe stable-ID
-  selection events, with application meaning reserved for MLPL;
-- a deterministic `just point-cloud` MLPL teaching app with selection, camera,
-  patches, lifecycle, and a headless real-worker acceptance test;
-- a bounded `just point-cloud-acceptance` release probe and evidence matrix that
-  separate CPU byte/timing observations from unmeasured GPU/Linux behavior;
-- a deterministic headless transform, perspective projection, clipping, and
-  thick-line raster pipeline with portable PPM evidence.
-- a real headless `_native3d` provider with typed viewer lifecycle, bulk line
-  arrays, state/size records, and explicit MLPL-supplied render state.
-- an MLPL-owned control reducer for dimensions, signed speed, pause/reset,
-  palette, thickness, resize/close events, and deterministic bulk updates.
-- bounded/coalesced input, camera/picking, single-flight animation frames, and
-  atomic retained-scene patches across every interactive native demo;
-- native tic-tac-toe, Life plane/torus, Model Atlas, disk usage, audio spectrum,
-  and weight-distribution applications with MLPL-owned semantics;
-- an offline-first Rust/Yew microscope over schema-validated, hash-pinned MM01,
-  LR01, and KM01 MLPL recordings with generic rank/shape rendering.
+The current release path covers the versioned C ABI, dynamic loading, bounded
+arrays and handles, generic native3d scenes, retained updates, and MLPL-owned
+interactive demos. It also includes the offline Yew microscope and the
+cross-repository system-layout viewers shown above. Detailed contracts,
+acceptance evidence, and known limitations are maintained in the linked
+documents rather than duplicated here.
 
 The opt-in wgpu/winit window is connected to the MLPL reducer through sw-MLPL's
 parked-main Port contract. Only owned event and scene values cross between the
@@ -423,6 +382,18 @@ unload/hot reload, facades, and compiled-provider startup remain future work.
 - [System-layout previews](docs/system-layout-preview.md) — runnable MLPL-owned
   visualizations of hash-pinned SWTOS, MLOS, and MesaOS artifacts through the
   same generic renderer, with selection details and switchable color modes.
+
+### Latest system-layout visualizations
+
+These short recordings show the same generic viewer driven by three different
+OS layout producers. Click a thumbnail to watch the video on YouTube.
+
+[![SWTOS system-layout visualization](https://img.youtube.com/vi/nCi2uGWd7f0/hqdefault.jpg)](https://www.youtube.com/watch?v=nCi2uGWd7f0)
+
+[![MesaOS fork system-layout visualization](https://img.youtube.com/vi/vRfXYOaxXbo/hqdefault.jpg)](https://www.youtube.com/watch?v=vRfXYOaxXbo)
+
+[![MLOS system-layout visualization](https://img.youtube.com/vi/JnlhHDtXWGg/hqdefault.jpg)](https://www.youtube.com/watch?v=JnlhHDtXWGg)
+
 - [Native3D point-cloud demo](docs/native3d-point-cloud-demo.md) — deterministic
   MLPL-owned arrays, controls, selection styling, and host responsibility split.
 - [Native3D point-cloud acceptance](docs/native3d-point-cloud-acceptance.md) —

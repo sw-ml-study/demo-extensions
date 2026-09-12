@@ -1,0 +1,1 @@
+Add inline linked README video thumbnails for the latest SWTOS, MesaOS fork, and MLOS system-layout visualizations. Preserve existing README structure, run documentation/style/check gates, commit, complete, and push main.
