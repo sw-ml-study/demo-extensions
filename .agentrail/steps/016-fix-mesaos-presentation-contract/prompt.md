@@ -1,0 +1,1 @@
+Fix the MesaOS native3d presentation contract rejected by the renderer. Reproduce the system-layout-mesaos failure, align legend_mode/legend_labels/legend_colors, add a focused regression test, run the mandatory gates, commit, complete, and push main.

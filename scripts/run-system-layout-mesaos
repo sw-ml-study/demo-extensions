@@ -22,6 +22,13 @@ presentation=$preview_dir/box-presentation.json
 "$mlpl" --source-dir "$repo_root" -f "$repo_root/demos/system-layout-preview/mesaos-scene.mlpl" -- "$layout" >"$raw"
 sed -n '1p' "$raw" >"$scene"
 sed -n '2p' "$raw" >"$presentation"
+legend_labels=$(jq '.legend_labels | length' "$presentation")
+legend_modes=$(jq '.legend_mode | length' "$presentation")
+legend_colors=$(jq '.legend_colors | length' "$presentation")
+if [ "$legend_labels" -ne "$legend_modes" ] || [ "$legend_labels" -ne "$legend_colors" ]; then
+  echo "MesaOS presentation legend mismatch: labels=$legend_labels modes=$legend_modes colors=$legend_colors" >&2
+  exit 1
+fi
 cargo run --release --manifest-path "$repo_root/Cargo.toml" -p mlpl-native3d-window -- \
   --box-scene "$scene" --box-presentation "$presentation" --selected-box 1001000000 \
   --initial-yaw -0.70 --initial-pitch 0.42

@@ -1,6 +1,6 @@
-number = 16
+number = 17
 slug = "runtime-snapshot-events"
-status = "pending"
+status = "in-progress"
 description = "After sw-tos defines its runtime snapshot/event artifact and sw-mlpl supplies..."
 role = "production"
 context_files = []
