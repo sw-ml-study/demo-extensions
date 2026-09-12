@@ -1,9 +1,10 @@
 number = 16
 slug = "fix-mesaos-presentation-contract"
-status = "in-progress"
+status = "completed"
 description = "Fix the MesaOS native3d presentation contract rejected by the renderer. Repro..."
 role = "production"
 context_files = []
 created_at = "2026-09-11T17:30:46"
+completed_at = "2026-09-11T17:35:14"
 task_type = "system-layout-events"
-commits = []
+commits = ["41142b76e7f44e887a7a57375207aa41ed506da8"]
