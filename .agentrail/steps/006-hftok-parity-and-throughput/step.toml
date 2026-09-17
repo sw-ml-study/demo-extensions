@@ -1,0 +1,9 @@
+number = 6
+slug = "hftok-parity-and-throughput"
+status = "pending"
+description = "Gated step. Check whether ../reasoning-from-scratch has published fixtures/to..."
+role = "production"
+context_files = []
+created_at = "2026-09-16T20:11:16"
+task_type = "hftok"
+commits = []

@@ -1,0 +1,1 @@
+Reprioritized at user request to build the reasoning-from-scratch extension work orders (hftok tokenizer, bounded large download, bf16 fallback); step 018 runtime-snapshot-events was unstarted and remains blocked on a sw-tos runtime artifact, preserved in this archive.

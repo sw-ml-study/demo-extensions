@@ -1,0 +1,9 @@
+number = 3
+slug = "hftok-contract-and-fixture"
+status = "pending"
+description = "Write docs/hftok-extension.md describing the hftok extension contract from ....."
+role = "production"
+context_files = []
+created_at = "2026-09-16T20:11:16"
+task_type = "hftok"
+commits = []

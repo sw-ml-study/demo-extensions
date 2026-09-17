@@ -4,7 +4,21 @@ Only one saga is active at a time. A later saga may be replanned when the
 previous acceptance report exposes an upstream blocker. Steps are independently
 reviewable and use red/green TDD; no step silently modifies `../sw-mlpl`.
 
-Current status (2026-09-06): `km01-offline-lesson` vendors the pinned KM01
+Current status (2026-09-16): the active saga is `reasoning-extensions`, which
+builds the work orders in `../reasoning-from-scratch/docs/demo-extensions-requests.md`:
+a bounded checksum-verified large download over `http-client`, the `hftok`
+Hugging Face byte-level BPE tokenizer extension, and a gated `unpack_bf16`
+fallback. Executable plan: `reasoning-extensions-saga.md`. Sibling-repository
+needs are recorded in `sw-mlpl-requests.md` and
+`demo-mlpl-libraries-requests.md`, never implemented from here.
+
+`swtos-system-layout-visualization` delivered steps 001 through 017 (interchange,
+filled boxes, picking, view modes, viewer controls, SWTOS/MLOS/MesaOS fixture
+integration, and README videos). Its step 018 (runtime snapshot/event
+ingestion) was archived unstarted because it waits on a `sw-tos` runtime
+artifact; it can be re-queued when that artifact exists.
+
+Earlier status: `km01-offline-lesson` vendors the pinned KM01
 producer artifacts and adds the lesson to the generic offline microscope
 selector. `native3d-point-cloud` has delivered its initial
 renderer-neutral contract, headless renderer, and native GPU point pipeline. The
@@ -23,7 +37,7 @@ HTTP/HTTPS client and fixed middleware-policy validation; callback-free serving,
 SQLite, an MLPL framework, and pinned model acquisition follow as explicit
 steps documented in `network-db-extensions.md`.
 
-The active `swtos-system-layout-visualization` saga begins with the versioned,
+The `swtos-system-layout-visualization` saga began with the versioned,
 bounded, renderer-neutral interchange in `system-layout-interchange.md`. This
 repository owns generic box graphics and validation; `sw-tos` owns authoritative
 storage semantics and generated artifacts, while `sw-mlpl` owns host contracts.
@@ -33,6 +47,50 @@ pre-commit tests, affected documentation, `.gitignore` audit, tracked-file
 audit, named-file staging, a detailed commit, AgentRail completion metadata,
 and a successful `git push origin main`. All work is directly on `main`; no
 feature branches, PRs, `gh`, or GitHub Actions are used.
+
+## Active: reasoning-extensions
+
+Purpose: deliver the native services `../reasoning-from-scratch` needs and
+cannot express in the interpreter: a Hugging Face `tokenizer.json` byte-level
+BPE encoder, a streamed checksum-verified download for the 7 MB tokenizer and
+1.19 GB Qwen3 weights, and a bf16 unpack fallback if the upstream dtype slips.
+
+Executable AgentRail plan: `docs/reasoning-extensions-saga.md`, which also
+records the revalidation of each work order (none was already implemented).
+
+1. `http-large-download-core` — pure bounded streaming into a temporary file
+   under an explicit root, length and SHA-256 verification, atomic rename, and
+   cleanup, proven with loopback listeners.
+2. `http-large-download-surface` — `_http:download` registration, MLPL facade,
+   docs, `just fetch-artifact`, and opt-in Qwen3 smoke procedure.
+3. `hftok-contract-and-fixture` — contract document, `tokenizer.json`
+   validation, and a synthetic fixture with expected encodings.
+4. `hftok-byte-level-bpe` — pure encode/decode with the file's own
+   pre-tokenization pattern, merges, and control tokens.
+5. `hftok-handles-and-facade` — typed handles, package manifest, MLPL facade,
+   loader and mlplunit tests.
+6. `hftok-parity-and-throughput` — gated on the upstream fixture, reference
+   suite, and Qwen3 goldens; records the 12,000-prompt timing against the
+   upstream budget or an honest "unavailable".
+7. `unpack-bf16-fallback-decision` — implement only if `sw-mlpl` still lacks
+   the `bf16` dtype.
+8. `reasoning-extensions-acceptance` — gate, acceptance report, catalog and
+   request-document updates.
+
+Acceptance: extension ids match the MLPL reference and real-vocabulary goldens
+exactly; no partial or unverified download survives under the root; malformed
+input and stale handles are `err` results, never panics; Rust holds no chat,
+prompt, or model semantics.
+
+## Delivered through step 017, remainder archived: swtos-system-layout-visualization
+
+Purpose: generic bounded system-layout interchange, filled-box rendering,
+stable-ID picking, camera/view modes, and cross-repository fixture evidence for
+the SWTOS, MLOS, and MesaOS storage visualizers. Steps 001 through 017 are
+complete and recorded in archive
+`swtos-system-layout-visualization-*`. Step 018 (`runtime-snapshot-events`)
+waits on a `sw-tos` runtime snapshot/event artifact and was archived
+unstarted; re-queue it as a new saga or step when that artifact exists.
 
 ## Completed: extension-foundation
 

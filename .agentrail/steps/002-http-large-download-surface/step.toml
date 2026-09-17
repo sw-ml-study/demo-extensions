@@ -1,0 +1,9 @@
+number = 2
+slug = "http-large-download-surface"
+status = "pending"
+description = "Expose the bounded download built in step 1 through the public extension surf..."
+role = "production"
+context_files = []
+created_at = "2026-09-16T20:11:16"
+task_type = "http-download"
+commits = []

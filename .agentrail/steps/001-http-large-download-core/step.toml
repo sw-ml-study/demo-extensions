@@ -1,0 +1,9 @@
+number = 1
+slug = "http-large-download-core"
+status = "pending"
+description = "Add a pure, testable bounded-download module to extensions/http-client follow..."
+role = "production"
+context_files = []
+created_at = "2026-09-16T20:11:16"
+task_type = "http-download"
+commits = []

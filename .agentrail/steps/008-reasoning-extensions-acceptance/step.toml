@@ -1,0 +1,9 @@
+number = 8
+slug = "reasoning-extensions-acceptance"
+status = "pending"
+description = "Run the full mandatory gate and publish docs/reasoning-extensions-acceptance...."
+role = "production"
+context_files = []
+created_at = "2026-09-16T20:11:16"
+task_type = "acceptance"
+commits = []

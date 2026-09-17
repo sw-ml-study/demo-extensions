@@ -1,0 +1,9 @@
+number = 7
+slug = "unpack-bf16-fallback-decision"
+status = "pending"
+description = "Decision step for E3. Re-check ../sw-mlpl for bf16 support in reinterpret (re..."
+role = "production"
+context_files = []
+created_at = "2026-09-16T20:11:16"
+task_type = "bf16"
+commits = []
