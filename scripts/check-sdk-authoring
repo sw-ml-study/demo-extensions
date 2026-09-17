@@ -7,6 +7,9 @@ for source_file in \
   "$repo_root/extensions/http-client/src/lib.rs" \
   "$repo_root/extensions/http-client/src/client.rs" \
   "$repo_root/extensions/http-client/src/middleware.rs" \
+  "$repo_root/extensions/http-client/src/fields.rs" \
+  "$repo_root/extensions/http-client/src/download_plan.rs" \
+  "$repo_root/extensions/http-client/src/download.rs" \
   "$repo_root/extensions/http-server/src/lib.rs" \
   "$repo_root/extensions/http-server/src/server.rs"
 do

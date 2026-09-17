@@ -2066,6 +2066,8 @@ dependencies = [
  "mlpl-extension-loader 0.0.0",
  "mlpl-extension-sdk",
  "mlpl-http-contract",
+ "sha2",
+ "tempfile",
  "ureq",
  "url",
 ]

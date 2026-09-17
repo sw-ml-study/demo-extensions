@@ -1,9 +1,13 @@
 //! Bounded synchronous HTTP capability for MLPL extensions.
 
 mod client;
+mod download;
+mod download_plan;
+mod fields;
 mod middleware;
 
 pub use client::{get_value, request_value};
+pub use download::download_value;
 pub use middleware::middleware_plan_value;
 
 const METADATA: &str = r#"

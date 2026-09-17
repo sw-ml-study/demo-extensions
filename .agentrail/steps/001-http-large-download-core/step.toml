@@ -1,6 +1,6 @@
 number = 1
 slug = "http-large-download-core"
-status = "pending"
+status = "in-progress"
 description = "Add a pure, testable bounded-download module to extensions/http-client follow..."
 role = "production"
 context_files = []

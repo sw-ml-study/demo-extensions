@@ -109,12 +109,66 @@ versioned C-provider boundary. `_http.request(record)` and the smaller
 implementation from interpreted MLPL. Package import and compiled-provider
 parity remain separate concerns.
 
-Large model weights must not use this buffered API. A later model acquisition
-facade should map a short allowlisted model name to a pinned URL, expected
-length, checksum, and cache location; disclose the transfer size; stream bounded
-chunks into a temporary file under an explicitly granted root; verify the
-checksum; and atomically rename the completed file. General HTTP fetch and disk
-write remain separate permissions.
+Large model weights must not use this buffered API. They use the bounded
+large-artifact download below.
+
+## Bounded large-artifact download (core delivered, surface pending)
+
+`download_value` in `extensions/http-client/src/download.rs` streams one
+artifact of declared length and SHA-256 digest into a confined path beneath an
+explicit root. The pure rules live in `download_plan.rs` and never touch the
+network or filesystem; the effects module owns confinement, verified reuse,
+streamed hashing, and atomic publication. The native `_http:download`
+registration, MLPL facade, and `just fetch-artifact` recipe follow in the next
+saga step (`docs/reasoning-extensions-saga.md`).
+
+Request record (exact fields, all required):
+
+| Field | Type | Rule |
+|---|---|---|
+| `url` | string | absolute `http` or `https` URL with a host |
+| `expected_bytes` | i64 | 1 through 8 GiB; the published artifact size |
+| `sha256` | string | 64 hexadecimal characters, any case |
+| `root` | string | absolute existing directory; canonicalized before use |
+| `path` | string | non-empty relative path with only normal components; parents are created beneath the root |
+| `chunk_bytes` | i64 | 1 through 16 MiB read buffer |
+| `timeout_ms` | i64 | 1 through 3,600,000; the overall deadline including body streaming |
+
+Result record: `path` (the published absolute path, resolved through the
+canonical root), `bytes`, `sha256` (lowercase), and `reused`. Redirects are
+fixed at three; exceeding that budget is a transport failure. Only a 2xx status
+is a download, and a 3xx the transport cannot follow (no `Location` header) is
+rejected by the download path itself.
+
+Behavior in order:
+
+1. Validate the record without I/O; any violation is an invalid-argument error.
+2. Canonicalize the root, create the parent directory, and reject a parent or
+   existing target that resolves outside the root or names a directory. The
+   destination directory is created even when the transfer later fails; only
+   files are guaranteed absent.
+3. If the target already exists with the expected size and digest, return
+   `reused: true` without opening a connection.
+4. Otherwise GET the URL; a non-2xx status, transport failure, or a
+   `Content-Length` that disagrees with `expected_bytes` fails before any byte
+   is written.
+5. Stream `chunk_bytes` reads into a uniquely named `.<name>.part-*` temporary
+   file in the target directory while hashing; stop as soon as more than
+   `expected_bytes` arrive.
+6. Verify the byte count and digest, `fsync`, and atomically rename over the
+   target. A stale or mismatched existing file is replaced this way.
+7. Every failure drops the temporary file. Truncation, stalls past the
+   deadline, over-delivery, digest mismatch, and filesystem errors leave no
+   partial output under the root.
+
+Evidence: `extensions/http-client/tests/download_contract.rs` proves success,
+truncated body, tampered bytes, over-delivery without `Content-Length`,
+`Content-Length` mismatch, non-success status, an unfollowable 3xx, a redirect
+loop, a stalled transfer, verified reuse, stale-file replacement, uppercase
+digests, and pre-I/O rejection of unsafe inputs using loopback listeners only. Limitations:
+no resume of interrupted transfers, no parallel ranges, and `timeout_ms` is a
+whole-transfer deadline rather than an idle timeout, so callers size it for the
+full artifact. General HTTP fetch and disk write remain separate permissions.
 
 ## Middleware configuration and order
 

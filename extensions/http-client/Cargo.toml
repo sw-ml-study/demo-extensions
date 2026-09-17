@@ -13,6 +13,8 @@ mlpl-extension-sdk = { path = "../../crates/mlpl-extension-sdk" }
 mlpl-http-contract = { path = "../../crates/mlpl-http-contract" }
 ureq = { version = "2.12.1", default-features = false, features = ["tls"] }
 url = "2"
+sha2 = "0.10"
+tempfile = "3"
 
 [dev-dependencies]
 mlpl-extension-loader = { path = "../../crates/mlpl-extension-loader" }
