@@ -1,0 +1,11 @@
+{
+  "task_type": "hftok",
+  "state": {
+    "number": 4,
+    "step": "hftok-contract-and-fixture"
+  },
+  "action": "Read two real tokenizer.json files as format reference before writing the validator; generated the synthetic fixture programmatically so vocabulary and merges are consistent; derived expected encodings from a byte-level BPE reference and hand-verified several; wrote sixteen rejection cases each differing from a known-good file by one section; registered the crate in the workspace, layout test, and gate scripts; ran scoped tests, clippy, and the full gate twice.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-18T16:43:38"
+}
