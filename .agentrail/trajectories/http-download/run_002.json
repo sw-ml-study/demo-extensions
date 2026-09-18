@@ -1,0 +1,11 @@
+{
+  "task_type": "http-download",
+  "state": {
+    "number": 2,
+    "step": "http-large-download-surface"
+  },
+  "action": "Read the existing provider, facade, demo-host, and script conventions; registered the function and facade; discovered the MLPL result asymmetry by running the demo and probed type_of/str_eq/err_message with the interpreter to find a total idiom; verified five end-to-end paths against a local HTTP server; filed upstream findings; ran crate tests, the MLPL suite, and the full gate; fixed a rustfmt diff the gate caught in the new host binary.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-18T11:01:42"
+}
