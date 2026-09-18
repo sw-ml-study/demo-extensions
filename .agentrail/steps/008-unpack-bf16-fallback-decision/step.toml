@@ -1,4 +1,4 @@
-number = 7
+number = 8
 slug = "unpack-bf16-fallback-decision"
 status = "pending"
 description = "Decision step for E3. Re-check ../sw-mlpl for bf16 support in reinterpret (re..."

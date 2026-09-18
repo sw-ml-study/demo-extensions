@@ -33,6 +33,7 @@ demos/wireframe-cube/            MLPL-owned bulk-array cube scene
 demos/tic-tac-toe/               MLPL rules, minimax, and generic line scene
 demos/life-plane/                 MLPL finite-grid Life model and presets
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
+extensions/digest/              Generic streaming SHA-256 over bytes and confined files
 extensions/http-client/         Bounded HTTP/HTTPS, verified large download, and middleware policy
 extensions/http-server/         Callback-free bounded local HTTP server provider
 extensions/sqlite/              Confined parameterized SQLite provider

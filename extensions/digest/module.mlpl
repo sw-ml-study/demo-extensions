@@ -1,0 +1,25 @@
+# Public MLPL facade for the generic native content-digest extension.
+def u:_digest_native_sha256_bytes(bytes) {
+  "Cross the private native in-memory digest seam.";
+  _digest:sha256_bytes(bytes)
+}
+
+def u:_digest_native_sha256_file(request) {
+  "Cross the private native streamed-file digest seam.";
+  _digest:sha256_file(request)
+}
+
+def u:digest_sha256_bytes(bytes) {
+  "Hash one in-memory byte string as lowercase hexadecimal.";
+  u:_digest_native_sha256_bytes(bytes)
+}
+
+def u:digest_sha256_file_request(root,path,chunk_bytes) {
+  "Build the exact V1 file-digest record without reading anything.";
+  {root: root,path: path,chunk_bytes: chunk_bytes}
+}
+
+def u:digest_sha256_file(root,path,chunk_bytes) {
+  "Stream one confined file and return its digest and byte count.";
+  u:_digest_native_sha256_file(u:digest_sha256_file_request(root,path,chunk_bytes))
+}

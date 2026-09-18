@@ -1,4 +1,4 @@
-number = 6
+number = 7
 slug = "hftok-parity-and-throughput"
 status = "pending"
 description = "Gated step. Check whether ../reasoning-from-scratch has published fixtures/to..."

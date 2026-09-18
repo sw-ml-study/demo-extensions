@@ -80,6 +80,13 @@ extensions/hello/Cargo.toml
 extensions/hello/extension.toml
 extensions/hello/module.mlpl
 extensions/hello/src/lib.rs
+extensions/digest/Cargo.toml
+extensions/digest/extension.toml
+extensions/digest/module.mlpl
+extensions/digest/src/lib.rs
+extensions/digest/src/sha256.rs
+extensions/digest/tests/digest_contract.rs
+extensions/digest/tests/provider_contract.rs
 extensions/sqlite/Cargo.toml
 extensions/sqlite/extension.toml
 extensions/sqlite/module.mlpl
@@ -129,6 +136,7 @@ tests/test_hello_module.mlpl
 tests/test_web_framework.mlpl
 tests/test_todomvc.mlpl
 tests/test_experiment_dashboard.mlpl
+tests/test_digest_module.mlpl
 tests/test_sqlite_module.mlpl
 tests/test_native3d_library.mlpl
 tests/test_tic_tac_toe_model.mlpl

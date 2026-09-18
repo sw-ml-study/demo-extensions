@@ -2,13 +2,12 @@
 //! confinement under an explicit root, verified reuse, streamed hashing into
 //! a temporary file, and atomic publication.
 
-use std::fmt::Write as _;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
+use mlpl_extension_digest::Sha256Stream;
 use mlpl_extension_sdk::{OwnedError, Value};
-use sha2::{Digest, Sha256};
 use tempfile::{Builder, NamedTempFile};
 
 use crate::download_plan::{DOWNLOAD_MAX_REDIRECTS, DownloadPlan};
@@ -163,7 +162,7 @@ fn hash_reader(
     mut sink: impl FnMut(&[u8]) -> Result<(), OwnedError>,
 ) -> Result<(u64, String), OwnedError> {
     let mut buffer = vec![0_u8; chunk_bytes];
-    let mut hasher = Sha256::new();
+    let mut stream = Sha256Stream::new();
     let mut total = 0_u64;
     loop {
         let size = match reader.read(&mut buffer) {
@@ -182,18 +181,10 @@ fn hash_reader(
                 "transfer exceeds expected_bytes {limit}"
             )));
         }
-        hasher.update(&buffer[..size]);
+        stream.update(&buffer[..size]);
         sink(&buffer[..size])?;
     }
-    Ok((total, hex(&hasher.finalize())))
-}
-
-fn hex(digest: &[u8]) -> String {
-    let mut text = String::with_capacity(digest.len() * 2);
-    for byte in digest {
-        let _ = write!(text, "{byte:02x}");
-    }
-    text
+    Ok((total, stream.finish()))
 }
 
 fn outcome(plan: &DownloadPlan, target: &Path, sha256: String, reused: bool) -> Value {

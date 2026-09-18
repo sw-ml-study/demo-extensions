@@ -1,0 +1,9 @@
+number = 6
+slug = "hftok-handles-and-facade"
+status = "pending"
+description = "Expose _hftok:load, encode, decode, token_to_id, and info through the SDK wit..."
+role = "production"
+context_files = []
+created_at = "2026-09-16T20:11:16"
+task_type = "hftok"
+commits = []

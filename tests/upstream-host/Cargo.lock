@@ -682,6 +682,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mlpl-extension-digest"
+version = "0.0.0"
+dependencies = [
+ "mlpl-extension-sdk",
+ "sha2",
+]
+
+[[package]]
 name = "mlpl-extension-hello"
 version = "0.0.0"
 dependencies = [
@@ -693,9 +701,9 @@ dependencies = [
 name = "mlpl-extension-http-client"
 version = "0.0.0"
 dependencies = [
+ "mlpl-extension-digest",
  "mlpl-extension-sdk",
  "mlpl-http-contract",
- "sha2",
  "tempfile",
  "ureq",
  "url",

@@ -15,6 +15,7 @@ members = [
     "extensions/sqlite",
     "extensions/boundary-probe",
     "extensions/canvas",
+    "extensions/digest",
     "extensions/native3d",
 ]
 resolver = "2"

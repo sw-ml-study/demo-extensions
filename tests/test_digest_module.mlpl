@@ -1,0 +1,10 @@
+# Native mlplunit coverage for the public content-digest facade.
+include "extensions/digest/module.mlpl";
+
+@test {name: "digest facade builds the exact V1 file record", tags: ["extensions", "digest"]}
+def u:test_digest_file_request() {
+  "Pin the file-digest record shape without reading any file.";
+  u:assert_eq(u:digest_sha256_file_request("/srv/models","vendor/model.bin",1048576),{root: "/srv/models",path: "vendor/model.bin",chunk_bytes: 1048576},"file digest record carries exactly the V1 fields")
+}
+
+u:run_registered_tests()

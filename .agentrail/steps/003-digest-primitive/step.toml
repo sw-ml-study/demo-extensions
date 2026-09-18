@@ -1,0 +1,9 @@
+number = 3
+slug = "digest-primitive"
+status = "in-progress"
+description = "Expose SHA-256 as a reusable native primitive so consumers can pin and verify..."
+role = "production"
+context_files = []
+created_at = "2026-09-18T11:08:33"
+task_type = "digest"
+commits = []

@@ -1,7 +1,7 @@
 number = 5
-slug = "hftok-handles-and-facade"
+slug = "hftok-byte-level-bpe"
 status = "pending"
-description = "Expose _hftok:load, encode, decode, token_to_id, and info through the SDK wit..."
+description = "Implement pure encode and decode in extensions/hftok with TDD: byte-to-unicod..."
 role = "production"
 context_files = []
 created_at = "2026-09-16T20:11:16"
