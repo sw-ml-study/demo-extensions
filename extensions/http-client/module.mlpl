@@ -9,6 +9,21 @@ def u:http_get(url) {
   u:_http_native_get(url)
 }
 
+def u:_http_native_download(request) {
+  "Cross the private native bounded-download seam.";
+  _http:download(request)
+}
+
+def u:http_download_request(url,expected_bytes,sha256,root,path,chunk_bytes,timeout_ms) {
+  "Build the exact V1 download record without performing any transfer.";
+  {url: url,expected_bytes: expected_bytes,sha256: sha256,root: root,path: path,chunk_bytes: chunk_bytes,timeout_ms: timeout_ms}
+}
+
+def u:http_download(url,expected_bytes,sha256,root,path,chunk_bytes,timeout_ms) {
+  "Stream one checksum-verified artifact into a confined path beneath a root.";
+  u:_http_native_download(u:http_download_request(url,expected_bytes,sha256,root,path,chunk_bytes,timeout_ms))
+}
+
 def u:http_request(request) {
   "Perform a fully configured request when the host supports record arguments.";
   _http:request(request)

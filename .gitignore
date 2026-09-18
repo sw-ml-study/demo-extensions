@@ -8,6 +8,9 @@
 *.so
 *.dll
 
+# Downloaded model artifacts (pinned, checksum-verified, never source)
+/models/
+
 # Generated demo and test output
 /artifacts/
 /reports/

@@ -151,6 +151,10 @@ check:
 http-client url="https://time.gov/":
     ./scripts/run-http-client "{{url}}"
 
+# Fetch one pinned, checksum-verified artifact into models/ (real network).
+fetch-artifact url expected_bytes sha256 path root="":
+    ./scripts/fetch-artifact "{{url}}" "{{expected_bytes}}" "{{sha256}}" "{{path}}" "{{root}}"
+
 # Render the deterministic MLPL TodoMVC HTML preview.
 todomvc:
     ./scripts/run-todomvc

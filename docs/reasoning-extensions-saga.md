@@ -103,6 +103,19 @@ pre-tokenization pattern (no C `onig` build).
    measured numbers, limitations, and remaining upstream gates; update
    `docs/sagas.md`, `README.md`, and the request documents; mark the saga done.
 
+## Delivery status
+
+| Step | Status |
+|---|---|
+| 1 `http-large-download-core` | Delivered 2026-09-17 (commit `3ce5b8c`). |
+| 2 `http-large-download-surface` | Delivered 2026-09-17. E2 is complete: `_http:download` is registered, the MLPL facade and `just fetch-artifact` exist, and the acceptance criteria are met. |
+| 3 onward | Not started. |
+
+Findings recorded rather than worked around silently: extension calls return a
+bare value on success but a result value on failure, so no single MLPL
+expression branches on both. Filed as R1 in `sw-mlpl-requests.md`, with R2 for
+`get_error` on a string payload. Neither blocks this saga.
+
 Acceptance: the tokenizer extension reproduces the upstream MLPL reference and
 real-vocabulary goldens exactly and meets the stated throughput budget or
 records the measured shortfall; the download path never leaves a partial or

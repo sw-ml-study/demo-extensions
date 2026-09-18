@@ -102,9 +102,21 @@ just http-client
 
 The default `https://time.gov/` request is an opt-in live-network example, not
 a test dependency. The mandatory test runs the same
-[`get.mlpl`](demos/http-client/get.mlpl) source against loopback. See the
-[network/database extension plan](docs/network-db-extensions.md) for bounds and
-the full request-record contract.
+[`get.mlpl`](demos/http-client/get.mlpl) source against loopback.
+
+Large artifacts use a separate bounded path that streams into a temporary file,
+verifies a pinned size and SHA-256, and only then renames the result into
+place:
+
+```sh
+just fetch-artifact URL EXPECTED_BYTES SHA256 RELATIVE_PATH
+```
+
+It writes beneath the git-ignored `models/` directory, reuses an already
+verified file without opening a connection, and leaves nothing behind when a
+transfer is truncated or tampered with. See the
+[network/database extension plan](docs/network-db-extensions.md) for bounds,
+the full request-record contract, and the error taxonomy.
 
 ## Build and test
 

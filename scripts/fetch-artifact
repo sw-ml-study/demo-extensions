@@ -1,0 +1,25 @@
+#!/bin/sh
+# Fetch one pinned, checksum-verified artifact through the MLPL download facade.
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+if [ "$#" -lt 4 ]; then
+  echo "usage: fetch-artifact URL EXPECTED_BYTES SHA256 RELATIVE_PATH [ROOT]" >&2
+  echo "  ROOT defaults to <repo>/models and must already exist." >&2
+  exit 2
+fi
+
+url=$1
+expected_bytes=$2
+sha256=$3
+relative_path=$4
+root=${5:-$repo_root/models}
+
+mkdir -p "$root"
+
+exec env CARGO_TARGET_DIR="$repo_root/target/upstream-host" \
+  cargo run --offline --quiet \
+  --manifest-path "$repo_root/tests/upstream-host/Cargo.toml" \
+  --bin http_download_demo -- \
+  "$url" "$expected_bytes" "$sha256" "$root" "$relative_path"

@@ -28,6 +28,14 @@ name = "request"
 type = "record"
 
 [[functions]]
+name = "download"
+documentation = "Stream one checksum-verified artifact into a confined path."
+returns = "record"
+[[functions.arguments]]
+name = "request"
+type = "record"
+
+[[functions]]
 name = "middleware_plan"
 documentation = "Validate V1 middleware TOML and return its fixed execution plan."
 returns = "record"
@@ -45,6 +53,7 @@ mlpl_extension_sdk::export_extension! {
     functions: [
         (get_trampoline, "get", 1, crate::get_value),
         (request_trampoline, "request", 1, crate::request_value),
+        (download_trampoline, "download", 1, crate::download_value),
         (middleware_plan_trampoline, "middleware_plan", 1, crate::middleware_plan_value),
     ]
 }

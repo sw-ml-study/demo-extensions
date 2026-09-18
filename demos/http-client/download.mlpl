@@ -1,0 +1,19 @@
+# Fetch one pinned, checksum-verified artifact through the native extension.
+url = unwrap_or(list_get(args(),0),"");
+expected_bytes = unwrap_or(to_int(unwrap_or(list_get(args(),1),"0")),0);
+sha256 = unwrap_or(list_get(args(),2),"");
+root = unwrap_or(list_get(args(),3),"");
+path = unwrap_or(list_get(args(),4),"");
+print("MLPL bounded artifact download");
+print({url: url,expected_bytes: expected_bytes,root: root,path: path});
+# A successful extension call yields a bare record; a failed one yields an err
+# result, so the outcome is classified with type_of before it is read.
+result = _http:download({url: url,expected_bytes: expected_bytes,sha256: sha256,root: root,path: path,chunk_bytes: 1048576,timeout_ms: 3600000});
+succeeded = str_eq(type_of(result),"record");
+if succeeded {
+  print({path: result.path,bytes: result.bytes,sha256: result.sha256,reused: result.reused})
+} else {
+  print("download failed; no partial file remains beneath the root");
+  print(err_message(result))
+};
+succeeded

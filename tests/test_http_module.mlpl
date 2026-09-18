@@ -8,4 +8,10 @@ def u:test_http_default_url() {
   u:assert_eq(u:http_default_url(args()),"https://time.gov/","empty arguments select official example")
 }
 
+@test {name: "HTTP download facade builds the exact V1 record", tags: ["extensions", "http"]}
+def u:test_http_download_request() {
+  "Pin the download record shape without performing any transfer.";
+  u:assert_eq(u:http_download_request("https://example.test/model.bin",1024,"ab",  "/srv/models","vendor/model.bin",1048576,600000),{url: "https://example.test/model.bin",expected_bytes: 1024,sha256: "ab",root: "/srv/models",path: "vendor/model.bin",chunk_bytes: 1048576,timeout_ms: 600000},"download record carries exactly the V1 fields")
+}
+
 u:run_registered_tests()

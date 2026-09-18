@@ -112,15 +112,21 @@ parity remain separate concerns.
 Large model weights must not use this buffered API. They use the bounded
 large-artifact download below.
 
-## Bounded large-artifact download (core delivered, surface pending)
+## Bounded large-artifact download
 
-`download_value` in `extensions/http-client/src/download.rs` streams one
-artifact of declared length and SHA-256 digest into a confined path beneath an
-explicit root. The pure rules live in `download_plan.rs` and never touch the
-network or filesystem; the effects module owns confinement, verified reuse,
-streamed hashing, and atomic publication. The native `_http:download`
-registration, MLPL facade, and `just fetch-artifact` recipe follow in the next
-saga step (`docs/reasoning-extensions-saga.md`).
+`_http:download(record)` streams one artifact of declared length and SHA-256
+digest into a confined path beneath an explicit root. The pure rules live in
+`extensions/http-client/src/download_plan.rs` and never touch the network or
+filesystem; `download.rs` owns confinement, verified reuse, streamed hashing,
+and atomic publication.
+
+The public MLPL facade is `u:http_download(url, expected_bytes, sha256, root,
+path, chunk_bytes, timeout_ms)` in `extensions/http-client/module.mlpl`, with
+`u:http_download_request(...)` building the record alone for tests that must
+not transfer anything. Ownership split: Rust performs one generic
+checksum-verified transfer into a confined path and knows nothing about models,
+vocabularies, or artifact names; MLPL chooses the URL, the pinned size and
+digest, the cache layout, and what to do with the outcome.
 
 Request record (exact fields, all required):
 
@@ -161,11 +167,57 @@ Behavior in order:
    deadline, over-delivery, digest mismatch, and filesystem errors leave no
    partial output under the root.
 
+### Error taxonomy
+
+Invalid-argument errors are raised before any I/O: a malformed or non-exact
+record, a non-HTTP(S) URL, a relative or missing root, an unconfined or empty
+path, an out-of-range length, chunk, or timeout, and a digest that is not 64
+hexadecimal characters. A path whose parent or existing target resolves outside
+the canonical root, or that names a directory, is also an invalid argument.
+
+Extension errors describe a transfer that was attempted and refused: a
+non-2xx status, a transport failure (including an exhausted redirect budget), a
+`Content-Length` that disagrees with `expected_bytes`, a truncated or
+over-delivered body, a digest mismatch, and filesystem failures while writing,
+flushing, or publishing. All of them leave no file at the target.
+
+A successful extension call yields a bare record to MLPL while a failure yields
+an err result, so neither `is_ok` nor field access is total across both. The
+demo classifies the outcome with `type_of` and `str_eq`; the underlying host
+asymmetry is filed as R1 in `sw-mlpl-requests.md`.
+
+### Running it
+
+`just fetch-artifact URL EXPECTED_BYTES SHA256 RELATIVE_PATH [ROOT]` runs
+`demos/http-client/download.mlpl` through the upstream host binary. `ROOT`
+defaults to `models/`, which is git-ignored because a pinned artifact is a
+downloaded product and never source.
+
+The first artifacts this exists for are published by Hugging Face:
+
+| Artifact | Bytes |
+|---|---|
+| `Qwen/Qwen3-0.6B-Base/tokenizer.json` | 7,031,645 |
+| `Qwen/Qwen3-0.6B-Base/model.safetensors` | 1,192,135,096 |
+
+Their SHA-256 digests are not vendored here. Take each digest from the
+publisher, pass it explicitly, and the transfer either matches it or leaves
+nothing behind. This command performs real network I/O and is opt-in; no gate
+or test requires it.
+
 Evidence: `extensions/http-client/tests/download_contract.rs` proves success,
 truncated body, tampered bytes, over-delivery without `Content-Length`,
 `Content-Length` mismatch, non-success status, an unfollowable 3xx, a redirect
 loop, a stalled transfer, verified reuse, stale-file replacement, uppercase
-digests, and pre-I/O rejection of unsafe inputs using loopback listeners only. Limitations:
+digests, and pre-I/O rejection of unsafe inputs using loopback listeners only.
+`extensions/http-client/tests/provider_contract.rs` pins the registered name,
+help text, and argument rejection across the dynamic and static providers, and
+`tests/test_http_module.mlpl` pins the facade record shape without transferring
+anything. The facade itself was exercised end to end against a local server on
+2026-09-17: a 200,000-byte payload published with its expected digest, a second
+run reported `reused: 1` with the server still running, and a tampered digest,
+a size mismatch, and a `../` path each failed with a distinct message leaving
+zero files under the root. Limitations:
 no resume of interrupted transfers, no parallel ranges, and `timeout_ms` is a
 whole-transfer deadline rather than an idle timeout, so callers size it for the
 full artifact. General HTTP fetch and disk write remain separate permissions.
