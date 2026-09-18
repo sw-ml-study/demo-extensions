@@ -87,6 +87,13 @@ extensions/digest/src/lib.rs
 extensions/digest/src/sha256.rs
 extensions/digest/tests/digest_contract.rs
 extensions/digest/tests/provider_contract.rs
+extensions/hftok/Cargo.toml
+extensions/hftok/src/lib.rs
+extensions/hftok/src/tokenizer_file.rs
+extensions/hftok/src/file_source.rs
+extensions/hftok/tests/tokenizer_file_contract.rs
+fixtures/tokenizer/tiny-tokenizer.json
+fixtures/tokenizer/tiny-expected-encodings.json
 extensions/sqlite/Cargo.toml
 extensions/sqlite/extension.toml
 extensions/sqlite/module.mlpl

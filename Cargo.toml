@@ -16,6 +16,7 @@ members = [
     "extensions/boundary-probe",
     "extensions/canvas",
     "extensions/digest",
+    "extensions/hftok",
     "extensions/native3d",
 ]
 resolver = "2"

@@ -1,0 +1,99 @@
+{
+ "source": "fixtures/tokenizer/tiny-tokenizer.json",
+ "note": "ASCII-only samples. Ids derived from a byte-level BPE reference, not hand-written.",
+ "cases": [
+  {
+   "text": "",
+   "ids": []
+  },
+  {
+   "text": "the",
+   "ids": [
+    116,
+    256
+   ]
+  },
+  {
+   "text": "hello world",
+   "ids": [
+    256,
+    108,
+    108,
+    111,
+    264
+   ]
+  },
+  {
+   "text": " the world",
+   "ids": [
+    258,
+    264
+   ]
+  },
+  {
+   "text": "token",
+   "ids": [
+    266,
+    268
+   ]
+  },
+  {
+   "text": "to the world",
+   "ids": [
+    266,
+    258,
+    264
+   ]
+  },
+  {
+   "text": "<|im_start|>hello<|im_end|>",
+   "ids": [
+    270,
+    256,
+    108,
+    108,
+    111,
+    271
+   ]
+  },
+  {
+   "text": "<think>to the world</think>",
+   "ids": [
+    272,
+    266,
+    258,
+    264,
+    273
+   ]
+  },
+  {
+   "text": "the<|endoftext|>",
+   "ids": [
+    116,
+    256,
+    269
+   ]
+  },
+  {
+   "text": "a b",
+   "ids": [
+    97,
+    32,
+    98
+   ]
+  },
+  {
+   "text": "9",
+   "ids": [
+    57
+   ]
+  },
+  {
+   "text": "!?",
+   "ids": [
+    33,
+    63
+   ]
+  }
+ ]
+}

@@ -111,7 +111,8 @@ pre-tokenization pattern (no C `onig` build).
 | 1 `http-large-download-core` | Delivered 2026-09-17 (commit `3ce5b8c`). |
 | 2 `http-large-download-surface` | Delivered 2026-09-17. E2 is complete: `_http:download` is registered, the MLPL facade and `just fetch-artifact` exist, and the acceptance criteria are met. |
 | 3 `digest-primitive` | Delivered 2026-09-18. Added `extensions/digest` (`_digest:sha256_bytes`, `_digest:sha256_file`) after noticing that E2's checksum verification is unusable by a consumer that cannot compute a digest: SHA-256 is impractical in MLPL, which has no 32-bit integer type for its rounds. Inserted ahead of the tokenizer work because it blocks downstream artifact pinning. See `digest-extension.md` and request D1 in `reasoning-from-scratch-requests.md`. |
-| 4 onward | Not started. |
+| 4 `hftok-contract-and-fixture` | Delivered 2026-09-18. Contract in `hftok-extension.md`, `extensions/hftok` parsing and validation, and the synthetic fixture with derived expected encodings. |
+| 5 onward | Not started. |
 
 Findings recorded rather than worked around silently: extension calls return a
 bare value on success but a result value on failure, so no single MLPL
