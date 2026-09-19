@@ -155,6 +155,10 @@ http-client url="https://time.gov/":
 fetch-artifact url expected_bytes sha256 path root="":
     ./scripts/fetch-artifact "{{url}}" "{{expected_bytes}}" "{{sha256}}" "{{path}}" "{{root}}"
 
+# Encode and decode through the native tokenizer extension over the fixture.
+hftok-check:
+    ./scripts/check-hftok
+
 # Render the deterministic MLPL TodoMVC HTML preview.
 todomvc:
     ./scripts/run-todomvc

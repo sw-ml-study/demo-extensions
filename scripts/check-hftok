@@ -1,0 +1,10 @@
+#!/bin/sh
+# Encode and decode through the real tokenizer extension over the fixture.
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+exec env CARGO_TARGET_DIR="$repo_root/target/upstream-host" \
+  cargo run --offline --quiet \
+  --manifest-path "$repo_root/tests/upstream-host/Cargo.toml" \
+  --bin hftok_demo -- "$repo_root/fixtures/tokenizer/tiny-tokenizer.json"

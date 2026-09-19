@@ -57,9 +57,24 @@ fn control_field_names() -> [&'static str; CONTROL_TOKENS.len()] {
     ]
 }
 
+/// Reads one confined file beneath `root`, applying the same confinement the
+/// record form uses. Shared by both `load` spellings so there is one rule.
+///
+/// # Errors
+///
+/// Returns an invalid-argument error when the path escapes the root or does
+/// not name a regular file, and an extension error when it cannot be read.
+pub(crate) fn read_confined(root: &Path, relative: &Path) -> Result<String, OwnedError> {
+    LoadRequest {
+        root: root.to_path_buf(),
+        relative_path: relative.to_path_buf(),
+    }
+    .read()
+}
+
 pub(crate) struct LoadRequest {
-    root: PathBuf,
-    relative_path: PathBuf,
+    pub(crate) root: PathBuf,
+    pub(crate) relative_path: PathBuf,
 }
 
 impl LoadRequest {

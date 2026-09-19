@@ -64,16 +64,40 @@ explicit root, matching the SQLite and download surfaces:
 _hftok:load({root: <absolute existing directory>, path: <confined relative path>})
 ```
 
-The public facade preserves the requested one-argument spelling by binding the
-root explicitly:
+The public facade preserves the requested one-argument spelling with a second
+native entry point that derives the root from the path itself:
 
 ```mlpl
-u:hftok_load_in(root, path)   # explicit, the honest primitive
-u:hftok_load(path)            # one-argument, resolves against a root the caller set
+u:hftok_load_in(root, path)   # explicit root, the honest primitive
+u:hftok_load(absolute_path)   # one-argument, root is the file's own directory
 ```
 
-The resolved target must still lie beneath the canonical root after symbolic
-links are resolved.
+`u:hftok_load` requires an absolute path and confines the read to the directory
+containing that file. The authority is still explicit, just derived rather than
+supplied: nothing ambient is consulted, and the rule is stated here rather than
+configured elsewhere. In both spellings the resolved target must lie beneath
+the canonical root after symbolic links are resolved.
+
+## Handles
+
+`load` returns a typed generational handle. `encode`, `decode`, `token_to_id`,
+`info`, and `close` take it. `close` releases the tokenizer, after which the
+handle is stale.
+
+A handle from another extension, a handle naming a resource type this
+extension does not define, a handle whose generation was never issued, and a
+handle to an already-closed tokenizer are each rejected as invalid arguments.
+Provider tests construct all four cases directly and check every call path
+rejects them, so the guarantee is proven rather than asserted.
+
+### Ids across the boundary
+
+`encode` returns a one-dimensional `i64` array. MLPL's numeric arrays are
+`f64`, so ids handed back to `decode` after a round trip through the
+interpreter arrive as `f64`. `decode` therefore accepts both, and refuses a
+value that is not a whole number rather than truncating it. This is a property
+of the language's array model, not a defect, and `just hftok-check` exercises
+the full MLPL round trip to keep it honest.
 
 ## Accepted files
 
@@ -169,6 +193,10 @@ regular expressions under "not requested".
 
 ## Status
 
-Delivered: the contract above, the crate, file parsing and validation, the
-fixture, and byte-level encoding and decoding. Typed handles and the MLPL
-facade follow in the next step.
+Delivered: everything above. The public surface, typed handles, the package
+manifest, and the MLPL facade are in place, and `just hftok-check` runs a real
+encode and decode through the loaded extension.
+
+Not yet done: parity against the consuming repository's MLPL reference encoder
+and the real Qwen3 golden encodings, with the 12,000-prompt throughput
+measurement. That is step 007, and no claim of agreement is made before it.

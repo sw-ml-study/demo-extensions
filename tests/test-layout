@@ -57,6 +57,7 @@ demos/life-torus/scene.mlpl
 demos/life-torus/live-applet.mlpl
 demos/http-client/get.mlpl
 demos/http-client/download.mlpl
+demos/hftok/roundtrip.mlpl
 demos/todomvc/model.mlpl
 demos/todomvc/view.mlpl
 demos/todomvc/app.mlpl
@@ -88,12 +89,16 @@ extensions/digest/src/sha256.rs
 extensions/digest/tests/digest_contract.rs
 extensions/digest/tests/provider_contract.rs
 extensions/hftok/Cargo.toml
+extensions/hftok/extension.toml
+extensions/hftok/module.mlpl
 extensions/hftok/src/lib.rs
 extensions/hftok/src/tokenizer_file.rs
 extensions/hftok/src/byte_level.rs
+extensions/hftok/src/handles.rs
 extensions/hftok/src/file_source.rs
 extensions/hftok/tests/tokenizer_file_contract.rs
 extensions/hftok/tests/byte_level_contract.rs
+extensions/hftok/tests/provider_contract.rs
 fixtures/tokenizer/tiny-tokenizer.json
 fixtures/tokenizer/tiny-expected-encodings.json
 extensions/sqlite/Cargo.toml
@@ -129,6 +134,7 @@ scripts/run-life-3d
 scripts/run-life-torus
 scripts/run-http-client
 scripts/fetch-artifact
+scripts/check-hftok
 scripts/run-todomvc
 scripts/run-todomvc-server
 scripts/reset-todomvc
@@ -146,6 +152,7 @@ tests/test_web_framework.mlpl
 tests/test_todomvc.mlpl
 tests/test_experiment_dashboard.mlpl
 tests/test_digest_module.mlpl
+tests/test_hftok_module.mlpl
 tests/test_sqlite_module.mlpl
 tests/test_native3d_library.mlpl
 tests/test_tic_tac_toe_model.mlpl
@@ -186,6 +193,7 @@ tests/test_wireframe_cube_controls.mlpl
 tests/upstream-host/tests/data_boundary.rs
 tests/upstream-host/tests/native3d_provider.rs
 tests/upstream-host/src/bin/http_download_demo.rs
+tests/upstream-host/src/bin/hftok_demo.rs
 tests/upstream-host/tests/http_client_provider.rs
 tests/upstream-host/src/bin/http_client_demo.rs'
 

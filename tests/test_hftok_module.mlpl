@@ -1,0 +1,10 @@
+# Native mlplunit coverage for the public tokenizer facade.
+include "extensions/hftok/module.mlpl";
+
+@test {name: "hftok facade builds the exact V1 load record", tags: ["extensions", "hftok"]}
+def u:test_hftok_load_request() {
+  "Pin the explicit-root load record shape without reading any file.";
+  u:assert_eq(u:hftok_load_request("/srv/models","qwen3/tokenizer.json"),{root: "/srv/models",path: "qwen3/tokenizer.json"},"load record carries exactly the V1 fields")
+}
+
+u:run_registered_tests()

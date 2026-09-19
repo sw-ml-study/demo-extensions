@@ -1,0 +1,50 @@
+# Public MLPL facade for the Hugging Face byte-level BPE tokenizer extension.
+def u:_hftok_native_load(request) {
+  "Cross the private native explicit-root load seam.";
+  _hftok:load(request)
+}
+
+def u:_hftok_native_load_path(path) {
+  "Cross the private native single-path load seam.";
+  _hftok:load_path(path)
+}
+
+def u:hftok_load_request(root,path) {
+  "Build the exact V1 load record without reading anything.";
+  {root: root,path: path}
+}
+
+def u:hftok_load_in(root,path) {
+  "Load a tokenizer.json confined to an explicit root directory.";
+  u:_hftok_native_load(u:hftok_load_request(root,path))
+}
+
+def u:hftok_load(path) {
+  "Load a tokenizer.json named by one absolute path, confined to its directory.";
+  u:_hftok_native_load_path(path)
+}
+
+def u:hftok_encode(tokenizer,text) {
+  "Encode text into an array of token ids.";
+  _hftok:encode(tokenizer,text)
+}
+
+def u:hftok_decode(tokenizer,ids) {
+  "Decode token ids back into text with control tokens still visible.";
+  _hftok:decode(tokenizer,ids)
+}
+
+def u:hftok_token_to_id(tokenizer,token) {
+  "Report one token's id, or an error when the vocabulary lacks it.";
+  _hftok:token_to_id(tokenizer,token)
+}
+
+def u:hftok_info(tokenizer) {
+  "Report vocabulary size, control-token ids, and the pre-tokenization pattern.";
+  _hftok:info(tokenizer)
+}
+
+def u:hftok_close(tokenizer) {
+  "Release one tokenizer and invalidate its handle.";
+  _hftok:close(tokenizer)
+}

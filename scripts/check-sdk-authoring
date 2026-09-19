@@ -17,7 +17,8 @@ for source_file in \
   "$repo_root/extensions/hftok/src/lib.rs" \
   "$repo_root/extensions/hftok/src/tokenizer_file.rs" \
   "$repo_root/extensions/hftok/src/file_source.rs" \
-  "$repo_root/extensions/hftok/src/byte_level.rs"
+  "$repo_root/extensions/hftok/src/byte_level.rs" \
+  "$repo_root/extensions/hftok/src/handles.rs"
 do
   if rg -n '\bunsafe\b|mlpl_extension_abi' "$source_file"; then
     echo "extension bypasses the safe SDK authoring surface: $source_file" >&2

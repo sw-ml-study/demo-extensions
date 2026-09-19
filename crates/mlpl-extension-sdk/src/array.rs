@@ -204,6 +204,21 @@ impl<'a> ArrayView<'a> {
         }
     }
 
+    /// Returns the flat row-major i64 elements.
+    ///
+    /// # Errors
+    ///
+    /// Rejects storage with a dtype other than i64.
+    pub fn as_i64(self) -> Result<&'a [i64], ArrayError> {
+        match &self.array.storage {
+            Storage::I64(values) => Ok(values),
+            other => Err(ArrayError::WrongDType {
+                expected: DType::I64,
+                actual: storage_dtype(other),
+            }),
+        }
+    }
+
     /// Returns the flat row-major f64 elements.
     ///
     /// # Errors

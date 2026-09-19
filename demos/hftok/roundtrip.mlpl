@@ -1,0 +1,12 @@
+# Encode and decode one sample through the native tokenizer extension.
+path = unwrap_or(list_get(args(),0),"");
+sample = unwrap_or(list_get(args(),1)," the world");
+tokenizer = _hftok:load_path(path);
+info = _hftok:info(tokenizer);
+ids = _hftok:encode(tokenizer,sample);
+text = _hftok:decode(tokenizer,ids);
+print("MLPL tokenizer round trip");
+print({vocabulary_size: info.vocabulary_size,end_of_text_id: info.end_of_text_id});
+print({sample: sample,ids: ids,decoded: text});
+_hftok:close(tokenizer);
+str_eq(text,sample)
