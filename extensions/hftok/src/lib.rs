@@ -3,9 +3,11 @@
 //! This step delivers file parsing, validation, and the `validate` diagnostic.
 //! Encoding, decoding, and typed handles follow in later steps.
 
+mod byte_level;
 mod file_source;
 mod tokenizer_file;
 
+pub use byte_level::ByteLevelTokenizer;
 pub use file_source::validate_value;
 pub use tokenizer_file::{CONTROL_TOKENS, TokenizerFile};
 

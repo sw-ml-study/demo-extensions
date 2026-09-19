@@ -114,8 +114,61 @@ waiting on the consuming repository, which will publish its own fixture and
 reference encoder. Reconciling the two, and running the real Qwen3 goldens, is
 a later step; until then no claim is made that the two agree.
 
+## The algorithm
+
+Encoding runs in four stages, and each stage uses only what the file supplies.
+
+1. **Added-token isolation.** Added tokens, which include the five control
+   tokens, are matched literally and longest-first, so `<|im_start|>` wins over
+   any shorter prefix. Each match becomes its own id and never merges with
+   neighbouring text. The text between matches continues to the next stage.
+2. **Pre-tokenization.** The file's own pattern splits text into fragments. A
+   file with a bare `ByteLevel` pre-tokenizer and no pattern treats the whole
+   segment as one fragment.
+3. **Byte-level mapping.** Each fragment's UTF-8 bytes map through the GPT-2
+   byte-to-unicode alphabet, so all 256 byte values become printable code
+   points. This is why a leading space appears as `Ġ`. Arbitrary bytes survive
+   a text vocabulary because of this mapping, and non-ASCII text encodes as its
+   bytes even when no merge covers it.
+4. **Merging.** The merge list is ranked, not ordered by position. Each pass
+   finds the lowest-ranked adjacent pair anywhere in the fragment and merges
+   it, repeating until no pair is mergeable. A left-to-right pass would give
+   different, wrong output: in the fixture `the` must become `t` + `he`,
+   because `(h,e)` is a merge and `(t,h)` is not.
+
+Decoding reverses this. Added tokens decode to their literal spelling, so
+control tokens stay visible rather than being dropped. Every other token's
+glyphs map back to bytes, and the byte string is validated as UTF-8.
+
+### Regular expressions
+
+Pre-tokenization uses `fancy-regex`, because the pattern real vocabularies
+carry contains a negative lookahead (`\s+(?!\S)`) that the `regex` crate
+cannot compile. `fancy-regex` is pure Rust, so this adds no C `onig` build.
+
+This is the only regex use in the repository, and it is internal. No
+general-purpose regex primitive is exposed; the downstream work order lists
+regular expressions under "not requested".
+
+## Limits
+
+- **A pattern that does not compile is refused** when the tokenizer is built,
+  with the reason, rather than panicking later.
+- **Pre-tokenization must cover its input.** If the pattern's matches leave a
+  gap, or the pattern fails at run time, encoding is an error. Encoding a
+  silently truncated prefix would be worse than refusing: the caller would
+  receive plausible ids for text it never supplied.
+- **A fragment absent from the vocabulary is an error.** With a complete
+  byte-level alphabet this cannot happen; with an incomplete one it is
+  reported rather than guessed at.
+- **Decoding validates UTF-8.** A partial multi-byte sequence, for instance one
+  id of the two that spell `é`, is an error rather than replacement characters.
+- **No unknown-token fallback.** `unk_token`, `byte_fallback`, `dropout`, and
+  `ignore_merges` are not honoured; files relying on them are outside the
+  supported set described above.
+
 ## Status
 
-Delivered in this step: the contract above, the crate, file parsing and
-validation, and the fixture. Encoding and decoding, handles, and the MLPL
-facade follow in the next two steps.
+Delivered: the contract above, the crate, file parsing and validation, the
+fixture, and byte-level encoding and decoding. Typed handles and the MLPL
+facade follow in the next step.
