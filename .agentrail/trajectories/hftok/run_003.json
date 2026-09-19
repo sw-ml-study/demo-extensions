@@ -1,0 +1,11 @@
+{
+  "task_type": "hftok",
+  "state": {
+    "number": 6,
+    "step": "hftok-handles-and-facade"
+  },
+  "action": "Studied the sqlite handle-registry pattern before writing my own; ran the real MLPL round trip which exposed the f64/i64 boundary mismatch; fixed the SDK gap in-repo rather than filing a request; constructed four classes of bad handle directly in tests; ran scoped tests, clippy, the MLPL suite, and the full gate twice.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-19T06:54:48"
+}
