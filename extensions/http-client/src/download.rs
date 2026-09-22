@@ -6,8 +6,8 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use mlpl_extension_digest::Sha256Stream;
 use mlpl_extension_sdk::{OwnedError, Value};
+use sha2::{Digest, Sha256};
 use tempfile::{Builder, NamedTempFile};
 
 use crate::download_plan::{DOWNLOAD_MAX_REDIRECTS, DownloadPlan};
@@ -162,7 +162,7 @@ fn hash_reader(
     mut sink: impl FnMut(&[u8]) -> Result<(), OwnedError>,
 ) -> Result<(u64, String), OwnedError> {
     let mut buffer = vec![0_u8; chunk_bytes];
-    let mut stream = Sha256Stream::new();
+    let mut stream = Sha256::new();
     let mut total = 0_u64;
     loop {
         let size = match reader.read(&mut buffer) {
@@ -184,7 +184,7 @@ fn hash_reader(
         stream.update(&buffer[..size]);
         sink(&buffer[..size])?;
     }
-    Ok((total, stream.finish()))
+    Ok((total, format!("{:x}", stream.finalize())))
 }
 
 fn outcome(plan: &DownloadPlan, target: &Path, sha256: String, reused: bool) -> Value {

@@ -114,7 +114,9 @@ pre-tokenization pattern (no C `onig` build).
 | 4 `hftok-contract-and-fixture` | Delivered 2026-09-18. Contract in `hftok-extension.md`, `extensions/hftok` parsing and validation, and the synthetic fixture with derived expected encodings. |
 | 5 `hftok-byte-level-bpe` | Delivered 2026-09-18. Encoding and decoding against the fixture, with `fancy-regex` for the lookahead real patterns use. |
 | 6 `hftok-handles-and-facade` | Delivered 2026-09-18. Typed handles, package manifest, MLPL facade, `just hftok-check`, and loader parity tests. |
-| 7 onward | Not started. |
+| 7 `hftok-nfc-linux-delivery` | Inserted ahead of parity for the Linux delivery request: NFC, added-token vocabulary integration, and the download link fix. See `reasoning-linux-delivery.md` for artifacts and evidence. |
+| 8 `hftok-parity-and-throughput` | Pending evidence: the consumer checkout is absent on this machine. |
+| 9–10 | bf16 decision and final saga acceptance remain pending. |
 
 Findings recorded rather than worked around silently: extension calls return a
 bare value on success but a result value on failure, so no single MLPL

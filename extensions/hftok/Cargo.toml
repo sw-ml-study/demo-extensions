@@ -12,6 +12,7 @@ crate-type = ["cdylib", "rlib"]
 mlpl-extension-sdk = { path = "../../crates/mlpl-extension-sdk" }
 serde_json = "1"
 fancy-regex = "0.16"
+unicode-normalization = "0.1"
 
 [dev-dependencies]
 mlpl-extension-loader = { path = "../../crates/mlpl-extension-loader" }

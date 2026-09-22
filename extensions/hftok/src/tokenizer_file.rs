@@ -18,6 +18,8 @@ pub struct TokenizerFile {
     pub added_tokens: Vec<(String, i64)>,
     /// The pre-tokenization pattern the file itself specifies.
     pub pattern: String,
+    /// Compose ordinary text to NFC after isolating literal added tokens.
+    pub normalize_nfc: bool,
 }
 
 /// Control tokens the work order names, reported by `info` in this order.
@@ -54,25 +56,26 @@ impl TokenizerFile {
         }
         require_byte_level_decoder(&document)?;
         let pattern = pre_tokenizer_pattern(&document)?;
-        let vocab = parse_vocab(model)?;
+        let mut vocab = parse_vocab(model)?;
         let merges = parse_merges(model)?;
         let added_tokens = parse_added_tokens(&document)?;
-        if let Some(normalizer) = document.get("normalizer") {
-            if !normalizer.is_null() {
-                let kind = normalizer
-                    .get("type")
-                    .and_then(Json::as_str)
-                    .unwrap_or("unknown");
+        for (content, id) in &added_tokens {
+            if vocab
+                .insert(content.clone(), *id)
+                .is_some_and(|existing| existing != *id)
+            {
                 return Err(format!(
-                    "unsupported normalizer {kind}; a normalizer would rewrite text before encoding"
+                    "added token {content} conflicts with its vocabulary id"
                 ));
             }
         }
+        let normalize_nfc = parse_normalizer(&document)?;
         Ok(Self {
             vocab,
             merges,
             added_tokens,
             pattern,
+            normalize_nfc,
         })
     }
 
@@ -100,6 +103,29 @@ impl TokenizerFile {
     pub fn vocabulary_size(&self) -> i64 {
         i64::try_from(self.vocab.len()).unwrap_or(i64::MAX)
     }
+}
+
+fn parse_normalizer(document: &Json) -> Result<bool, String> {
+    let Some(normalizer) = document.get("normalizer").filter(|value| !value.is_null()) else {
+        return Ok(false);
+    };
+    let kind = normalizer
+        .get("type")
+        .and_then(Json::as_str)
+        .unwrap_or("unknown");
+    if kind != "NFC" {
+        return Err(format!(
+            "unsupported normalizer {kind}; only NFC or null is supported"
+        ));
+    }
+    if let Some(tokens) = document.get("added_tokens").and_then(Json::as_array) {
+        for token in tokens {
+            if token.get("normalized") != Some(&Json::Bool(false)) {
+                return Err("NFC requires normalized:false on added tokens; normalized added tokens are unsupported".to_owned());
+            }
+        }
+    }
+    Ok(true)
 }
 
 fn require_byte_level_decoder(document: &Json) -> Result<(), String> {

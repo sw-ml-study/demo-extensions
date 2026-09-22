@@ -12,6 +12,11 @@ fallback. Executable plan: `reasoning-extensions-saga.md`. Sibling-repository
 needs are recorded in `sw-mlpl-requests.md` and
 `demo-mlpl-libraries-requests.md`, never implemented from here.
 
+Linux delivery update (2026-09-22): an inserted step adds NFC support and
+builds the tokenizer and checksum-verified downloader for x86_64 Linux.
+[Artifacts and integration evidence](reasoning-linux-delivery.md) record the
+real Qwen3 smoke and the remaining downstream parity/integration work.
+
 `swtos-system-layout-visualization` delivered steps 001 through 017 (interchange,
 filled boxes, picking, view modes, viewer controls, SWTOS/MLOS/MesaOS fixture
 integration, and README videos). Its step 018 (runtime snapshot/event

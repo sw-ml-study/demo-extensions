@@ -50,13 +50,13 @@ empty, absolute, or traversing path, a path that escapes the root or does not
 name a regular file, and an out-of-range `chunk_bytes`. Extension errors cover
 a file that cannot be opened or read. Nothing panics.
 
-## One hashing implementation
+## Hashing and extension linkage
 
-`Sha256Stream` in `extensions/digest/src/sha256.rs` is the only SHA-256
-implementation in the repository, including its hexadecimal rendering. The
-bounded download in `http-client` drives that type directly from its own read
-loop, because it must also enforce a byte limit and tee each chunk into a
-temporary file. Transfer policy stays in the download; hashing stays here.
+Both extensions use the `sha2` implementation. `Sha256Stream` wraps it for the
+digest extension; `http-client` uses `sha2` directly in its bounded read loop.
+Linking the digest extension into another extension pulled in a second
+`sw_mlpl_extension_v1` symbol and failed on Linux. The libraries now each own
+one ABI entry point; their public MLPL contracts are unchanged.
 
 ## Evidence
 

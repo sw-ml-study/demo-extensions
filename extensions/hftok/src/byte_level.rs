@@ -8,6 +8,7 @@
 use std::collections::HashMap;
 
 use fancy_regex::Regex;
+use unicode_normalization::UnicodeNormalization;
 
 use crate::tokenizer_file::TokenizerFile;
 
@@ -56,6 +57,7 @@ pub struct ByteLevelTokenizer {
     pub pattern_source: String,
     control_ids: [i64; 5],
     vocabulary_size: i64,
+    normalize_nfc: bool,
 }
 
 impl ByteLevelTokenizer {
@@ -103,6 +105,7 @@ impl ByteLevelTokenizer {
             pattern_source: file.pattern.clone(),
             control_ids: file.control_ids(),
             vocabulary_size: file.vocabulary_size(),
+            normalize_nfc: file.normalize_nfc,
         })
     }
 
@@ -179,6 +182,13 @@ impl ByteLevelTokenizer {
     }
 
     fn encode_text(&self, text: &str, ids: &mut Vec<i64>) -> Result<(), String> {
+        let normalized;
+        let text = if self.normalize_nfc {
+            normalized = text.nfc().collect::<String>();
+            normalized.as_str()
+        } else {
+            text
+        };
         for fragment in self.pre_tokenize(text)? {
             let mapped = fragment
                 .bytes()

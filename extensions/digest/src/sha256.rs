@@ -131,11 +131,9 @@ impl FileRequest {
 
 /// Incremental SHA-256 over a byte stream.
 ///
-/// This is the single hashing implementation in the repository. Callers that
-/// need their own read loop, such as the bounded download in `http-client`
-/// which must also enforce a byte limit and tee each chunk to a file, drive
-/// this type directly instead of copying the algorithm or its hexadecimal
-/// rendering.
+/// Wraps `sha2` for the digest extension's byte and file surfaces. Other
+/// extensions use `sha2` directly so linking their libraries does not pull in
+/// this extension's exported C ABI entry point.
 #[derive(Default)]
 pub struct Sha256Stream {
     hasher: Sha256,

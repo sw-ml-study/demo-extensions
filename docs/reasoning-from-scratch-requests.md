@@ -41,3 +41,17 @@ repository pins, licenses, and documents. Choosing and recording them is its
 decision, and this repository does not modify sibling repositories.
 
 Status: open. It does not block any step of the active saga here.
+
+## D2. Integrate the Linux tokenizer and download packages
+
+Requested 2026-09-22. Linux release packages now exist locally for `hftok`
+with NFC and `http-client` with checksum-verified downloads. Rebuild commands,
+exact package paths, the required host version, real Qwen3 smoke evidence,
+and limitations are in [reasoning-linux-delivery.md](reasoning-linux-delivery.md).
+The download Linux link failure from duplicate extension entry symbols is
+fixed. Use the public facades and pinned artifact sizes and hashes in the
+consumer's real-model fetch workflow.
+
+Status: downstream integration pending. `../reasoning-from-scratch` is absent
+on this machine, so no consumer files or tests were changed. Its reference
+parity and throughput artifacts remain required for the gated acceptance step.

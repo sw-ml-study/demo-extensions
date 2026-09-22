@@ -34,7 +34,7 @@ demos/tic-tac-toe/               MLPL rules, minimax, and generic line scene
 demos/life-plane/                 MLPL finite-grid Life model and presets
 extensions/hello/               Rust cdylib, package manifest, and MLPL facade
 extensions/digest/              Generic streaming SHA-256 over bytes and confined files
-extensions/hftok/               Hugging Face byte-level BPE tokenizer with typed handles
+extensions/hftok/               Hugging Face byte-level BPE tokenizer with NFC and typed handles
 extensions/http-client/         Bounded HTTP/HTTPS, verified large download, and middleware policy
 extensions/http-server/         Callback-free bounded local HTTP server provider
 extensions/sqlite/              Confined parameterized SQLite provider
@@ -55,6 +55,10 @@ The hello package demonstrates the intended separation:
   and will bind to the native namespace once sw-MLPL provides the host hook.
 
 ## Prerequisites
+
+For Qwen3 tokenization and pinned model downloads, see the
+[Linux tokenizer and downloader delivery](docs/reasoning-linux-delivery.md)
+for package paths, build commands, and measured compatibility.
 
 - Rust 1.85 or newer.
 - [`just`](https://github.com/casey/just) for repository task aliases.

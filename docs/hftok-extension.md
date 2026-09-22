@@ -111,9 +111,15 @@ than guessing:
   the `Sequence` form, so both are supported.
 - `model.merges` entries are either two-element arrays or single strings with
   one space between halves. Current files use arrays; older ones use strings.
+- The normalizer is absent, null, or `{"type":"NFC"}`. NFC composes ordinary
+  text after literal added-token isolation and before pre-tokenization. With
+  NFC, added tokens must explicitly declare `normalized:false`, as in Qwen3;
+  normalized added-token matching is rejected rather than approximated.
+- Added tokens may be outside `model.vocab`. They participate in lookup,
+  vocabulary size, control-token reporting, and literal decoding.
 
 Anything else, including a `WordPiece` or `Unigram` model, a missing vocabulary
-or merge list, a normalizer that would rewrite text before encoding, or
+or merge list, an unsupported normalizer (including NFKC), or
 malformed JSON, is an `err` with a reason. Nothing panics.
 
 ## Error taxonomy
@@ -146,7 +152,9 @@ Encoding runs in four stages, and each stage uses only what the file supplies.
    tokens, are matched literally and longest-first, so `<|im_start|>` wins over
    any shorter prefix. Each match becomes its own id and never merges with
    neighbouring text. The text between matches continues to the next stage.
-2. **Pre-tokenization.** The file's own pattern splits text into fragments. A
+2. **Normalization and pre-tokenization.** NFC, when requested by the file,
+   composes each ordinary segment; null normalization preserves its bytes.
+   The file's own pattern splits text into fragments. A
    file with a bare `ByteLevel` pre-tokenizer and no pattern treats the whole
    segment as one fragment.
 3. **Byte-level mapping.** Each fragment's UTF-8 bytes map through the GPT-2
@@ -163,6 +171,11 @@ Encoding runs in four stages, and each stage uses only what the file supplies.
 Decoding reverses this. Added tokens decode to their literal spelling, so
 control tokens stay visible rather than being dropped. Every other token's
 glyphs map back to bytes, and the byte string is validated as UTF-8.
+
+NFC decoding returns normalized text, not necessarily the input bytes:
+`Cafe` followed by a combining acute accent decodes as `Café`. Literal added
+tokens retain their original spelling. Null-normalizer round trips remain
+byte-exact. See [Linux delivery evidence](reasoning-linux-delivery.md).
 
 ### Regular expressions
 
@@ -199,4 +212,6 @@ encode and decode through the loaded extension.
 
 Not yet done: parity against the consuming repository's MLPL reference encoder
 and the real Qwen3 golden encodings, with the 12,000-prompt throughput
-measurement. That is step 007, and no claim of agreement is made before it.
+measurement. That is the gated parity step, and no claim of agreement is made
+before it. Linux NFC and real-file smoke evidence are recorded separately in
+`reasoning-linux-delivery.md`.

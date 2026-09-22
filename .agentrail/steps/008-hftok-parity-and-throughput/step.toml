@@ -1,6 +1,6 @@
-number = 7
+number = 8
 slug = "hftok-parity-and-throughput"
-status = "pending"
+status = "in-progress"
 description = "Gated step. Check whether ../reasoning-from-scratch has published fixtures/to..."
 role = "production"
 context_files = []

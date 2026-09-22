@@ -99,6 +99,10 @@ fn absent_control_tokens_report_minus_one_rather_than_changing_shape() {
         let vocab = document["model"]["vocab"].as_object_mut().unwrap();
         vocab.remove("<think>");
         vocab.remove("</think>");
+        document["added_tokens"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|token| token["content"] != "<think>" && token["content"] != "</think>");
     });
 
     let ids = TokenizerFile::parse(&source).unwrap().control_ids();
