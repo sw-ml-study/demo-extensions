@@ -1,0 +1,11 @@
+{
+  "task_type": "hftok",
+  "state": {
+    "number": 7,
+    "step": "hftok-nfc-linux-delivery"
+  },
+  "action": "Used AgentRail insert/reorder to activate Linux delivery; wrote failing NFC and added-token regression tests before fixes; built release cdylibs; tested dynamic loading and real HTTPS checksum verification; restored missing adjacent test dependencies; ran scoped tests and full gate; committed named source, documentation, lockfiles and saga state.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-22T14:21:34"
+}
