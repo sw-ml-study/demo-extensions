@@ -1,9 +1,10 @@
 number = 9
 slug = "unpack-bf16-fallback-decision"
-status = "in-progress"
+status = "completed"
 description = "Decision step for E3. Re-check ../sw-mlpl for bf16 support in reinterpret (re..."
 role = "production"
 context_files = []
 created_at = "2026-09-16T20:11:16"
+completed_at = "2026-09-22T21:03:12"
 task_type = "bf16"
-commits = []
+commits = ["9c150ef70c165f9e77487a358b479504c219616a"]

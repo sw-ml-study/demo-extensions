@@ -1,0 +1,11 @@
+{
+  "task_type": "bf16",
+  "state": {
+    "number": 9,
+    "step": "unpack-bf16-fallback-decision"
+  },
+  "action": "Ran the consumer's reinterpret-bf16 probe and an unpack check against the selected sw-mlpl release binary; git-grepped sw-mlpl history and queue for unpack; read the consumer's R11 and E3; documented the decision; ran just check; committed named files.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-22T21:03:12"
+}
