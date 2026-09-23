@@ -1,0 +1,11 @@
+{
+  "task_type": "hftok",
+  "state": {
+    "number": 8,
+    "step": "hftok-parity-and-throughput"
+  },
+  "action": "Fast-forwarded to the renumbered saga; checked each upstream artifact; ran the parity tests and the consumer's own MLPL runner read-only; wrote a round-trip-checked throughput example and measured it four times; documented the proxy's limitations; ran clippy, fmt, and the full just check; committed named files.",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-09-22T20:34:58"
+}
