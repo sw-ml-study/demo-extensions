@@ -159,6 +159,10 @@ fetch-artifact url expected_bytes sha256 path root="":
 hftok-check:
     ./scripts/check-hftok
 
+# Time release-build encoding of a JSON Lines prompt corpus and check round trips.
+hftok-throughput tokenizer corpus count="":
+    cargo run --quiet --release -p mlpl-extension-hftok --example throughput -- "{{tokenizer}}" "{{corpus}}" {{count}}
+
 # Render the deterministic MLPL TodoMVC HTML preview.
 todomvc:
     ./scripts/run-todomvc

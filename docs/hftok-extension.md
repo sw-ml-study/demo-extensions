@@ -210,8 +210,10 @@ Delivered: everything above. The public surface, typed handles, the package
 manifest, and the MLPL facade are in place, and `just hftok-check` runs a real
 encode and decode through the loaded extension.
 
-Not yet done: parity against the consuming repository's MLPL reference encoder
-and the real Qwen3 golden encodings, with the 12,000-prompt throughput
-measurement. That is the gated parity step, and no claim of agreement is made
-before it. Linux NFC and real-file smoke evidence are recorded separately in
+Parity: the extension agrees with the consuming repository's MLPL reference
+on every published fixture expectation and every real Qwen3 golden. The
+12,000-prompt throughput criterion awaits the upstream training corpus and a
+numeric budget; a proxy measurement is recorded. Numbers, method, and
+limitations are in `hftok-acceptance.md`; `just hftok-throughput` reruns the
+measurement. Linux NFC and real-file smoke evidence are recorded separately in
 `reasoning-linux-delivery.md`.

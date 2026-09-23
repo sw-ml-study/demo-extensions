@@ -52,6 +52,12 @@ The download Linux link failure from duplicate extension entry symbols is
 fixed. Use the public facades and pinned artifact sizes and hashes in the
 consumer's real-model fetch workflow.
 
-Status: downstream integration pending. `../reasoning-from-scratch` is absent
-on this machine, so no consumer files or tests were changed. Its reference
-parity and throughput artifacts remain required for the gated acceptance step.
+Status: downstream integration pending. No consumer files or tests were
+changed from here. Parity was checked on macOS on 2026-09-22 against the
+consumer checkout (see [hftok-acceptance.md](hftok-acceptance.md)): its own
+`scripts/run-tokenizer-parity` now matches 6 of 6 fixture expectations and
+8 of 8 Qwen3 goldens. Still needed from that repository to close throughput
+criterion 3: the 12,000-problem training split under `data/math-train/` and a
+numeric budget in its `docs/plan.md` Saga 2 step 4. Its
+`docs/demo-extensions-requests.md` E1 still describes the NFC refusal, which
+is resolved.
