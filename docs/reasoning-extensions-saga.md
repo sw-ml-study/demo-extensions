@@ -117,7 +117,7 @@ pre-tokenization pattern (no C `onig` build).
 | 7 `hftok-nfc-linux-delivery` | Inserted ahead of parity for the Linux delivery request: NFC, added-token vocabulary integration, and the download link fix. See `reasoning-linux-delivery.md` for artifacts and evidence. |
 | 8 `hftok-parity-and-throughput` | Delivered 2026-09-22 on macOS. 6 of 6 fixture expectations and 8 of 8 Qwen3 goldens match, both in Rust and through the consumer's MLPL parity runner. The 12,000-prompt criterion is unavailable as written (corpus not fetched, no numeric budget); a cycled MATH-500 proxy encodes 12,000 prompts in 0.8 to 1.4 s. See `hftok-acceptance.md`. |
 | 9 `unpack-bf16-fallback-decision` | Decided 2026-09-22: not needed, no code. The `bf16` dtype landed in `sw-mlpl`, and the consumer has not requested E3. See "E3 decision" below. |
-| 10 | Final saga acceptance remains pending. |
+| 10 `reasoning-extensions-acceptance` | Delivered 2026-09-22. `reasoning-extensions-acceptance.md`; saga complete. |
 
 Findings recorded rather than worked around silently: extension calls return a
 bare value on success but a result value on failure, so no single MLPL

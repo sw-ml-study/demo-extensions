@@ -1,6 +1,6 @@
 number = 10
 slug = "reasoning-extensions-acceptance"
-status = "pending"
+status = "in-progress"
 description = "Run the full mandatory gate and publish docs/reasoning-extensions-acceptance...."
 role = "production"
 context_files = []

@@ -58,7 +58,9 @@ The hello package demonstrates the intended separation:
 
 For Qwen3 tokenization and pinned model downloads, see the
 [Linux tokenizer and downloader delivery](docs/reasoning-linux-delivery.md)
-for package paths, build commands, and measured compatibility.
+for package paths, build commands, and measured compatibility, and the
+[reasoning extensions acceptance report](docs/reasoning-extensions-acceptance.md)
+for parity, throughput, and remaining upstream gates.
 
 - Rust 1.85 or newer.
 - [`just`](https://github.com/casey/just) for repository task aliases.
@@ -450,6 +452,10 @@ OS layout producers. Click a thumbnail to watch the video on YouTube.
 - [Network and database extensions](docs/network-db-extensions.md) — bounded
   HTTP, fixed middleware ordering, callback-free serving, SQLite, and the MLPL
   framework roadmap.
+- [Hugging Face tokenizer](docs/hftok-extension.md) and
+  [SHA-256 digest](docs/digest-extension.md) — `hftok` and `digest` contracts;
+  [reasoning extensions acceptance](docs/reasoning-extensions-acceptance.md)
+  records parity, throughput, and open upstream gates.
 - [Callback-free HTTP server](docs/http-server.md) — polling, handles, CORS,
   token extraction, bounds, lifecycle, and deliberate protocol limits.
 - [Development and testing](docs/development.md) — tool resolution, TDD, and

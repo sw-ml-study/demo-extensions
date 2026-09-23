@@ -202,7 +202,10 @@ The first artifacts this exists for are published by Hugging Face:
 
 Their SHA-256 digests are not vendored here. Take each digest from the
 publisher, pass it explicitly, and the transfer either matches it or leaves
-nothing behind. This command performs real network I/O and is opt-in; no gate
+nothing behind. The tokenizer's digest,
+`c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539`, was
+measured independently on two machines (`reasoning-linux-delivery.md`). It is
+not publisher-signed. The weights' digest has not been measured here. This command performs real network I/O and is opt-in; no gate
 or test requires it.
 
 Evidence: `extensions/http-client/tests/download_contract.rs` proves success,
@@ -347,8 +350,12 @@ web application inside Rust.
 sw-MLPL's working fine-tuning demos currently construct small deterministic
 weights; arbitrary pretrained checkpoint loading is not yet delivered. The
 planned real SmolLM2 flow uses a named allowlist and explicit size disclosure,
-then caches raw weights for CLI or connect-mode use. Safetensors/GGUF mapping,
-tokenization, and the target model architecture remain separate requirements.
+then caches raw weights for CLI or connect-mode use. Tokenization is now
+delivered by the `hftok` extension (`hftok-extension.md`). Safetensors
+mapping and the target model architecture remain separate requirements.
+`sw-mlpl` reads `bf16` one scalar at a time, but its bulk
+`unpack(bytes, dtype)`, consumer request R11, is still missing. That, not
+acquisition, is what now gates loading real weights.
 
 sw-MLPL already documents sandboxed `write_bytes`, `append_bytes`, and
 `write_atomic`. Once dynamic provider import and ABI-byte bridging are proven,
@@ -367,6 +374,7 @@ still require the specialized streamed, checksum-pinned acquisition path above.
    JSON/form/HTML/session helpers, standard TodoMVC, and experiment CRUD plans.
 5. `live-todomvc-server` — delivered persistent browser CRUD by composing the
    callback-free HTTP server and confined SQLite providers in MLPL.
-6. `pinned-model-acquisition` — only after streaming and filesystem capability
-   contracts exist, add explicit allowlisted fetch, checksum, cache, and atomic
-   publication behavior.
+6. `pinned-model-acquisition` — delivered by the `reasoning-extensions` saga
+   as the bounded large-artifact download above: explicit digest, confined
+   cache path, verified reuse, and atomic publication
+   (`reasoning-extensions-acceptance.md`).

@@ -86,8 +86,9 @@ No new chat, prompt, or model-specific semantics run in Rust.
 
 The `../reasoning-from-scratch` checkout is absent here. Its reference suite,
 Qwen3 goldens, and 12,000 training prompts were not available. This smoke
-evidence is not full reference parity or a throughput acceptance result;
-those remain the next gated step. Integration into that repository remains
+evidence is not full reference parity or a throughput acceptance result.
+Those were measured later on macOS against the consumer checkout; see
+`hftok-acceptance.md`. Integration into that repository remains
 its agent's task. No weights were downloaded.
 
 The full gate also needs the adjacent `demo-ml-utils` checkout (used here at

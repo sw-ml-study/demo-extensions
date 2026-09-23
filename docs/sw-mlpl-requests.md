@@ -4,8 +4,9 @@ Changes this repository needs from the `sw-mlpl` host. Nothing here is
 implemented from this repository; each entry is a work order for the upstream
 agent, revalidated against the named artifacts before that agent acts.
 Historical host-contract gaps and their resolution status remain in
-`upstream-contract.md`; this file holds only open requests raised by the active
-saga (`reasoning-extensions-saga.md`).
+`upstream-contract.md`; this file holds only open requests raised by the
+`reasoning-extensions` saga (`reasoning-extensions-saga.md`, complete
+2026-09-22). Both were re-checked at `sw-mlpl` `dd776fff`.
 
 ## R1. Symmetric result shape from extension calls
 
@@ -35,12 +36,12 @@ success value is deliberate for ergonomics, then a total predicate
 (`is_result`, or `is_ok` returning false rather than raising for a non-result)
 would also resolve it.
 
-Impact: cosmetic for one demo today. It becomes a correctness concern for the
-`hftok` facade in steps 5 and 6, where every call must distinguish a valid
-result from an `err` without a hard error.
+Impact: every extension consumer is affected. The `hftok` facade and the
+consumer's parity runner branch on `type_of`, because `is_ok` on a successful
+`_hftok:load_path` raises "expected a Result value, got ext-handle".
 
-Status: open, not blocking. This repository ships the `type_of` workaround and
-documents it.
+Status: open, not blocking. It still reproduces at `dd776fff`. This repository
+ships the `type_of` workaround and documents it.
 
 ## R2. `get_error` on a string payload
 
@@ -52,4 +53,10 @@ unwrap/err_message instead". `err_message` works and is what this repository
 uses. Recorded so the upstream agent can decide whether Stage 6 enclose or a
 narrower `get_error` contract is the intended resolution.
 
-Status: open, worked around with `err_message`.
+Status: open, still reproduces at `dd776fff`, worked around with
+`err_message`.
+
+Not listed here: bulk `unpack(bytes, dtype)`. That is
+`../reasoning-from-scratch`'s request R11, filed from that repository. This
+saga's step 9 decision depends on it (`reasoning-extensions-saga.md`, "E3
+decision").

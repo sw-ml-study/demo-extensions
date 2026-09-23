@@ -4,13 +4,14 @@ Only one saga is active at a time. A later saga may be replanned when the
 previous acceptance report exposes an upstream blocker. Steps are independently
 reviewable and use red/green TDD; no step silently modifies `../sw-mlpl`.
 
-Current status (2026-09-16): the active saga is `reasoning-extensions`, which
-builds the work orders in `../reasoning-from-scratch/docs/demo-extensions-requests.md`:
-a bounded checksum-verified large download over `http-client`, the `hftok`
-Hugging Face byte-level BPE tokenizer extension, and a gated `unpack_bf16`
-fallback. Executable plan: `reasoning-extensions-saga.md`. Sibling-repository
-needs are recorded in `sw-mlpl-requests.md` and
-`demo-mlpl-libraries-requests.md`, never implemented from here.
+Current status (2026-09-22): no saga is active. `reasoning-extensions` is
+complete. It delivered the bounded checksum-verified download over
+`http-client`, a streaming SHA-256 primitive, and the `hftok` Hugging Face
+byte-level BPE tokenizer, with parity against the consumer's reference. The
+`unpack_bf16` fallback was not needed. See the
+[acceptance report](reasoning-extensions-acceptance.md) for evidence,
+limitations, and the upstream gates that remain. Open sibling-repository
+requests are in `sw-mlpl-requests.md` and `reasoning-from-scratch-requests.md`.
 
 Linux delivery update (2026-09-22): an inserted step adds NFC support and
 builds the tokenizer and checksum-verified downloader for x86_64 Linux.
@@ -53,7 +54,9 @@ audit, named-file staging, a detailed commit, AgentRail completion metadata,
 and a successful `git push origin main`. All work is directly on `main`; no
 feature branches, PRs, `gh`, or GitHub Actions are used.
 
-## Active: reasoning-extensions
+## Delivered: reasoning-extensions
+
+Completed 2026-09-22. Acceptance: `reasoning-extensions-acceptance.md`.
 
 Purpose: deliver the native services `../reasoning-from-scratch` needs and
 cannot express in the interpreter: a Hugging Face `tokenizer.json` byte-level
@@ -83,10 +86,14 @@ records the revalidation of each work order (none was already implemented).
 8. `reasoning-extensions-acceptance` — gate, acceptance report, catalog and
    request-document updates.
 
+AgentRail numbering differs from this list: `digest-primitive` and
+`hftok-nfc-linux-delivery` were inserted as steps 3 and 7, giving ten steps.
+
 Acceptance: extension ids match the MLPL reference and real-vocabulary goldens
 exactly; no partial or unverified download survives under the root; malformed
 input and stale handles are `err` results, never panics; Rust holds no chat,
-prompt, or model semantics.
+prompt, or model semantics. All are met. The 12,000-prompt throughput
+criterion remains open until upstream publishes its corpus and budget.
 
 ## Delivered through step 017, remainder archived: swtos-system-layout-visualization
 
