@@ -116,7 +116,8 @@ pre-tokenization pattern (no C `onig` build).
 | 6 `hftok-handles-and-facade` | Delivered 2026-09-18. Typed handles, package manifest, MLPL facade, `just hftok-check`, and loader parity tests. |
 | 7 `hftok-nfc-linux-delivery` | Inserted ahead of parity for the Linux delivery request: NFC, added-token vocabulary integration, and the download link fix. See `reasoning-linux-delivery.md` for artifacts and evidence. |
 | 8 `hftok-parity-and-throughput` | Delivered 2026-09-22 on macOS. 6 of 6 fixture expectations and 8 of 8 Qwen3 goldens match, both in Rust and through the consumer's MLPL parity runner. The 12,000-prompt criterion is unavailable as written (corpus not fetched, no numeric budget); a cycled MATH-500 proxy encodes 12,000 prompts in 0.8 to 1.4 s. See `hftok-acceptance.md`. |
-| 9–10 | bf16 decision and final saga acceptance remain pending. |
+| 9 `unpack-bf16-fallback-decision` | Decided 2026-09-22: not needed, no code. The `bf16` dtype landed in `sw-mlpl`, and the consumer has not requested E3. See "E3 decision" below. |
+| 10 | Final saga acceptance remains pending. |
 
 Findings recorded rather than worked around silently: extension calls return a
 bare value on success but a result value on failure, so no single MLPL
@@ -130,3 +131,41 @@ unverified file under the root; malformed files, unsupported model types, and
 stale handles are `err` results and never panics; no Rust code encodes chat
 roles, prompts, or model semantics; and every sibling-repository need is
 documented rather than implemented from here.
+
+## E3 decision (step 9, 2026-09-22)
+
+**Not needed: no `bf16` extension is built.** This step's condition was
+"implement only if the `bf16` dtype has not landed", and it has landed.
+
+Evidence, from running `../sw-mlpl` commit `dd776fff` (`mlpl-repl` 0.22.0,
+release build selected by `scripts/select-mlpl`):
+
+- `reinterpret` accepts `bf16` and `f16`. It shipped in `a34cc230` ("bf16 and
+  f16 dtypes for reinterpret + read (RS6)"). The consumer's
+  `probes/reinterpret-bf16.mlpl` prints `bf16=yes f16=yes` and `Ok(1)`.
+- Scalar decode works: `read_bf16_le` of the byte pairs `80 3f` and `80 bf`
+  returns `1` and `-1`.
+- A bulk decode does not exist: `unpack(bytes, "bf16")` fails with `unknown
+  function: unpack`.
+
+The missing bulk decode is the consumer's request R11
+(`../reasoning-from-scratch/docs/sw-mlpl-requests.md`), not R7. The consumer's
+own work order says E3 is not to be built yet:
+`docs/demo-extensions-requests.md` E3 is headed "Not requested yet. Raise only
+if `sw-mlpl` declines request R11". The fallback it describes there is a
+`sten:read_tensor(path, name) -> array` safetensors reader, not the
+`unpack_bf16` planned here. Building `unpack_bf16` now would anticipate a
+request with a different shape that has not been made.
+
+`sw-mlpl` has deferred `unpack`, not declined it. Its
+`docs/future-sagas-queue.md` lists `unpack(bytes, dtype) -> array` under
+"typed-packed-bytes tail", marked "non-critical completeness" and "deferred
+when the extension-ABI work took priority". That entry predates R11, and it
+does not reflect that R11 now blocks the consumer's Saga 3. Raising the
+priority is a matter between those two repositories; this repository does
+not modify `../sw-mlpl`.
+
+Reopen condition: `sw-mlpl` declines R11 and the consumer raises E3. Build
+the extension to the shape E3 then specifies. Keep the Hugging Face
+tensor-name mapping in MLPL, and use the `bf16-vectorized-decode` probe
+values as the parity reference.

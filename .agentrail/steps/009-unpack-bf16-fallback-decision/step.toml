@@ -1,6 +1,6 @@
 number = 9
 slug = "unpack-bf16-fallback-decision"
-status = "pending"
+status = "in-progress"
 description = "Decision step for E3. Re-check ../sw-mlpl for bf16 support in reinterpret (re..."
 role = "production"
 context_files = []

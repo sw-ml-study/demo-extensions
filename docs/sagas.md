@@ -78,7 +78,8 @@ records the revalidation of each work order (none was already implemented).
    suite, and Qwen3 goldens; records the 12,000-prompt timing against the
    upstream budget or an honest "unavailable".
 7. `unpack-bf16-fallback-decision` — implement only if `sw-mlpl` still lacks
-   the `bf16` dtype.
+   the `bf16` dtype. Decided 2026-09-22: not needed (dtype landed;
+   bulk `unpack` is upstream R11, and E3 is not yet requested).
 8. `reasoning-extensions-acceptance` — gate, acceptance report, catalog and
    request-document updates.
 
