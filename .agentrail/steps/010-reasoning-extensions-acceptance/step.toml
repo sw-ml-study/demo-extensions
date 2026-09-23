@@ -1,9 +1,10 @@
 number = 10
 slug = "reasoning-extensions-acceptance"
-status = "in-progress"
+status = "completed"
 description = "Run the full mandatory gate and publish docs/reasoning-extensions-acceptance...."
 role = "production"
 context_files = []
 created_at = "2026-09-16T20:11:16"
+completed_at = "2026-09-22T21:24:15"
 task_type = "acceptance"
-commits = []
+commits = ["a16a77c00e73a020fb9ab7c97340e90ae34b11c2"]
