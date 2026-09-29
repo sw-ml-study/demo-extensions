@@ -1,9 +1,10 @@
 number = 11
 slug = "sw-mlpl-b3180d9a-reconcile"
-status = "in-progress"
+status = "completed"
 description = "Docs-only reconciliation after sw-mlpl b3180d9a (bulk unpack, is_result, get_..."
 role = "production"
 context_files = []
 created_at = "2026-09-29T09:07:19"
+completed_at = "2026-09-29T09:21:25"
 task_type = "acceptance"
-commits = []
+commits = ["1c6e8f781fa6d57c24eae77b8117a8bf1418d297"]
