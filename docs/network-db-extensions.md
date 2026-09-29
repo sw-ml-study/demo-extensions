@@ -183,8 +183,10 @@ flushing, or publishing. All of them leave no file at the target.
 
 A successful extension call yields a bare record to MLPL while a failure yields
 an err result, so neither `is_ok` nor field access is total across both. The
-demo classifies the outcome with `type_of` and `str_eq`; the underlying host
-asymmetry is filed as R1 in `sw-mlpl-requests.md`.
+demo classifies the outcome with `type_of` and `str_eq`, which works on every
+host. `sw-mlpl` `b3180d9a` added the total predicate `is_result` (R1 in
+`sw-mlpl-requests.md`), and `if is_result(r) { ... }` is the preferred branch
+on hosts at or after that commit.
 
 ### Running it
 
@@ -353,9 +355,10 @@ planned real SmolLM2 flow uses a named allowlist and explicit size disclosure,
 then caches raw weights for CLI or connect-mode use. Tokenization is now
 delivered by the `hftok` extension (`hftok-extension.md`). Safetensors
 mapping and the target model architecture remain separate requirements.
-`sw-mlpl` reads `bf16` one scalar at a time, but its bulk
-`unpack(bytes, dtype)`, consumer request R11, is still missing. That, not
-acquisition, is what now gates loading real weights.
+`sw-mlpl` `b3180d9a` added bulk `unpack(bytes, dtype)` (consumer request R11),
+which decodes a whole `bf16` buffer in one native pass. Weight decoding
+therefore stays in the core, and no native tensor-reader extension is
+planned.
 
 sw-MLPL already documents sandboxed `write_bytes`, `append_bytes`, and
 `write_atomic`. Once dynamic provider import and ABI-byte bridging are proven,

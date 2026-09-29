@@ -16,7 +16,7 @@ Evidence was gathered against `../reasoning-from-scratch` at `8cef001` and
 |---|---|---|
 | E1 `hftok` tokenizer | **Delivered.** Parity with the upstream reference passes. The throughput criterion is unavailable as written because upstream artifacts are missing. | `extensions/hftok`, `hftok-extension.md`, `hftok-acceptance.md` |
 | E2 bounded verified download | **Delivered** and acknowledged upstream as "exactly the shape that was asked for". | `extensions/http-client`, `network-db-extensions.md` |
-| E3 `unpack_bf16` fallback | **Not built, by decision.** The `bf16` dtype landed in `sw-mlpl`, and upstream has not raised E3. | `reasoning-extensions-saga.md`, "E3 decision" |
+| E3 `unpack_bf16` fallback | **Not needed.** The `bf16` dtype landed, and bulk `unpack` shipped in `sw-mlpl` `b3180d9a`. | `reasoning-extensions-saga.md`, "E3 decision" |
 | (unrequested) SHA-256 primitive | **Delivered**, because a consumer cannot supply E2's checksum without it. | `extensions/digest`, `digest-extension.md` |
 
 ## E1: `hftok`
@@ -75,6 +75,11 @@ consumer's own request R11 to `sw-mlpl`, which `sw-mlpl` has deferred as
 R11 is declined, and names a `sten:read_tensor` reader as the fallback shape.
 No code was written.
 
+Update 2026-09-29: `sw-mlpl` `b3180d9a` shipped `unpack` for every
+`reinterpret` dtype. It decodes the bf16 values above exactly, preserves
+infinities, NaN, and subnormals, and rejects ragged lengths. E3 is therefore
+permanently unnecessary.
+
 ## Gate
 
 `just check` passes on this final commit. It covers workspace Rust tests,
@@ -94,9 +99,11 @@ mlplunit, and the headless integration checks.
   `libmlpl_extension_<name>.*`, so the consumer loads them by path, not by bare
   name.
 - **Result shape and `get_error`.** Extension results are bare on success and
-  Result-shaped on failure (R1), and `get_error` fails on string payloads
-  (R2). Both reproduced at `dd776fff`; consumers branch on `type_of` and use
-  `err_message`.
+  Result-shaped on failure. `sw-mlpl` `b3180d9a` resolved R1 by adding the
+  total predicate `is_result`, and R2 by documenting `err_message` as the way
+  to read string errors. This repository's MLPL still branches on `type_of`,
+  which works on every host; moving to `is_result` is deferred because it
+  raises the minimum host version.
 - **NFC is lossy by design.** Decoded text is normalized, so decomposed input
   does not round-trip byte for byte. NFC files whose added tokens are marked
   normalized are refused.
@@ -113,7 +120,8 @@ mlplunit, and the headless integration checks.
 | Publish the training split and a numeric encoding budget | `reasoning-from-scratch` | closing E1 criterion 3 (`just hftok-throughput`) |
 | Update E1's status in its request document (NFC is resolved) | `reasoning-from-scratch` | accurate consumer records |
 | Pin artifact SHA-256 digests (D1) and integrate the packages (D2) | `reasoning-from-scratch` | verified model fetches upstream |
-| R11 bulk `unpack(bytes, dtype)` | `sw-mlpl` | the consumer's weight loading, and deciding whether E3 is ever raised |
-| R1 symmetric extension result shape, R2 `get_error` on strings | `sw-mlpl` | uniform railway handling of extension calls |
+| Re-probe R11 and move weight loading to `unpack` (shipped in `sw-mlpl` `b3180d9a`) | `reasoning-from-scratch` | its Saga 3 weight loading |
 
 None of these is work for this repository until the owning repository acts.
+All `sw-mlpl` requests from this saga (R1, R2, and the consumer's R11) were
+resolved in `b3180d9a`, and verified here on 2026-09-29.

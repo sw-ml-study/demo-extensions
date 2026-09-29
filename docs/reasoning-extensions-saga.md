@@ -122,7 +122,9 @@ pre-tokenization pattern (no C `onig` build).
 Findings recorded rather than worked around silently: extension calls return a
 bare value on success but a result value on failure, so no single MLPL
 expression branches on both. Filed as R1 in `sw-mlpl-requests.md`, with R2 for
-`get_error` on a string payload. Neither blocks this saga.
+`get_error` on a string payload. Neither blocked this saga, and both were
+resolved upstream in `sw-mlpl` `b3180d9a` (`is_result`, and the documented
+`err_message` contract).
 
 Acceptance: the tokenizer extension reproduces the upstream MLPL reference and
 real-vocabulary goldens exactly and meets the stated throughput budget or
@@ -165,7 +167,22 @@ does not reflect that R11 now blocks the consumer's Saga 3. Raising the
 priority is a matter between those two repositories; this repository does
 not modify `../sw-mlpl`.
 
-Reopen condition: `sw-mlpl` declines R11 and the consumer raises E3. Build
+**Update 2026-09-29: settled.** `sw-mlpl` `b3180d9a` shipped R11 as bulk
+`unpack(bytes, dtype)`, so the reopen condition below can no longer occur.
+Re-probed with the release `mlpl-repl` selected by `scripts/select-mlpl`:
+
+- The bf16 byte pairs for `[1, -1, 2, 0.5, 0, 50]` unpack to exactly
+  `1 -1 2 0.5 0 50`.
+- The bf16 patterns for positive and negative infinity, NaN, and the smallest
+  subnormal unpack to `inf`, `-inf`, `NaN`, and about `9.18e-41`.
+- A three-byte buffer is an error: "3 bytes is not a whole number of bf16
+  values".
+
+No `unpack_bf16` and no `sten:read_tensor` extension is needed. Decoding
+stays in the core, where the consumer's `feature-homes.md` rule places it.
+
+Original reopen condition, kept for the record: `sw-mlpl` declines R11 and
+the consumer raises E3. Build
 the extension to the shape E3 then specifies. Keep the Hugging Face
 tensor-name mapping in MLPL, and use the `bf16-vectorized-decode` probe
 values as the parity reference.
